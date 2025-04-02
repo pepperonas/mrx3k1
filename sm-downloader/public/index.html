@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Video Downloader</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Social Media Video Downloader</h1>
+            <p class="subtitle">Lade Videos von Instagram, TikTok, Twitter und YouTube herunter</p>
+        </header>
+        
+        <main>
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="videoUrl">Video-URL eingeben:</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        <button id="clearBtn" class="clear-btn">×</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Plattform auswählen:</label>
+                    <div class="platform-selector">
+                        <button class="platform-btn selected" data-platform="youtube">
+                            <img src="icons/youtube.svg" alt="YouTube" class="platform-icon">
+                            <span>YouTube</span>
+                        </button>
+                        <button class="platform-btn" data-platform="instagram">
+                            <img src="icons/instagram.svg" alt="Instagram" class="platform-icon">
+                            <span>Instagram</span>
+                        </button>
+                        <button class="platform-btn" data-platform="tiktok">
+                            <img src="icons/tiktok.svg" alt="TikTok" class="platform-icon">
+                            <span>TikTok</span>
+                        </button>
+                        <button class="platform-btn" data-platform="twitter">
+                            <img src="icons/twitter.svg" alt="Twitter" class="platform-icon">
+                            <span>Twitter</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button id="fetchBtn" class="fetch-btn">
+                    <span class="btn-text">Video abrufen</span>
+                    <div class="spinner hide"></div>
+                </button>
+            </div>
+            
+            <div id="alertMessage" class="alert-message hide"></div>
+            
+            <div id="resultContainer" class="result-container hide">
+                <div class="video-preview">
+                    <img id="thumbnail" src="" alt="Video Vorschau">
+                    <div class="duration-badge" id="duration"></div>
+                </div>
+                
+                <div class="video-info">
+                    <h2 id="videoTitle">Video Titel wird geladen...</h2>
+                    <p id="videoSource"></p>
+                </div>
+                
+                <div class="download-options" id="downloadOptions">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>© 2025 mrx3k1.de | Keine Daten oder Videos werden auf unserem Server gespeichert</p>
+            <p class="disclaimer">Diese App ist nur für Inhalte gedacht, für die du Rechte besitzt oder die unter freien Lizenzen stehen. Bitte beachte die Nutzungsbedingungen der jeweiligen Plattformen.</p>
+        </footer>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

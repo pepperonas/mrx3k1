@@ -1,0 +1,37 @@
+{
+  "name": "techdocs",
+  "version": "1.0.0",
+  "description": "Ein Framework für IT-Dokumentation und Cheat Sheets",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "install-all": "npm install && cd client && npm install",
+    "client": "cd client && npm start",
+    "server": "nodemon server/server.js",
+    "dev-full": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": ["documentation", "cheatsheet", "markdown", "knowledge-base"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "marked": "^9.0.0",
+    "highlight.js": "^11.8.0",
+    "multer": "^1.4.5-lts.1",
+    "morgan": "^1.10.0",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^6.9.0",
+    "jsonwebtoken": "^9.0.1",
+    "bcrypt": "^5.1.1",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.1"
+  }
+}

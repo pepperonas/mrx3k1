@@ -1,0 +1,266 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Fira Code', monospace;
+    background-color: #2e3440;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative; /* For absolute positioning of children */
+}
+
+.terminal-container {
+    width: 90%;
+    max-width: 800px;
+    height: 500px;
+    background-color: #2e3440;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1; /* Ensure terminal is above other elements */
+}
+
+.site-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    color: #d8dee9;
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+    font-size: 14px;
+    background-color: rgba(59, 66, 82, 0.5);
+}
+
+.terminal-container {
+    width: 90%;
+    max-width: 800px;
+    height: 500px;
+    background-color: #2e3440;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.terminal-header {
+    background-color: #3b4252;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 8px;
+    margin-right: 15px;
+}
+
+.terminal-button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.close {
+    background-color: #bf616a;
+}
+
+.minimize {
+    background-color: #ebcb8b;
+}
+
+.maximize {
+    background-color: #a3be8c;
+}
+
+.terminal-title {
+    color: #eceff4;
+    font-size: 14px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.terminal-body {
+    flex-grow: 1;
+    background-color: #2e3440;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#terminal-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    color: #d8dee9;
+    margin-bottom: 10px;
+}
+
+.welcome-message pre {
+    color: #88c0d0;
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 15px;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.welcome-message p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.cmd {
+    color: #88c0d0;
+    background-color: #3b4252;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.prompt {
+    color: #a3be8c;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+#terminal-input {
+    background-color: transparent;
+    border: none;
+    color: #d8dee9;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    outline: none;
+    flex-grow: 1;
+    caret-color: #d8dee9;
+}
+
+.message {
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+.question {
+    color: #88c0d0;
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+.error {
+    color: #bf616a;
+}
+
+.success {
+    color: #a3be8c;
+}
+
+.info {
+    color: #5e81ac;
+}
+
+.hint {
+    color: #ebcb8b;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+.command-output {
+    color: #d8dee9;
+    background-color: #3b4252;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 5px 0;
+    white-space: pre-wrap;
+}
+
+.terminal-footer {
+    background-color: #3b4252;
+    padding: 8px 15px;
+    color: #d8dee9;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.progress-container {
+    width: 100%;
+    background-color: #4c566a;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #5e81ac;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.stats {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#correct-count {
+    color: #a3be8c;
+}
+
+/* Animation für die Eingabeaufforderung */
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+.cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background-color: #d8dee9;
+    animation: blink 1s infinite;
+    vertical-align: middle;
+}
+
+/* Scrollbar-Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #3b4252;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4c566a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5e81ac;
+}
