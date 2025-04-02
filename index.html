@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <meta property="og:title" content="mrx3k1.de - Deine Apps">
+    <meta property="og:description" content="Made with ❤️ by Martin Pfeffer">
+    <meta property="og:image" content="mrx3k1.jpg">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Tags für Twitter-Vorschau -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mrx3k1.de - Deine Apps">
+    <meta name="twitter:description" content="Made with ❤️ by Martin Pfeffer">
+    <meta name="twitter:image" content="mrx3k1.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <!-- Zusätzliche Favicon für moderne Browser und Geräte -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+
+    <title>mrx3k1.de - Deine Apps</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: #1e1f2b;
+            --card-bg: #2a2b3d;
+            --text: #e4e4e7;
+            --accent: #4ade80;
+            --blue: #60a5fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #a1a1aa;
+        }
+
+        .apps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+            transition: all 0.3s ease;
+            min-height: 250px;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transform: translateY(-6px);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin: 1rem 0;
+            font-weight: 600;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .card a {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-blue {
+            background-color: var(--blue);
+            color: white;
+        }
+
+        .btn-blue:hover {
+            background-color: #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .btn-green {
+            background-color: var(--accent);
+            color: #1e293b;
+        }
+
+        .btn-green:hover {
+            background-color: #22c55e;
+            transform: scale(1.05);
+        }
+
+        .footer-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-buttons a {
+            border: 1px solid #3b3c50;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .footer-buttons a:hover {
+            background-color: #3b3c50;
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>mrx3k1.de</h1>
+    <p>Deine Tools und Spiele</p>
+</header>
+
+<section class="apps">
+    <div class="card">
+        <h2>Pong</h2>
+        <p>Der klassische Spielhallen-Hit neu aufgelegt – forder deine Reflexe heraus!</p>
+        <a href="https://mrx3k1.de/games/pong/" target="_blank" class="btn-blue">Spielen</a>
+    </div>
+    <div class="card">
+        <h2>Dart Zähler</h2>
+        <p>Behalte deine Punkte im Blick – ideal für jedes Dart-Match mit Freunden.</p>
+        <a href="https://mrx3k1.de/games/dart-counter/" target="_blank"
+           class="btn-green">Starten</a>
+    </div>
+    <div class="card">
+        <h2>Brain Buster</h2>
+        <p>Teste dein Wissen in Kategorien und fordere deine Freunde im Multiplayer-Modus
+            heraus!</p>
+        <a href="https://mrx3k1.de/games/brain-buster/" target="_blank"
+           class="btn-blue">Loslegen</a>
+    </div>
+    <div class="card">
+        <h2>Wetter App</h2>
+        <p>Dein kompakter Wetterüberblick – aktuell, übersichtlich und zuverlässig.</p>
+        <a href="https://mrx3k1.de/stuff/weather/" target="_blank" class="btn-green">Ansehen</a>
+    </div>
+    <div class="card">
+        <h2>Terminal Quiz</h2>
+        <p>Teste dein Terminal-Wissen direkt im Browser – perfekt für Nerds und Linux-Fans!</p>
+        <a href="https://mrx3k1.de/stuff/terminal-quiz/" target="_blank" class="btn-blue">Quiz
+            starten</a>
+    </div>
+    <div class="card">
+        <h2>Mockup Generator</h2>
+        <p>Erstelle realistische Mockups deiner Designs oder Websites mit nur wenigen Klicks.</p>
+        <a href="https://mrx3k1.de/stuff/mockup/" target="_blank" class="btn-green">Öffnen</a>
+    </div>
+</section>
+
+<div class="footer-buttons">
+    <p>Made with ❤️ by Martin Pfeffer</p>
+</div>
+</body>
+</html>
