@@ -143,15 +143,12 @@ Erzeuge eine Markdown-Datei mit korrektem Frontmatter und strukturiertem Inhalt.
 - Schreibe im informativ-sachlichen Stil, aber leicht verständlich
 
 ### Frontmatter-Beispiel:
-```
 ---
 title: "Aussagekräftiger Titel"
 date: "YYYY-MM-DD" (aktuelles Datum)
 excerpt: "Eine prägnante Zusammenfassung des Beitrags in 1-2 Sätzen."
 tags: ["Tag1", "Tag2", "Tag3"]
 ---
-```
-
 ### Beispiel für Struktur:
 1. Einleitung zum Thema
 2. Hauptteil mit verschiedenen Aspekten/Techniken (mehrere Überschriften)
