@@ -1,0 +1,509 @@
+{
+  "info": {
+    "name": "TechDocs API",
+    "description": "Collection für die TechDocs API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentifizierungsendpunkte",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Martin Pfeffer\",\n  \"email\": \"martin@example.com\",\n  \"password\": \"mein-sicheres-passwort\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Neuen Benutzer registrieren"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set(\"authToken\", jsonData.token);",
+                  "    console.log(\"Token gespeichert:\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"martin@example.com\",\n  \"password\": \"mein-sicheres-passwort\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Benutzer anmelden"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Aktuellen Benutzer abrufen"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Benutzer abmelden"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "description": "Kategorieverwaltung",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?populate=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"],
+              "query": [
+                {
+                  "key": "populate",
+                  "value": "true",
+                  "description": "Zugehörige Dokumente abrufen"
+                },
+                {
+                  "key": "parentOnly",
+                  "value": "true",
+                  "description": "Nur Hauptkategorien abrufen",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Alle Kategorien abrufen"
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Programmierung\",\n  \"description\": \"Programmiersprachen und Konzepte\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Neue Kategorie erstellen"
+          }
+        },
+        {
+          "name": "Create Subcategory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"JavaScript\",\n  \"description\": \"JavaScript Ressourcen\",\n  \"parentCategory\": \"{{categoryId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Neue Unterkategorie erstellen"
+          }
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Kategorie mittels ID abrufen"
+          }
+        },
+        {
+          "name": "Get Category by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/slug/programmierung",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "slug", "programmierung"]
+            },
+            "description": "Kategorie mittels Slug abrufen"
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Programmierung & Entwicklung\",\n  \"description\": \"Aktualisierte Beschreibung\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Kategorie aktualisieren"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Kategorie löschen"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "description": "Dokumentenverwaltung",
+      "item": [
+        {
+          "name": "Get All Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs?limit=10&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Anzahl der Einträge pro Seite"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Seitennummer"
+                },
+                {
+                  "key": "select",
+                  "value": "title,slug,category",
+                  "description": "Spezifische Felder auswählen",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt",
+                  "description": "Sortierung",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Alle Dokumente abrufen"
+          }
+        },
+        {
+          "name": "Create Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Git Befehle\",\n  \"content\": \"# Git Befehle\\n\\n## Grundlegende Befehle\\n\\n- `git init` - Initialisiert ein neues Repository\\n- `git clone URL` - Klont ein Repository\\n- `git add .` - Fügt alle Änderungen zum Staging hinzu\\n- `git commit -m 'Nachricht'` - Erstellt einen Commit\\n- `git push` - Überträgt Commits zum Remote-Repository\\n- `git pull` - Holt Änderungen vom Remote-Repository\\n\\n## Branches\\n\\n- `git branch` - Listet alle Branches auf\\n- `git checkout -b name` - Erstellt und wechselt zu einem neuen Branch\\n- `git merge branch-name` - Führt einen Branch in den aktuellen Branch zusammen\",\n  \"contentType\": \"markdown\",\n  \"category\": \"{{categoryId}}\",\n  \"tags\": [\"git\", \"versionskontrolle\", \"cheatsheet\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs"]
+            },
+            "description": "Neues Dokument erstellen"
+          }
+        },
+        {
+          "name": "Get Document by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs", "{{documentId}}"]
+            },
+            "description": "Dokument mittels ID abrufen"
+          }
+        },
+        {
+          "name": "Get Document by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs/slug/git-befehle",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs", "slug", "git-befehle"]
+            },
+            "description": "Dokument mittels Slug abrufen"
+          }
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Git Befehle Cheat Sheet\",\n  \"content\": \"# Git Befehle Cheat Sheet\\n\\n## Grundlegende Befehle\\n\\n- `git init` - Initialisiert ein neues Repository\\n- `git clone URL` - Klont ein Repository\\n- `git add .` - Fügt alle Änderungen zum Staging hinzu\\n- `git commit -m 'Nachricht'` - Erstellt einen Commit\\n- `git push` - Überträgt Commits zum Remote-Repository\\n- `git pull` - Holt Änderungen vom Remote-Repository\\n\\n## Branches\\n\\n- `git branch` - Listet alle Branches auf\\n- `git checkout -b name` - Erstellt und wechselt zu einem neuen Branch\\n- `git merge branch-name` - Führt einen Branch in den aktuellen Branch zusammen\\n\\n## Fortgeschrittene Befehle\\n\\n- `git rebase` - Änderungsverlauf umschreiben\\n- `git cherry-pick` - Commits aus einem Branch übernehmen\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/docs/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs", "{{documentId}}"]
+            },
+            "description": "Dokument aktualisieren"
+          }
+        },
+        {
+          "name": "Import Markdown File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/markdown/file.md"
+                },
+                {
+                  "key": "category",
+                  "value": "{{categoryId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "import,markdown,demo",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/docs/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs", "import"]
+            },
+            "description": "Markdown-Datei importieren"
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs", "{{documentId}}"]
+            },
+            "description": "Dokument löschen"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "description": "Suche",
+      "item": [
+        {
+          "name": "Search Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=git",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "git",
+                  "description": "Suchbegriff"
+                }
+              ]
+            },
+            "description": "Dokumente durchsuchen"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5007",
+      "type": "string",
+      "description": "Base URL für die API"
+    },
+    {
+      "key": "categoryId",
+      "value": "your-category-id",
+      "type": "string",
+      "description": "ID einer Beispielkategorie"
+    },
+    {
+      "key": "documentId",
+      "value": "your-document-id",
+      "type": "string",
+      "description": "ID eines Beispieldokuments"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Token für authentifizierte Anfragen"
+    }
+  ]
+}

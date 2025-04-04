@@ -1,0 +1,27 @@
+{
+  "id": "techdocs-environment",
+  "name": "TechDocs Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5007",
+      "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "documentId",
+      "value": "",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
