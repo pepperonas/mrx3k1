@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentPath = window.location.pathname;
     document.querySelectorAll('nav ul li a').forEach(link => {
         if (currentPath === link.getAttribute('href') ||
-            (link.getAttribute('href') !== '/docs' && currentPath.includes(link.getAttribute('href')))) {
+            (link.getAttribute('href') !== '/blog' && currentPath.includes(link.getAttribute('href')))) {
             link.classList.add('active');
         }
     });

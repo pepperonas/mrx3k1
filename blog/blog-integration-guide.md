@@ -175,7 +175,7 @@ Wenn du direkten Zugriff auf den Server hast:
 ssh user@dein-server.de
 
 # Navigiere zum Blog-Verzeichnis
-cd /var/www/html/docs/blog-framework
+cd /var/www/html/blog/blog-framework
 
 # Erstelle einen neuen Beitrag
 nano posts/category/neuer-beitrag.md
@@ -193,10 +193,10 @@ Wenn du lokal arbeitest:
 
 ```bash
 # Einzelne Datei übertragen
-scp pfad/zu/lokaler/datei.md user@dein-server.de:/var/www/html/docs/blog-framework/posts/kategorie/
+scp pfad/zu/lokaler/datei.md user@dein-server.de:/var/www/html/blog/blog-framework/posts/kategorie/
 
 # Oder alle Beiträge synchronisieren
-rsync -avz pfad/zu/lokalem/posts/ user@dein-server.de:/var/www/html/docs/blog-framework/posts/
+rsync -avz pfad/zu/lokalem/posts/ user@dein-server.de:/var/www/html/blog/blog-framework/posts/
 ```
 
 ## Fehlersuche und häufige Probleme
@@ -226,7 +226,7 @@ Falls Änderungen nicht sofort sichtbar sind, starte den Server neu:
 pm2 restart it-blog
 
 # Oder direkt
-cd /var/www/html/docs/blog-framework
+cd /var/www/html/blog/blog-framework
 npm start
 ```
 

@@ -11,7 +11,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/docs', express.static(path.join(__dirname, 'public')));
+app.use('/blog', express.static(path.join(__dirname, 'public')));
 
 // Benutzerdefinierte Rendering-Funktion für Layout-Support
 app.engine('ejs', (filePath, options, callback) => {
@@ -52,20 +52,20 @@ if (!fs.existsSync(logsDir)) {
 const indexRoutes = require('./routes/index');
 const postsRoutes = require('./routes/posts');
 
-app.use('/docs', indexRoutes);
-app.use('/docs/posts', postsRoutes);
+app.use('/blog', indexRoutes);
+app.use('/blog/posts', postsRoutes);
 
 // 404-Route für alle nicht gefundenen Seiten
-app.use('/docs/*', (req, res) => {
+app.use('/blog/*', (req, res) => {
     res.status(404).render('404', {
         title: 'Seite nicht gefunden',
         message: 'Die angeforderte Seite existiert nicht.'
     });
 });
 
-// Startseite auf /docs umleiten
+// Startseite auf /blog umleiten
 app.get('/', (req, res) => {
-    res.redirect('/docs');
+    res.redirect('/blog');
 });
 
 // Fehlerbehandlung
@@ -73,6 +73,6 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server läuft auf http://localhost:${PORT}/docs`);
+    console.log(`Server läuft auf http://localhost:${PORT}/blog`);
     console.log(`Drücke STRG+C zum Beenden.`);
 });

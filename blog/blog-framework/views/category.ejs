@@ -11,7 +11,7 @@
                 <div class="post-card">
                     <div class="category-tag <%= post.category %>"><%= post.category %></div>
                     <h3>
-                        <a href="/docs/posts/<%= post.category %>/<%= post.slug %>"><%= post.title %></a>
+                        <a href="/blog/posts/<%= post.category %>/<%= post.slug %>"><%= post.title %></a>
                     </h3>
                     <div class="post-meta">
                         <span class="date"><%= new Date(post.date).toLocaleDateString('de-DE', {
@@ -21,7 +21,7 @@
                             }) %></span>
                     </div>
                     <p class="excerpt"><%= post.excerpt %></p>
-                    <a href="/docs/posts/<%= post.category %>/<%= post.slug %>" class="read-more">Weiterlesen</a>
+                    <a href="/blog/posts/<%= post.category %>/<%= post.slug %>" class="read-more">Weiterlesen</a>
                 </div>
             <% }) %>
         </div>

@@ -70,7 +70,7 @@ Hier kommt der Inhalt des Beitrags...
                     fs.writeFileSync(filePath, frontMatter);
 
                     console.log(`\nBeitrag erstellt: ${filePath}`);
-                    console.log(`Du kannst den Beitrag unter /docs/posts/${category}/${slug} aufrufen.`);
+                    console.log(`Du kannst den Beitrag unter /blog/posts/${category}/${slug} aufrufen.`);
 
                     rl.close();
                 });
@@ -125,10 +125,10 @@ const deploy = async () => {
         // Deployment auf den Server
         // Ersetze USER und SERVER_ADDRESS mit deinen Daten
         console.log('Deployment auf Server starten...');
-        await runCommand(`rsync -avz --delete ${deployDir}/ USER@SERVER_ADDRESS:/pfad/zum/docs/verzeichnis/`);
+        await runCommand(`rsync -avz --delete ${deployDir}/ USER@SERVER_ADDRESS:/pfad/zum/blog/verzeichnis/`);
 
         // SSH-Befehle zum Neustart des Servers (falls nötig)
-        await runCommand(`ssh USER@SERVER_ADDRESS "cd /pfad/zum/docs/verzeichnis && npm install && pm2 restart blog-app || pm2 start app.js --name blog-app"`);
+        await runCommand(`ssh USER@SERVER_ADDRESS "cd /pfad/zum/blog/verzeichnis && npm install && pm2 restart blog-app || pm2 start app.js --name blog-app"`);
 
         console.log('Deployment erfolgreich abgeschlossen!');
     } catch (error) {
