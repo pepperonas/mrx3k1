@@ -1,0 +1,13 @@
+<section class="error-page">
+    <h1><%= status || 500 %></h1>
+    <h2><%= message || 'Ein Fehler ist aufgetreten' %></h2>
+
+    <% if (typeof stack !== 'undefined' && stack && process.env.NODE_ENV !== 'production') { %>
+        <div class="error-details">
+            <pre><code><%= stack %></code></pre>
+        </div>
+    <% } %>
+
+    <p>Etwas ist schief gelaufen. Bitte versuche es später erneut.</p>
+    <a href="/docs" class="btn">Zurück zur Startseite</a>
+</section>

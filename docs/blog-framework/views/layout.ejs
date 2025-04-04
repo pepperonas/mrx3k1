@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'IT Blog' %></title>
+    <link rel="stylesheet" href="/docs/css/style.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <div class="logo">
+            <a href="/docs">IT Blog</a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/docs">Home</a></li>
+                <li><a href="/docs/category/ai">AI</a></li>
+                <li><a href="/docs/category/development">Development</a></li>
+                <li><a href="/docs/category/it-security">IT-Security</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <%- body %>
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>&copy; <%= new Date().getFullYear() %> mrx3k1.de - Alle Rechte vorbehalten</p>
+    </div>
+</footer>
+
+<script src="/docs/js/main.js"></script>
+</body>
+</html>

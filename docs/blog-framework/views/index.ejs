@@ -1,0 +1,38 @@
+<section class="hero">
+    <h1>IT-Blog</h1>
+    <p>Aktuelle Beiträge zu AI, Development und IT-Security</p>
+</section>
+
+<section class="recent-posts">
+    <h2>Neueste Beiträge</h2>
+    <div class="posts-grid">
+        <% recentPosts.forEach(post => { %>
+            <div class="post-card">
+                <div class="category-tag <%= post.category %>"><%= post.category %></div>
+                <h3>
+                    <a href="/docs/posts/<%= post.category %>/<%= post.slug %>"><%= post.title %></a>
+                </h3>
+                <div class="post-meta">
+                    <span class="date"><%= new Date(post.date).toLocaleDateString('de-DE', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }) %></span>
+                </div>
+                <p class="excerpt"><%= post.excerpt %></p>
+                <a href="/docs/posts/<%= post.category %>/<%= post.slug %>" class="read-more">Weiterlesen</a>
+            </div>
+        <% }) %>
+    </div>
+</section>
+
+<section class="categories">
+    <h2>Kategorien</h2>
+    <div class="category-grid">
+        <% categories.forEach(category => { %>
+            <a href="/docs/category/<%= category %>" class="category-card <%= category %>">
+                <h3><%= category.charAt(0).toUpperCase() + category.slice(1) %></h3>
+            </a>
+        <% }) %>
+    </div>
+</section>

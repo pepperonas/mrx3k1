@@ -1,0 +1,22 @@
+{
+  "name": "it-blog-framework",
+  "version": "1.0.0",
+  "description": "Framework für IT-Blog mit AI-generierten Inhalten",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "security-fix": "npm audit fix"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "markdown-it": "^13.0.2",
+    "highlight.js": "^11.8.0",
+    "gray-matter": "^4.0.3",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

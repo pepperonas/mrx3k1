@@ -1,0 +1,29 @@
+<section class="category-header <%= category %>">
+    <h1><%= category.charAt(0).toUpperCase() + category.slice(1) %></h1>
+</section>
+
+<section class="posts-list">
+    <% if (posts.length === 0) { %>
+        <p>Keine Beiträge in dieser Kategorie.</p>
+    <% } else { %>
+        <div class="posts-grid">
+            <% posts.forEach(post => { %>
+                <div class="post-card">
+                    <div class="category-tag <%= post.category %>"><%= post.category %></div>
+                    <h3>
+                        <a href="/docs/posts/<%= post.category %>/<%= post.slug %>"><%= post.title %></a>
+                    </h3>
+                    <div class="post-meta">
+                        <span class="date"><%= new Date(post.date).toLocaleDateString('de-DE', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            }) %></span>
+                    </div>
+                    <p class="excerpt"><%= post.excerpt %></p>
+                    <a href="/docs/posts/<%= post.category %>/<%= post.slug %>" class="read-more">Weiterlesen</a>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</section>

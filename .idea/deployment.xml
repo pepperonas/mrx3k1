@@ -10,6 +10,9 @@
           </mappings>
           <excludedPaths>
             <excludedPath local="true" path="$PROJECT_DIR$/.idea" />
+            <excludedPath local="true" path="$PROJECT_DIR$/../celox.io/docs/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/docs/blog-framework/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/techdocs/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>
