@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Themenübersicht</title>
+    <style>
+        :root {
+            --main-bg-color: #2C2E3B;
+            --sidebar-bg-color: #222331;
+            --text-color: #f5f5f5;
+            --highlight-color: #4D5382;
+            --accent-color: #7A7FBC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            color: var(--text-color);
+            background-color: var(--main-bg-color);
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg-color);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .folder {
+            margin-bottom: 15px;
+        }
+
+        .folder-name {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .folder-name:hover {
+            color: var(--accent-color);
+        }
+
+        .folder-name::before {
+            content: '▶';
+            display: inline-block;
+            margin-right: 8px;
+            transition: transform 0.2s;
+            font-size: 10px;
+        }
+
+        .folder.open .folder-name::before {
+            transform: rotate(90deg);
+        }
+
+        .files {
+            display: none;
+            padding-left: 24px;
+        }
+
+        .folder.open .files {
+            display: block;
+        }
+
+        .file {
+            padding: 6px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .file::before {
+            content: '📄';
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .file:hover {
+            color: var(--accent-color);
+        }
+
+        .file.active {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .content-title {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .content-frame {
+            border: none;
+            width: 100%;
+            height: calc(100vh - 120px);
+            background-color: white;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+
+        .welcome-message {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+
+            .content-frame {
+                height: calc(100vh - 300px);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="folder">
+        <div class="folder-name">Statistiken</div>
+        <div class="files">
+            <div class="file" data-content="statistiken/james-bond-data.html">James Bond</div>
+        </div>
+    </div>
+    <div class="folder">
+        <div class="folder-name">Tech Demos</div>
+        <div class="files">
+            <div class="file" data-content="tech-demos/mengenlehreuhr.html">Mengenlehreuhr</div>
+            <div class="file" data-content="tech-demos/mandelbrot.html">Mandelbrot</div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <h1 class="content-title">Willkommen</h1>
+    <div id="content-container">
+        <div class="welcome-message">
+            <p>Bitte wählen Sie eine Datei aus der Seitenleiste aus, um den Inhalt anzuzeigen.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ordner auf-/zuklappen
+    document.querySelectorAll('.folder-name').forEach(folderName => {
+        folderName.addEventListener('click', () => {
+            const folder = folderName.parentElement;
+            folder.classList.toggle('open');
+        });
+    });
+
+    // Datei-Inhalte laden
+    document.querySelectorAll('.file').forEach(file => {
+        file.addEventListener('click', () => {
+            // Aktive Datei markieren
+            document.querySelectorAll('.file').forEach(f => f.classList.remove('active'));
+            file.classList.add('active');
+
+            // Dateiname und Pfad ermitteln
+            const filePath = file.getAttribute('data-content');
+            const fileName = file.textContent.trim();
+
+            // Titel aktualisieren
+            const contentTitle = document.querySelector('.content-title');
+            contentTitle.textContent = fileName;
+
+            // Container leeren und iframe erstellen
+            const contentContainer = document.getElementById('content-container');
+            contentContainer.innerHTML = `<iframe src="${filePath}" class="content-frame" title="${fileName}"></iframe>`;
+        });
+    });
+
+    // Standardmäßig den ersten Ordner öffnen
+    document.querySelector('.folder').classList.add('open');
+</script>
+</body>
+</html>
