@@ -164,6 +164,14 @@
                 height: calc(100vh - 300px);
             }
         }
+
+        /* CSS für die TextScramble-Animation */
+        .scrambling {
+            text-shadow: 0 0 12px currentColor;
+        }
+        h1 {
+            text-shadow: 0 0 8px currentColor;
+        }
     </style>
 </head>
 <body>
@@ -171,16 +179,16 @@
     <div class="folder">
         <div class="folder-name">Statistiken</div>
         <div class="files">
-            <div class="file" data-content="statistiken/james-bond-data.html">James Bond</div>
-            <div class="file" data-content="statistiken/phonk-d-charts.html">Phonk D</div>
+            <div class="file" id="james-bond" data-content="statistiken/james-bond-data.html">James Bond</div>
+            <div class="file" id="phonk-d" data-content="statistiken/phonk-d-charts.html">Phonk D</div>
         </div>
     </div>
     <div class="folder">
         <div class="folder-name">Tech Demos</div>
         <div class="files">
-            <div class="file" data-content="tech-demos/mengenlehreuhr.html">Mengenlehreuhr</div>
-            <div class="file" data-content="tech-demos/mandelbrot.html">Mandelbrot</div>
-            <div class="file" data-content="tech-demos/story-code.html">Story Code</div>
+            <div class="file" id="mengenlehreuhr" data-content="tech-demos/mengenlehreuhr.html">Mengenlehreuhr</div>
+            <div class="file" id="mandelbrot" data-content="tech-demos/mandelbrot.html">Mandelbrot</div>
+            <div class="file" id="story-code" data-content="tech-demos/story-code.html">Story Code</div>
         </div>
     </div>
 </div>
@@ -199,46 +207,7 @@
 </div>
 
 <script>
-    // Ordner auf-/zuklappen
-    document.querySelectorAll('.folder-name').forEach(folderName => {
-        folderName.addEventListener('click', () => {
-            const folder = folderName.parentElement;
-            folder.classList.toggle('open');
-        });
-    });
-
-    // Datei-Inhalte laden
-    document.querySelectorAll('.file').forEach(file => {
-        file.addEventListener('click', () => {
-            // Aktive Datei markieren
-            document.querySelectorAll('.file').forEach(f => f.classList.remove('active'));
-            file.classList.add('active');
-
-            // Dateiname und Pfad ermitteln
-            const filePath = file.getAttribute('data-content');
-            const fileName = file.textContent.trim();
-
-            // Titel aktualisieren
-            const contentTitle = document.querySelector('.content-title');
-            contentTitle.textContent = fileName;
-
-            // Animation für den aktualisierten Titel
-            const fx = new TextScramble(contentTitle);
-            fx.setText(fileName);
-
-            // Container leeren und iframe erstellen
-            const contentContainer = document.getElementById('content-container');
-            contentContainer.innerHTML = `<iframe src="${filePath}" class="content-frame" title="${fileName}"></iframe>`;
-        });
-    });
-
-    // Standardmäßig den ersten Ordner öffnen
-    document.querySelector('.folder').classList.add('open');
-</script>
-</body>
-
-<script>
-    // TextScramble-Klasse
+    // TextScramble-Klasse (definiert vor Verwendung)
     class TextScramble {
         constructor(el) {
             this.el = el;
@@ -307,8 +276,98 @@
         }
     }
 
-    // Script für die Animation des Haupttitels
+    // Hauptfunktion, die alle Initialisierungen vornimmt
     document.addEventListener('DOMContentLoaded', function () {
+        // Ordner auf-/zuklappen
+        document.querySelectorAll('.folder-name').forEach(folderName => {
+            folderName.addEventListener('click', () => {
+                const folder = folderName.parentElement;
+                folder.classList.toggle('open');
+            });
+        });
+
+        // Funktion zum Laden des Inhalts in einem iframe
+        function loadContent(fileElement) {
+            if (!fileElement) return;
+
+            // Aktive Datei markieren
+            document.querySelectorAll('.file').forEach(f => f.classList.remove('active'));
+            fileElement.classList.add('active');
+
+            // Dateiname und Pfad ermitteln
+            const filePath = fileElement.getAttribute('data-content');
+            const fileName = fileElement.textContent.trim();
+
+            // Titel aktualisieren
+            const contentTitle = document.querySelector('.content-title');
+            contentTitle.textContent = fileName;
+
+            // Animation für den aktualisierten Titel
+            const fx = new TextScramble(contentTitle);
+            fx.setText(fileName);
+
+            // Container leeren und iframe erstellen
+            const contentContainer = document.getElementById('content-container');
+            contentContainer.innerHTML = `<iframe src="${filePath}" class="content-frame" title="${fileName}"></iframe>`;
+
+            // URL aktualisieren (ohne Neuladen der Seite)
+            const fileId = fileElement.id;
+            history.pushState(null, null, `?content=${filePath}`);
+
+            // Animation für iframe-Inhalte vorbereiten
+            const iframe = contentContainer.querySelector('.content-frame');
+            iframe.onload = function () {
+                try {
+                    // Zugriff auf den Inhalt des iframes
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                    // CSS für Animation hinzufügen
+                    const styleElement = iframeDoc.createElement('style');
+                    styleElement.textContent = `
+                        .scrambling {
+                          text-shadow: 0 0 12px currentColor;
+                        }
+                        h1 {
+                          text-shadow: 0 0 8px currentColor;
+                        }
+                    `;
+                    iframeDoc.head.appendChild(styleElement);
+
+                    // Hinzufügen der TextScramble-Klasse zum iframe
+                    const scriptElement = iframeDoc.createElement('script');
+                    scriptElement.textContent = `
+                        ${TextScramble.toString()}
+
+                        // Finde alle h1-Elemente und wende Animation an
+                        document.querySelectorAll('h1').forEach(h1 => {
+                            const originalText = h1.textContent;
+                            const fx = new TextScramble(h1);
+
+                            // Animation starten
+                            setTimeout(() => {
+                                fx.setText(originalText);
+                            }, 500);
+
+                            // Animation bei Klick wiederholen
+                            h1.addEventListener('click', () => {
+                                fx.setText(originalText);
+                            });
+                        });
+                    `;
+                    iframeDoc.body.appendChild(scriptElement);
+                } catch (e) {
+                    console.warn('Konnte nicht auf iframe-Inhalt zugreifen:', e);
+                }
+            };
+        }
+
+        // Event-Listener für Datei-Klicks
+        document.querySelectorAll('.file').forEach(file => {
+            file.addEventListener('click', () => {
+                loadContent(file);
+            });
+        });
+
         // Animation für den Haupttitel
         const mainTitle = document.querySelector('.content-title');
         if (mainTitle) {
@@ -316,55 +375,53 @@
             fx.setText(mainTitle.textContent);
         }
 
-        // Füge diese Funktion zum vorhandenen File-Click-Event hinzu
-        const originalFileClick = document.querySelectorAll('.file').forEach;
-        document.querySelectorAll('.file').forEach(file => {
-            file.addEventListener('click', () => {
-                // Warte auf das Laden des iframes
-                setTimeout(() => {
-                    const iframe = document.querySelector('.content-frame');
-                    if (iframe) {
-                        iframe.onload = function () {
-                            try {
-                                // Zugriff auf den Inhalt des iframes
-                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        // Prüfe URL-Parameter und lade entsprechenden Inhalt
+        function checkUrlAndLoadContent() {
+            // URL-Parameter prüfen
+            const urlParams = new URLSearchParams(window.location.search);
+            const contentParam = urlParams.get('content');
 
-                                // CSS für Animation hinzufügen
-                                const styleElement = iframeDoc.createElement('style');
-                                styleElement.textContent = `
-                .scrambling {
-                  text-shadow: 0 0 12px currentColor;
-                }
-                h1 {
-                  text-shadow: 0 0 8px currentColor;
-                }
-              `;
-                                iframeDoc.head.appendChild(styleElement);
+            // Hash-Fragment prüfen (Alternative)
+            const hash = window.location.hash.substring(1);
 
-                                // Finde alle h1-Elemente und wende Animation an
-                                iframeDoc.querySelectorAll('h1').forEach(h1 => {
-                                    const originalText = h1.textContent;
-                                    const fx = new TextScramble(h1);
-
-                                    // Animation starten
-                                    setTimeout(() => {
-                                        fx.setText(originalText);
-                                    }, 500);
-
-                                    // Animation bei Klick wiederholen
-                                    h1.addEventListener('click', () => {
-                                        fx.setText(originalText);
-                                    });
-                                });
-                            } catch (e) {
-                                console.warn('Konnte nicht auf iframe-Inhalt zugreifen:', e);
-                            }
-                        };
+            if (contentParam) {
+                // Suche nach data-content
+                const fileElement = document.querySelector(`.file[data-content="${contentParam}"]`);
+                if (fileElement) {
+                    // Den übergeordneten Ordner öffnen
+                    const parentFolder = fileElement.closest('.folder');
+                    if (parentFolder) {
+                        parentFolder.classList.add('open');
                     }
-                }, 100);
-            });
-        });
+
+                    // Inhalt laden
+                    loadContent(fileElement);
+                    return true;
+                }
+            } else if (hash) {
+                // Versuche nach ID zu suchen
+                const fileElement = document.getElementById(hash);
+                if (fileElement && fileElement.classList.contains('file')) {
+                    // Den übergeordneten Ordner öffnen
+                    const parentFolder = fileElement.closest('.folder');
+                    if (parentFolder) {
+                        parentFolder.classList.add('open');
+                    }
+
+                    // Inhalt laden
+                    loadContent(fileElement);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Standardmäßig den ersten Ordner öffnen, wenn kein URL-Parameter gefunden wurde
+        if (!checkUrlAndLoadContent()) {
+            document.querySelector('.folder').classList.add('open');
+        }
     });
 </script>
-
+</body>
 </html>
