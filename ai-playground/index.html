@@ -180,6 +180,7 @@
         <div class="files">
             <div class="file" data-content="tech-demos/mengenlehreuhr.html">Mengenlehreuhr</div>
             <div class="file" data-content="tech-demos/mandelbrot.html">Mandelbrot</div>
+            <div class="file" data-content="tech-demos/story-code.html">Story Code</div>
         </div>
     </div>
 </div>
@@ -221,6 +222,10 @@
             const contentTitle = document.querySelector('.content-title');
             contentTitle.textContent = fileName;
 
+            // Animation für den aktualisierten Titel
+            const fx = new TextScramble(contentTitle);
+            fx.setText(fileName);
+
             // Container leeren und iframe erstellen
             const contentContainer = document.getElementById('content-container');
             contentContainer.innerHTML = `<iframe src="${filePath}" class="content-frame" title="${fileName}"></iframe>`;
@@ -231,4 +236,135 @@
     document.querySelector('.folder').classList.add('open');
 </script>
 </body>
+
+<script>
+    // TextScramble-Klasse
+    class TextScramble {
+        constructor(el) {
+            this.el = el;
+            this.chars = '!<>-_\\/[]{}—=+*^?#________';
+            this.update = this.update.bind(this);
+            this.revealSpeed = 1;
+            this.changeFrequency = 0.28;
+            this.highlightColor = '#7A7FBC';
+            this.glowIntensity = 8;
+            this.activeGlowIntensity = 12;
+        }
+
+        setText(newText) {
+            const oldText = this.el.innerText;
+            const length = Math.max(oldText.length, newText.length);
+            const promise = new Promise(resolve => this.resolve = resolve);
+            this.queue = [];
+
+            for (let i = 0; i < length; i++) {
+                const from = oldText[i] || '';
+                const to = newText[i] || '';
+                const start = Math.floor(Math.random() * 40);
+                const end = start + Math.floor(Math.random() * 40);
+                this.queue.push({from, to, start, end});
+            }
+
+            cancelAnimationFrame(this.frameRequest);
+            this.frame = 0;
+            this.update();
+            return promise;
+        }
+
+        update() {
+            let output = '';
+            let complete = 0;
+
+            for (let i = 0, n = this.queue.length; i < n; i++) {
+                let {from, to, start, end, char} = this.queue[i];
+
+                if (this.frame >= end) {
+                    complete++;
+                    output += to;
+                } else if (this.frame >= start) {
+                    if (!char || Math.random() < this.changeFrequency) {
+                        char = this.randomChar();
+                        this.queue[i].char = char;
+                    }
+                    output += `<span class="scrambling" style="color: ${this.highlightColor}; text-shadow: 0 0 ${this.activeGlowIntensity}px currentColor;">${char}</span>`;
+                } else {
+                    output += from;
+                }
+            }
+
+            this.el.innerHTML = output;
+
+            if (complete === this.queue.length) {
+                this.resolve();
+            } else {
+                this.frameRequest = requestAnimationFrame(this.update);
+                this.frame++;
+            }
+        }
+
+        randomChar() {
+            return this.chars[Math.floor(Math.random() * this.chars.length)];
+        }
+    }
+
+    // Script für die Animation des Haupttitels
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animation für den Haupttitel
+        const mainTitle = document.querySelector('.content-title');
+        if (mainTitle) {
+            const fx = new TextScramble(mainTitle);
+            fx.setText(mainTitle.textContent);
+        }
+
+        // Füge diese Funktion zum vorhandenen File-Click-Event hinzu
+        const originalFileClick = document.querySelectorAll('.file').forEach;
+        document.querySelectorAll('.file').forEach(file => {
+            file.addEventListener('click', () => {
+                // Warte auf das Laden des iframes
+                setTimeout(() => {
+                    const iframe = document.querySelector('.content-frame');
+                    if (iframe) {
+                        iframe.onload = function () {
+                            try {
+                                // Zugriff auf den Inhalt des iframes
+                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                                // CSS für Animation hinzufügen
+                                const styleElement = iframeDoc.createElement('style');
+                                styleElement.textContent = `
+                .scrambling {
+                  text-shadow: 0 0 12px currentColor;
+                }
+                h1 {
+                  text-shadow: 0 0 8px currentColor;
+                }
+              `;
+                                iframeDoc.head.appendChild(styleElement);
+
+                                // Finde alle h1-Elemente und wende Animation an
+                                iframeDoc.querySelectorAll('h1').forEach(h1 => {
+                                    const originalText = h1.textContent;
+                                    const fx = new TextScramble(h1);
+
+                                    // Animation starten
+                                    setTimeout(() => {
+                                        fx.setText(originalText);
+                                    }, 500);
+
+                                    // Animation bei Klick wiederholen
+                                    h1.addEventListener('click', () => {
+                                        fx.setText(originalText);
+                                    });
+                                });
+                            } catch (e) {
+                                console.warn('Konnte nicht auf iframe-Inhalt zugreifen:', e);
+                            }
+                        };
+                    }
+                }, 100);
+            });
+        });
+    });
+</script>
+
 </html>
