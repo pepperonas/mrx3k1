@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonk D Diskografie</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #2C2E3B;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1, h2 {
+            color: #ffffff;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        .col-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        .releases-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .releases-table th, .releases-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .releases-table th {
+            background-color: rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+        .releases-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .info-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .info-section p {
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .col-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Phonk D Diskografie</h1>
+        
+        <div class="info-section">
+            <p>Künstler: <strong>Phonk D</strong> (Darmstadt)</p>
+            <p>Daten aktualisiert: <strong>2025-04-05</strong></p>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="chart-container">
+                    <h2>Veröffentlichungen pro Jahr</h2>
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="chart-container">
+                    <h2>Label-Verteilung</h2>
+                    <canvas id="labelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="chart-container">
+                    <h2>Release-Typen</h2>
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="chart-container">
+                    <h2>BPM-Verteilung</h2>
+                    <canvas id="bpmChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h2>Releases Chronologisch</h2>
+                    <table class="releases-table">
+                        <thead>
+                            <tr>
+                                <th>Jahr</th>
+                                <th>Titel</th>
+                                <th>Typ</th>
+                                <th>Label</th>
+                                <th>BPM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releaseTableBody">
+                            <!-- Wird per JavaScript gefüllt -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Daten aus JSON konvertiert
+        const artistData = {
+            "artist": "Phonk D",
+            "data_retrieved_date": "2025-04-05",
+            "releases": [
+                {
+                    "title": "Cheek",
+                    "release_type": "Single / EP",
+                    "year": 2024,
+                    "bpm": 124,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Vida Boa",
+                    "release_type": "Single",
+                    "year": 2024,
+                    "bpm": 122,
+                    "label": null
+                },
+                {
+                    "title": "Medusa",
+                    "release_type": "Track on Compilation",
+                    "album_compilation": "10 Years Kurzweil",
+                    "year": 2024,
+                    "bpm": null,
+                    "label": "Kurzweil Music"
+                },
+                {
+                    "title": "Playground EP",
+                    "release_type": "EP",
+                    "year": 2023,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Collabo Collection #1",
+                    "release_type": "Single",
+                    "year": 2023,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Intestine City EP",
+                    "release_type": "EP",
+                    "year": 2023,
+                    "bpm": null,
+                    "label": "theBasement Discos"
+                },
+                {
+                    "title": "Make a Change",
+                    "release_type": "Track on Compilation",
+                    "album_compilation": "Footure Classics Vol. 3",
+                    "year": 2023,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Connie",
+                    "release_type": "Track on Single",
+                    "year": 2023,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Before Dawn",
+                    "release_type": "Single / EP",
+                    "year": 2022,
+                    "bpm": 123,
+                    "label": "Safe Trip"
+                },
+                {
+                    "title": "Gotta Get Away",
+                    "release_type": "Single",
+                    "year": 2022,
+                    "bpm": null,
+                    "label": "Exploited Club"
+                },
+                {
+                    "title": "Couple Therapy EP",
+                    "release_type": "EP",
+                    "year": 2020,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "I Can Show You (Better Than I Can Tell You) (Phonk D Edit)",
+                    "original_artist": "First Choice",
+                    "release_type": "Edit / Remix",
+                    "year": 2020,
+                    "bpm": 120,
+                    "label": "Salsoul Records"
+                },
+                {
+                    "title": "Another Love",
+                    "collaboration_with": ["Ise Jr.", "Sascha Ciminiera"],
+                    "release_type": "Single",
+                    "year": 2015,
+                    "bpm": null,
+                    "label": "Footjob"
+                },
+                {
+                    "title": "Darlin' Playa",
+                    "release_type": "Track on EP/Single",
+                    "year": 2016,
+                    "bpm": null,
+                    "label": "NDYD Records"
+                }
+            ],
+            "yearly_release_summary": {
+                "comment": "Counts based *only* on the releases listed above; actual numbers might be higher.",
+                "2024": 3,
+                "2023": 5,
+                "2022": 2,
+                "2020": 2,
+                "2016": 1,
+                "2015": 1
+            }
+        };
+
+        // Sortiere Releases nach Jahr (neueste zuerst)
+        const releasesByYear = artistData.releases.sort((a, b) => b.year - a.year);
+
+        // Extrahiere die Jahres-Zusammenfassung für das Balkendiagramm
+        const yearlyData = Object.entries(artistData.yearly_release_summary)
+            .filter(([year]) => year !== "comment")
+            .map(([year, count]) => ({ year: parseInt(year), count }))
+            .sort((a, b) => a.year - b.year);
+
+        // Label-Verteilung analysieren
+        const labelDistribution = {};
+        releasesByYear.forEach(release => {
+            const label = release.label || "Unbekannt";
+            labelDistribution[label] = (labelDistribution[label] || 0) + 1;
+        });
+
+        // Release-Typen analysieren
+        const releaseTypeDistribution = {};
+        releasesByYear.forEach(release => {
+            const type = release.release_type || "Unbekannt";
+            releaseTypeDistribution[type] = (releaseTypeDistribution[type] || 0) + 1;
+        });
+
+        // BPM-Daten extrahieren (nur für Einträge mit BPM-Werten)
+        const bpmData = releasesByYear
+            .filter(release => release.bpm)
+            .map(release => ({
+                title: release.title,
+                bpm: release.bpm,
+                year: release.year
+            }));
+
+        // Chart.js Farben
+        const chartColors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)',
+            'rgba(40, 159, 64, 0.7)',
+            'rgba(210, 199, 199, 0.7)',
+            'rgba(78, 52, 199, 0.7)',
+            'rgba(120, 120, 120, 0.7)'
+        ];
+
+        // Erstelle Jährliche Releases Chart
+        const yearlyChart = new Chart(
+            document.getElementById('yearlyChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: yearlyData.map(d => d.year),
+                    datasets: [{
+                        label: 'Anzahl Releases',
+                        data: yearlyData.map(d => d.count),
+                        backgroundColor: chartColors[0],
+                        borderColor: chartColors[0].replace('0.7', '1'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Erstelle Label-Verteilung Chart
+        const labelChart = new Chart(
+            document.getElementById('labelChart').getContext('2d'),
+            {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(labelDistribution),
+                    datasets: [{
+                        data: Object.values(labelDistribution),
+                        backgroundColor: chartColors.slice(0, Object.keys(labelDistribution).length),
+                        borderColor: chartColors.map(color => color.replace('0.7', '1')).slice(0, Object.keys(labelDistribution).length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#fff',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    }
+                }
+            }
+        );
+
+        // Erstelle Release-Typen Chart
+        const typeChart = new Chart(
+            document.getElementById('typeChart').getContext('2d'),
+            {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(releaseTypeDistribution),
+                    datasets: [{
+                        data: Object.values(releaseTypeDistribution),
+                        backgroundColor: chartColors.slice(0, Object.keys(releaseTypeDistribution).length),
+                        borderColor: chartColors.map(color => color.replace('0.7', '1')).slice(0, Object.keys(releaseTypeDistribution).length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#fff',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    }
+                }
+            }
+        );
+
+        // Erstelle BPM-Chart
+        const bpmChart = new Chart(
+            document.getElementById('bpmChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: bpmData.map(d => d.title),
+                    datasets: [{
+                        label: 'BPM',
+                        data: bpmData.map(d => d.bpm),
+                        backgroundColor: chartColors[3],
+                        borderColor: chartColors[3].replace('0.7', '1'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const track = bpmData[context.dataIndex];
+                                    return `Jahr: ${track.year}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            min: 115,
+                            max: 130,
+                            ticks: {
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Fülle Tabelle mit Releases
+        const tableBody = document.getElementById('releaseTableBody');
+        releasesByYear.forEach(release => {
+            const row = tableBody.insertRow();
+            row.insertCell(0).textContent = release.year;
+            row.insertCell(1).textContent = release.title;
+            row.insertCell(2).textContent = release.release_type || '-';
+            row.insertCell(3).textContent = release.label || 'Unbekannt';
+            row.insertCell(4).textContent = release.bpm || '-';
+        });
+    </script>
+</body>
+</html>
