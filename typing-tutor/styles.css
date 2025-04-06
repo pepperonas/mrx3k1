@@ -1,0 +1,412 @@
+:root {
+    --primary: #6B81CD;
+    --secondary: #3F72AF;
+    --accent: #4FC3B3;
+    --light: #CFD5E8;
+    --dark: #2C2E3B;
+    --success: #4caf50;
+    --error: #f44336;
+    --bg-dark: #1E2030;
+    --card-bg: #2C2E3B;
+    --key-bg: #3A3D52;
+    --key-active: #4FC3B3;
+    --key-highlight: #6B81CD;
+    --text-main: #FFFFFF;
+    --text-secondary: #B6B9C4;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.container {
+    width: 900px;
+    max-width: 95%;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    position: relative;
+}
+
+header {
+    text-align: center;
+    padding: 15px 0;
+    margin-bottom: 20px;
+    color: var(--accent);
+    border-bottom: 2px solid var(--bg-dark);
+}
+
+.game-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.stat {
+    text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: var(--bg-dark);
+    min-width: 120px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.text-display {
+    background-color: var(--bg-dark);
+    border-radius: 5px;
+    padding: 20px;
+    font-size: 24px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+}
+
+.current-text {
+    position: relative;
+    letter-spacing: 1px;
+}
+
+.current-character {
+    background-color: var(--accent);
+    color: var(--bg-dark);
+    animation: pulse 1s infinite;
+}
+
+.correct-character {
+    color: var(--success);
+}
+
+.incorrect-character {
+    color: var(--error);
+    text-decoration: underline;
+}
+
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 30px;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.key {
+    width: 50px;
+    height: 50px;
+    background-color: var(--key-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+    cursor: default;
+    position: relative;
+    transition: all 0.1s;
+    color: var(--text-main);
+}
+
+.key-wide {
+    width: 100px;
+}
+
+.key-extra-wide {
+    width: 200px;
+}
+
+.key-active {
+    background-color: var(--key-active);
+    color: var(--bg-dark);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.key-highlight {
+    background-color: var(--key-highlight);
+    color: var(--text-main);
+    animation: pulse 1s infinite;
+}
+
+.finger-hint {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.finger-1 {
+    background-color: #FF5252;
+}
+
+/* Kleiner Finger links */
+.finger-2 {
+    background-color: #FF9800;
+}
+
+/* Ringfinger links */
+.finger-3 {
+    background-color: #FFEB3B;
+}
+
+/* Mittelfinger links */
+.finger-4 {
+    background-color: #4CAF50;
+}
+
+/* Zeigefinger links */
+.finger-5 {
+    background-color: #2196F3;
+}
+
+/* Daumen */
+.finger-6 {
+    background-color: #4CAF50;
+}
+
+/* Zeigefinger rechts */
+.finger-7 {
+    background-color: #FFEB3B;
+}
+
+/* Mittelfinger rechts */
+.finger-8 {
+    background-color: #FF9800;
+}
+
+/* Ringfinger rechts */
+.finger-9 {
+    background-color: #FF5252;
+}
+
+/* Kleiner Finger rechts */
+
+.hand-diagram {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 720px;
+    padding: 10px;
+    background-color: var(--bg-dark);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.3s;
+    display: none;
+    color: var(--text-main);
+}
+
+.hand-diagram img {
+    width: 100%;
+}
+
+.level-indicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: var(--primary);
+    color: var(--text-main);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.progress-container {
+    width: 100%;
+    height: 10px;
+    background-color: var(--bg-dark);
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 5px;
+    background-color: var(--accent);
+    width: 0%;
+    transition: width 0.5s;
+}
+
+.level-complete {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(44, 46, 59, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.level-complete.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.level-complete h2 {
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: 20px;
+}
+
+.stats-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.level-stat {
+    text-align: center;
+    font-size: 18px;
+}
+
+.level-stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.next-level-btn {
+    padding: 10px 20px;
+    background-color: var(--accent);
+    color: var(--dark);
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.next-level-btn:hover {
+    background-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.restart-btn, .help-btn {
+    position: absolute;
+    top: 20px;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.restart-btn {
+    left: 20px;
+}
+
+.help-btn {
+    left: 100px;
+}
+
+.restart-btn:hover, .help-btn:hover {
+    background-color: var(--accent);
+    color: var(--dark);
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Animationen für Game-Elemente */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.game-element {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.bounce {
+    animation: bounce 0.5s;
+}
+
+/* Konfetti Animation für Level-Up */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #f00;
+    opacity: 0;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(500px) rotate(360deg);
+        opacity: 0;
+    }
+}
