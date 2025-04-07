@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martin Pfeffer - Entwickler, IT-Sicherheitsexperte & DSB</title>
+    <style>
+        :root {
+            --primary: #2C2E3B;
+            --secondary: #3b3d52;
+            --accent: #4f9da6;
+            --text: #f5f5f5;
+            --text-secondary: #bbbbbb;
+            --highlight: #5cbbcf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--primary);
+        }
+
+        header {
+            background-color: var(--primary);
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .profile-pic {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text);
+            border: 4px solid var(--highlight);
+        }
+
+        .name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        nav {
+            background-color: var(--secondary);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links li a:hover {
+            color: var(--highlight);
+        }
+
+        section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--highlight);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 50px;
+            height: 3px;
+            background-color: var(--highlight);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .about-text p {
+            margin-bottom: 1rem;
+        }
+
+        .about-info {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: var(--highlight);
+        }
+
+        .experience-item {
+            margin-bottom: 2rem;
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .experience-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .experience-title {
+            color: var(--highlight);
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .experience-company {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .skill-category {
+            flex: 1;
+            min-width: 250px;
+            background-color: var(--secondary);
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .skill-category h3 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .skill-list li::before {
+            content: '•';
+            color: var(--highlight);
+            position: absolute;
+            left: 0;
+            font-size: 1.5rem;
+            line-height: 1;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .profiles-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .profile-card {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .profile-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--highlight);
+        }
+
+        .profile-card h3 {
+            margin-bottom: 1rem;
+        }
+
+        .profile-card a {
+            color: var(--highlight);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .profile-card a:hover {
+            color: var(--text);
+        }
+
+        .expectations {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+
+        .expectations h3 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        .expectations-list {
+            list-style: none;
+        }
+
+        .expectations-list li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .expectations-list li::before {
+            content: '→';
+            color: var(--highlight);
+            position: absolute;
+            left: 0;
+        }
+
+        footer {
+            background-color: var(--secondary);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .contact-info {
+            margin-bottom: 1rem;
+        }
+
+        .contact-info p {
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-label {
+            font-weight: bold;
+            color: var(--highlight);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--accent);
+            color: var(--text);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--highlight);
+        }
+
+        @media (max-width: 768px) {
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links li a {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<header id="home">
+    <div class="header-content">
+        <div class="profile-info">
+            <div class="profile-pic">MP</div>
+            <div>
+                <h1 class="name">Martin Pfeffer</h1>
+                <p class="title">Entwickler, IT-Sicherheitsexperte & Datenschutzbeauftragter</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-container">
+        <ul class="nav-links">
+            <li><a href="#home">Start</a></li>
+            <li><a href="#about">Über mich</a></li>
+            <li><a href="#experience">Erfahrung</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#profiles">Profile</a></li>
+            <li><a href="#contact">Kontakt</a></li>
+        </ul>
+    </div>
+</nav>
+
+<section id="about">
+    <h2 class="section-title">Über mich</h2>
+    <div class="about-content">
+        <div class="about-text">
+            <p>Als erfahrener Java-Entwickler mit Fokus auf Android seit über 10 Jahren bringe ich
+                umfassende Expertise in der Entwicklung robuster und benutzerfreundlicher
+                Anwendungen mit. Meine Leidenschaft für Softwareentwicklung geht weit über meinen
+                Beruf hinaus - sie ist Teil meiner Identität und spiegelt sich in zahlreichen
+                Open-Source-Projekten wider, die ich in meiner Freizeit entwickle.</p>
+            <p>Neben meiner Entwicklertätigkeit bringe ich fundiertes Wissen im Bereich
+                IT-Sicherheit und Datenschutz mit, was mir einen ganzheitlichen Blick auf digitale
+                Lösungen ermöglicht. Als selbstständiger Berater helfe ich Kunden, ihre Web-Präsenz
+                zu optimieren und ihre IT-Infrastruktur sicher zu gestalten.</p>
+            <p>Ich suche nach neuen Herausforderungen, bei denen ich meine technischen Fähigkeiten
+                und mein Expertenwissen gewinnbringend einsetzen kann.</p>
+        </div>
+        <div class="about-info">
+            <div class="info-item">
+                <span class="info-label">Name:</span> Martin Pfeffer
+            </div>
+            <div class="info-item">
+                <span class="info-label">Alter:</span> 36 Jahre
+            </div>
+            <div class="info-item">
+                <span class="info-label">Wohnort:</span> Berlin
+            </div>
+            <div class="info-item">
+                <span class="info-label">Spezialisierung:</span> Java-Entwicklung (Android),
+                IT-Sicherheit, Datenschutz
+            </div>
+            <div class="info-item">
+                <span class="info-label">Berufserfahrung:</span> 10+ Jahre
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="experience">
+    <h2 class="section-title">Berufserfahrung</h2>
+    <div class="experience-item">
+        <h3 class="experience-title">Anwendungsentwickler & Datenschutzkoordinator</h3>
+        <p class="experience-company">Intertek, Darmstadt | 7 Jahre</p>
+        <p>Als Anwendungsentwickler bei Intertek übernahm ich die Projektverantwortung für mehrere
+            wichtige Anwendungen. Ich entwickelte von Grund auf:</p>
+        <ul class="skill-list">
+            <li>Eine App zur Erfassung von Fahrzeug- und Routendaten</li>
+            <li>Eine App zur Erfassung von Werkstattaufträgen</li>
+        </ul>
+        <p>Zusätzlich zu meinen Entwicklungsaufgaben war ich für die Datenbank- und
+            Backend-Infrastruktur verantwortlich und übernahm ab 2020 zusätzlich die Rolle des
+            Datenschutzbeauftragten.</p>
+    </div>
+    <div class="experience-item">
+        <h3 class="experience-title">Selbstständiger Entwickler & IT-Berater</h3>
+        <p class="experience-company">celox.io | Seit mehreren Jahren</p>
+        <p>In meiner Selbstständigkeit erstelle ich aussagekräftige Webseiten für meine Kunden und
+            biete umfassende Beratung zu IT und IT-Sicherheit an.</p>
+        <p>Ich setze auf moderne Technologien und ansprechende Designs, um meinen Kunden einen
+            echten Mehrwert zu bieten und ihre digitale Präsenz zu optimieren.</p>
+    </div>
+    <div class="experience-item">
+        <h3 class="experience-title">Open-Source-Entwickler</h3>
+        <p class="experience-company">Eigene Projekte | Kontinuierlich</p>
+        <p>Aus Leidenschaft für die Softwareentwicklung habe ich diverse Projekte in meiner Freizeit
+            erstellt und als Open-Source zur Verfügung gestellt. Mein neuestes Projekt ist
+            "Zauberkoch", eine KI-basierte Lösung zur Erstellung von Koch- und
+            Cocktail-Rezepten.</p>
+    </div>
+</section>
+
+<section id="skills">
+    <h2 class="section-title">Fachliche Kompetenzen</h2>
+    <div class="skills-container">
+        <div class="skill-category">
+            <h3>Programmiersprachen</h3>
+            <ul class="skill-list">
+                <li>Java (Android, Spring Boot 3)</li>
+                <li>JavaScript</li>
+                <li>PHP</li>
+            </ul>
+        </div>
+        <div class="skill-category">
+            <h3>Frameworks & Bibliotheken</h3>
+            <ul class="skill-list">
+                <li>Vaadin</li>
+                <li>JavaFX</li>
+                <li>React</li>
+                <li>Node.js</li>
+                <li>Laravel</li>
+            </ul>
+        </div>
+        <div class="skill-category">
+            <h3>Build & Versionierung</h3>
+            <ul class="skill-list">
+                <li>Maven</li>
+                <li>Gradle</li>
+                <li>Git</li>
+            </ul>
+        </div>
+        <div class="skill-category">
+            <h3>Datenbanken</h3>
+            <ul class="skill-list">
+                <li>MySQL</li>
+                <li>SQLite</li>
+                <li>MongoDB</li>
+            </ul>
+        </div>
+        <div class="skill-category">
+            <h3>Webtechnologien</h3>
+            <ul class="skill-list">
+                <li>HTML</li>
+                <li>CSS</li>
+                <li>JavaScript</li>
+            </ul>
+        </div>
+        <div class="skill-category">
+            <h3>Sicherheit & Datenschutz</h3>
+            <ul class="skill-list">
+                <li>IT-Sicherheit</li>
+                <li>Datenschutz</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section id="profiles">
+    <h2 class="section-title">Online-Profile & Projekte</h2>
+    <div class="profiles-container">
+        <div class="profile-card">
+            <div class="profile-icon">🔍</div>
+            <h3>Stack Overflow</h3>
+            <p>Fragen & Antworten rund um Programmierung</p>
+            <a href="https://stackoverflow.com/users/2533290/martin-pfeffer" target="_blank">Profil
+                ansehen</a>
+        </div>
+        <div class="profile-card">
+            <div class="profile-icon">💻</div>
+            <h3>GitHub</h3>
+            <p>Open-Source-Projekte & Beiträge</p>
+            <a href="https://github.com/pepperonas" target="_blank">Profil ansehen</a>
+        </div>
+        <div class="profile-card">
+            <div class="profile-icon">🚀</div>
+            <h3>celox.io</h3>
+            <p>Meine freiberufliche Tätigkeit</p>
+            <a href="https://celox.io" target="_blank">Website besuchen</a>
+        </div>
+        <div class="profile-card">
+            <div class="profile-icon">🧙‍♂️</div>
+            <h3>Zauberkoch</h3>
+            <p>KI-basierte Koch- & Cocktail-Rezepte</p>
+            <a href="https://zauberkoch.com" target="_blank">Projekt ansehen</a>
+        </div>
+    </div>
+
+    <div class="expectations">
+        <h3>Erwartungen an meine nächste Position</h3>
+        <ul class="expectations-list">
+            <li>Gehaltsvorstellung: 80.000€ brutto</li>
+            <li>Bevorzugte Betriebssysteme: macOS / Linux</li>
+            <li>Flexible Arbeitsumgebung: Remote-Tätigkeit gewünscht (oder Hund am Arbeitsplatz
+                erlaubt)
+            </li>
+        </ul>
+    </div>
+</section>
+
+<footer id="contact">
+    <div class="footer-content">
+        <div class="contact-info">
+            <p><span class="contact-label">Adresse:</span> Flughafenstraße 24, 12053 Berlin</p>
+            <p><span class="contact-label">E-Mail:</span> martin.pfeffer@celox,io</p>
+            <p><span class="contact-label">Telefon:</span> +49 123 456789</p>
+        </div>
+        <p>&copy; 2025 Martin Pfeffer. Alle Rechte vorbehalten.</p>
+    </div>
+</footer>
+
+<a href="#home" class="back-to-top">↑</a>
+</body>
+</html>

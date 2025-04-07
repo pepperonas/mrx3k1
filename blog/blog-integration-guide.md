@@ -1,8 +1,10 @@
 # Dokumentation: Neue Beiträge im IT-Blog-Framework integrieren
 
-Diese Anleitung beschreibt den Prozess, wie du neue Blogbeiträge in deinem IT-Blog-Framework erstellst und integrierst.
+Diese Anleitung beschreibt den Prozess, wie du neue Blogbeiträge in deinem IT-Blog-Framework
+erstellst und integrierst.
 
 ## Inhaltsverzeichnis
+
 1. [Voraussetzungen](#voraussetzungen)
 2. [Dateisystem und Struktur](#dateisystem-und-struktur)
 3. [Methode 1: Manuelles Erstellen eines Beitrags](#methode-1-manuelles-erstellen-eines-beitrags)
@@ -33,13 +35,16 @@ Dein Blog-Framework verwendet folgende Struktur für Beiträge:
       beitrag1.md
 ```
 
-Jeder Blogbeitrag ist eine Markdown-Datei (`.md`) und wird in einem der drei Kategorieordner abgelegt.
+Jeder Blogbeitrag ist eine Markdown-Datei (`.md`) und wird in einem der drei Kategorieordner
+abgelegt.
 
 ## Methode 1: Manuelles Erstellen eines Beitrags
 
 ### Schritt 1: Erstelle eine neue Markdown-Datei
 
-Erstelle eine neue Datei mit der Endung `.md` im entsprechenden Kategorieordner. Der Dateiname sollte:
+Erstelle eine neue Datei mit der Endung `.md` im entsprechenden Kategorieordner. Der Dateiname
+sollte:
+
 - Nur Kleinbuchstaben enthalten
 - Keine Umlaute oder Sonderzeichen enthalten
 - Leerzeichen durch Bindestriche ersetzen
@@ -61,6 +66,7 @@ tags: ["Docker", "Container", "DevOps", "Virtualisierung"]
 ```
 
 Der Frontmatter muss folgende Felder enthalten:
+
 - `title`: Der Titel des Beitrags (in Anführungszeichen)
 - `date`: Das Datum im Format YYYY-MM-DD
 - `excerpt`: Eine kurze Zusammenfassung (1-2 Sätze)
@@ -88,6 +94,7 @@ docker run -d -p 80:80 nginx
 ## Fazit
 
 Docker-Container bieten zahlreiche Vorteile...
+
 ```
 
 ## Methode 2: Verwendung des Hilfsskripts
@@ -104,6 +111,7 @@ node utils/create-post.js
 ### Schritt 2: Angaben ausfüllen
 
 Das Script fragt dich nach:
+
 - Kategorie (ai, development, it-security)
 - Titel des Beitrags
 - Kurzbeschreibung (Excerpt)
@@ -111,7 +119,8 @@ Das Script fragt dich nach:
 
 ### Schritt 3: Inhalt hinzufügen
 
-Das Script erstellt eine Markdown-Datei mit dem Frontmatter. Öffne die erzeugte Datei und füge den Beitragsinhalt hinzu.
+Das Script erstellt eine Markdown-Datei mit dem Frontmatter. Öffne die erzeugte Datei und füge den
+Beitragsinhalt hinzu.
 
 ## Methode 3: KI-generierte Beiträge
 
@@ -125,7 +134,7 @@ Verwende die bereitgestellte Promptvorlage und sende sie an eine KI (z.B. Claude
 Erstelle einen ausführlichen und informativen Blogbeitrag im Markdown-Format für meine IT-Website zu folgendem Thema:
 
 ### Thema:
-[THEMA HIER EINFÜGEN, z.B. "Einführung in Docker-Container"]
+[THEMA_HIER_EINFÜGEN]
 
 ### Kategorie (eine auswählen):
 - ai
@@ -205,17 +214,17 @@ rsync -avz pfad/zu/lokalem/posts/ user@dein-server.de:/var/www/html/blog/blog-fr
 
 - Überprüfe, ob die Markdown-Datei im richtigen Kategorieordner liegt
 - Stelle sicher, dass das Frontmatter korrekt formatiert ist:
-  - Drei Bindestriche (`---`) am Anfang und Ende
-  - Keine zusätzlichen Leerzeichen beim Frontmatter
-  - Das Datum im korrekten Format (YYYY-MM-DD)
+    - Drei Bindestriche (`---`) am Anfang und Ende
+    - Keine zusätzlichen Leerzeichen beim Frontmatter
+    - Das Datum im korrekten Format (YYYY-MM-DD)
 - Prüfe die Berechtigungen der Datei auf dem Server
 
 ### Formatierung wird nicht korrekt angezeigt
 
 - Überprüfe die Markdown-Syntax:
-  - Überschriften mit # (und Leerzeichen danach)
-  - Codeblöcke mit drei Backticks (```)
-  - Listen mit - oder 1. (und Leerzeichen danach)
+    - Überschriften mit # (und Leerzeichen danach)
+    - Codeblöcke mit drei Backticks (```)
+    - Listen mit - oder 1. (und Leerzeichen danach)
 
 ### Server-Neustart nach Änderungen
 
@@ -232,4 +241,6 @@ npm start
 
 ---
 
-Mit dieser Anleitung solltest du problemlos neue Beiträge zu deinem IT-Blog hinzufügen können. Bei weiteren Fragen oder Problemen konsultiere die Logs im `/logs`-Verzeichnis oder wende dich an den Systemadministrator.
+Mit dieser Anleitung solltest du problemlos neue Beiträge zu deinem IT-Blog hinzufügen können. Bei
+weiteren Fragen oder Problemen konsultiere die Logs im `/logs`-Verzeichnis oder wende dich an den
+Systemadministrator.
