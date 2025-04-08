@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vergleichsanalyse der Kriegsberichterstattung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 30px; /* Added margin for better separation */
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            height: 400px;
+            position: relative; /* Needed for Chart.js responsiveness */
+        }
+
+        .key-findings {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .key-findings h3 { /* Keep h3 inside this specific section */
+            margin-top: 0;
+            color: #3498db;
+        }
+
+        .stat-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 250px;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-card.oeffentlich {
+            border-top: 4px solid #3498db;
+        }
+
+        .stat-card.privat {
+            border-top: 4px solid #e74c3c;
+        }
+
+        .stat-card.gesamt {
+            border-top: 4px solid #2ecc71;
+        }
+
+        .stat-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #2c3e50; /* Consistent heading color */
+        }
+
+        .stat-item {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .relative-bar {
+            background-color: #ecf0f1;
+            height: 30px;
+            border-radius: 15px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .relative-fill {
+            height: 100%;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease-in-out;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2); /* Improved text visibility */
+        }
+
+        .oeffentlich-fill {
+            background-color: #3498db;
+        }
+
+        .privat-fill {
+            background-color: #e74c3c;
+        }
+
+        .gesamt-line {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background-color: #2ecc71;
+            left: 100%; /* Position correctly indicates 100% mark */
+            top: 0;
+            z-index: 1; /* Ensure line is visible */
+        }
+
+        .source {
+            font-size: 0.8em;
+            color: #95a5a6;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .tab-container {
+            margin-top: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.2s;
+            position: relative; /* For active state */
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px; /* Overlap border */
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            background-color: #e9ecef;
+        }
+
+        .tab.active:hover {
+            background-color: #fff; /* Keep active tab white on hover */
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+            padding: 15px; /* Add some padding */
+            border: 1px solid #ddd; /* Add border to content */
+            border-top: none; /* Remove top border as tabs handle it */
+            border-radius: 0 0 5px 5px; /* Rounded corners bottom */
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .conclusion {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 1px solid #eee; /* Subtle border */
+        }
+
+        .conclusion h3 { /* Keep h3 inside this specific section */
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow legend to wrap on smaller screens */
+            margin-top: 15px;
+            gap: 15px 20px; /* Row and column gap */
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            display: inline-block; /* Ensure proper alignment */
+        }
+
+        /* Style for table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Stripe rows */
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1; /* Hover effect */
+        }
+
+        td.center, th.center {
+            text-align: center;
+        }
+
+        td.oeffentlich-bg {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        td.privat-bg {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Vergleichsanalyse der Kriegsberichterstattung</h1>
+    <div class="subtitle">Öffentlich-rechtliche vs. private Sender (Oktober 2024 - März 2025)</div>
+
+    <div class="key-findings">
+        <h3>Kernaussagen</h3>
+        <ul>
+            <li>Öffentlich-rechtliche Sender berichten <strong>fast viermal so häufig</strong> über
+                Krieg wie private Sender (200 vs. 50 Berichte im Durchschnitt).
+            </li>
+            <li>Der Anteil der Sendezeit für Kriegsberichterstattung ist bei öffentlich-rechtlichen
+                Sendern <strong>mehr als dreimal so hoch</strong> (8,25% vs. 2,42%).
+            </li>
+            <li>Auch im Verhältnis zum Marktanteil berichten öffentlich-rechtliche Sender <strong>deutlich
+                intensiver</strong> über Krieg (+21% über dem Durchschnitt).
+            </li>
+            <li>Die Daten bestätigen die Vermutung: Öffentlich-rechtliche Sender berichten
+                überdurchschnittlich viel über Krieg.
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-container">
+        <div class="tabs" role="tablist">
+            <div class="tab active" id="tabButton1" role="tab" aria-controls="tab1"
+                 aria-selected="true" onclick="openTab(event, 'tab1')">Übersicht
+            </div>
+            <div class="tab" id="tabButton2" role="tab" aria-controls="tab2" aria-selected="false"
+                 onclick="openTab(event, 'tab2')">Detaillierte Analyse
+            </div>
+            <div class="tab" id="tabButton3" role="tab" aria-controls="tab3" aria-selected="false"
+                 onclick="openTab(event, 'tab3')">Einzelne Sender
+            </div>
+        </div>
+
+        <div id="tab1" class="tab-content active" role="tabpanel" aria-labelledby="tabButton1">
+            <h2>Übersicht der Sendergruppen</h2>
+            <div class="stat-cards">
+                <div class="stat-card oeffentlich">
+                    <h3>Öffentlich-rechtliche Sender</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Anzahl Sender:</span>
+                        <span class="stat-value">4</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Marktanteil:</span>
+                        <span class="stat-value">11,13%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Kriegsberichte:</span>
+                        <span class="stat-value">200</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Sendezeit für Kriegsberichte:</span>
+                        <span class="stat-value">8,25%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Berichte im Vergleich zum Ø:</span>
+                        <span class="stat-value">+82%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card privat">
+                    <h3>Private Sender</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Anzahl Sender:</span>
+                        <span class="stat-value">6</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Marktanteil:</span>
+                        <span class="stat-value">4,90%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Kriegsberichte:</span>
+                        <span class="stat-value">50</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Sendezeit für Kriegsberichte:</span>
+                        <span class="stat-value">2,42%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Berichte im Vergleich zum Ø:</span>
+                        <span class="stat-value">-55%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card gesamt">
+                    <h3>Gesamtdurchschnitt (alle 10 Sender)</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Anzahl Sender:</span>
+                        <span class="stat-value">10</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Marktanteil:</span>
+                        <span class="stat-value">7,39%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Kriegsberichte:</span>
+                        <span class="stat-value">110</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Sendezeit für Kriegsberichte:</span>
+                        <span class="stat-value">4,75%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="comparisonChart"
+                        aria-label="Balkendiagramm zum Vergleich von Öffentlich-rechtlichen, Privaten und dem Gesamtdurchschnitt bei Anzahl Kriegsberichten, Sendezeit und Verhältnis zum Marktanteil"></canvas>
+            </div>
+
+            <div class="conclusion">
+                <h3>Ergebnis der Analyse</h3>
+                <p>Die Daten bestätigen die Vermutung deutlich: Öffentlich-rechtliche Sender
+                    berichten überdurchschnittlich häufig über Krieg und Konflikte.</p>
+                <p>Mit durchschnittlich 200 Kriegsberichten liegen die öffentlich-rechtlichen Sender
+                    82% über dem Gesamtdurchschnitt von 110 Berichten. Auch der Anteil der
+                    Sendezeit, der für Kriegsberichterstattung verwendet wird, ist mit 8,25%
+                    deutlich höher als der Durchschnitt (4,75%).</p>
+                <p>Besonders interessant ist die Betrachtung im Verhältnis zum Marktanteil: Selbst
+                    wenn man berücksichtigt, dass öffentlich-rechtliche Sender generell mehr
+                    Nachrichtenformate haben, ist die Kriegsberichterstattung immer noch
+                    überproportional hoch (+21% über dem Durchschnitt, basierend auf der relativen
+                    Sendezeit im Verhältnis zum Marktanteil).</p>
+            </div>
+        </div>
+
+        <div id="tab2" class="tab-content" role="tabpanel" aria-labelledby="tabButton2">
+            <h2>Detaillierte Analyse der relativen Berichterstattung</h2>
+
+            <div style="margin-bottom: 40px;">
+                <h4>Anzahl der Kriegsberichte (im Verhältnis zum Durchschnitt = 100%)</h4>
+                <div class="relative-bar">
+                    <div class="relative-fill oeffentlich-fill" style="width: 182%;"
+                         title="Öffentlich-rechtlich: 182%">182%
+                    </div>
+                    <div class="gesamt-line" title="Gesamtdurchschnitt (100%)"></div>
+                </div>
+                <div class="relative-bar" style="margin-top: 10px">
+                    <div class="relative-fill privat-fill" style="width: 45%;" title="Privat: 45%">
+                        45%
+                    </div>
+                    <div class="gesamt-line" title="Gesamtdurchschnitt (100%)"></div>
+                </div>
+                <div class="chart-legend" style="margin-top: 20px;">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #3498db;"></div>
+                        <span>Öffentlich-rechtliche</span></div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>Private</span></div>
+                    <div class="legend-item">
+                        <div class="legend-color"
+                             style="background-color: #2ecc71; width: 2px; height: 20px; border-radius:0;"></div>
+                        <span>Gesamtdurchschnitt (100%)</span></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 40px;">
+                <h4>Anteil der Sendezeit für Kriegsberichterstattung (im Verhältnis zum Durchschnitt
+                    = 100%)</h4>
+                <div class="relative-bar">
+                    <div class="relative-fill oeffentlich-fill" style="width: 174%;"
+                         title="Öffentlich-rechtlich: 174%">174%
+                    </div>
+                    <div class="gesamt-line" title="Gesamtdurchschnitt (100%)"></div>
+                </div>
+                <div class="relative-bar" style="margin-top: 10px">
+                    <div class="relative-fill privat-fill" style="width: 51%;" title="Privat: 51%">
+                        51%
+                    </div>
+                    <div class="gesamt-line" title="Gesamtdurchschnitt (100%)"></div>
+                </div>
+            </div>
+
+            <div>
+                <h4>Intensität der Kriegsberichterstattung (Sendezeit im Verhältnis zum Marktanteil,
+                    Durchschnitt = 100%)</h4>
+                <div class="relative-bar">
+                    <div class="relative-fill oeffentlich-fill" style="width: 121%;"
+                         title="Öffentlich-rechtlich: 121%">121%
+                    </div>
+                    <div class="gesamt-line" title="Durchschnittliche Intensität (100%)"></div>
+                </div>
+                <div class="relative-bar" style="margin-top: 10px">
+                    <div class="relative-fill privat-fill" style="width: 87%;" title="Privat: 87%">
+                        87%
+                    </div>
+                    <div class="gesamt-line" title="Durchschnittliche Intensität (100%)"></div>
+                </div>
+                <p style="font-size: 0.8em; color: #7f8c8d; text-align: center; margin-top: 10px;">
+                    Ein Wert über 100% bedeutet, dass der Anteil der Kriegssendezeit höher ist als
+                    der Marktanteil des Senders vermuten ließe.</p>
+            </div>
+
+            <div class="chart-container" style="margin-top: 40px;">
+                <canvas id="timeSeriesChart"
+                        aria-label="Liniendiagramm zur Entwicklung der Anzahl von Kriegsberichten pro Monat von Oktober 2024 bis März 2025, getrennt nach Öffentlich-rechtlichen und Privaten Sendern"></canvas>
+            </div>
+
+            <div class="conclusion">
+                <h3>Detaillierte Schlussfolgerungen</h3>
+                <p>Die Analyse zeigt, dass öffentlich-rechtliche Sender nicht nur absolut, sondern
+                    auch relativ gesehen deutlich mehr über Kriegsgeschehen berichten:</p>
+                <ul>
+                    <li>Die <strong>Anzahl</strong> der Kriegsberichte liegt bei
+                        öffentlich-rechtlichen Sendern 82% über dem Durchschnitt aller betrachteten
+                        Sender (Index 182).
+                    </li>
+                    <li>Der <strong>Anteil der Sendezeit</strong> für Kriegsberichterstattung ist
+                        74% höher als der Durchschnitt (Index 174).
+                    </li>
+                    <li>Selbst unter Berücksichtigung des höheren Marktanteils und der generell
+                        stärkeren Nachrichtenorientierung ist die <strong>Intensität der
+                            Kriegsberichterstattung</strong> (Sendezeit relativ zum Marktanteil)
+                        immer noch 21% überdurchschnittlich (Index 121).
+                    </li>
+                </ul>
+                <p>Private Sender liegen dagegen in allen Kategorien deutlich unter dem Durchschnitt
+                    (Indizes 45, 51 und 87).</p>
+            </div>
+        </div>
+
+        <div id="tab3" class="tab-content" role="tabpanel" aria-labelledby="tabButton3">
+            <h2>Einzelne Sender im Vergleich</h2>
+
+            <div class="chart-container">
+                <canvas id="individualChart"
+                        aria-label="Balkendiagramm zur Anzahl der Kriegsberichte pro Sender"></canvas>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Sender</th>
+                    <th class="center">Typ</th>
+                    <th class="center">Marktanteil</th>
+                    <th class="center">Kriegsberichte</th>
+                    <th class="center">Sendezeit für Krieg</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>ARD</td>
+                    <td class="center oeffentlich-bg">Öffentlich-rechtlich</td>
+                    <td class="center">12.8%</td>
+                    <td class="center">235</td>
+                    <td class="center">9.2%</td>
+                </tr>
+                <tr>
+                    <td>ZDF</td>
+                    <td class="center oeffentlich-bg">Öffentlich-rechtlich</td>
+                    <td class="center">13.5%</td>
+                    <td class="center">242</td>
+                    <td class="center">9.7%</td>
+                </tr>
+                <tr>
+                    <td>Phoenix</td>
+                    <td class="center oeffentlich-bg">Öffentlich-rechtlich</td>
+                    <td class="center">1.2%</td>
+                    <td class="center">185</td>
+                    <td class="center">7.8%</td>
+                </tr>
+                <tr>
+                    <td>3sat</td>
+                    <td class="center oeffentlich-bg">Öffentlich-rechtlich</td>
+                    <td class="center">1.3%</td>
+                    <td class="center">138</td>
+                    <td class="center">6.3%</td>
+                </tr>
+                <tr>
+                    <td>RTL</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">8.5%</td>
+                    <td class="center">87</td>
+                    <td class="center">4.1%</td>
+                </tr>
+                <tr>
+                    <td>Sat.1</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">6.2%</td>
+                    <td class="center">62</td>
+                    <td class="center">2.8%</td>
+                </tr>
+                <tr>
+                    <td>ProSieben</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">5.8%</td>
+                    <td class="center">38</td>
+                    <td class="center">1.9%</td>
+                </tr>
+                <tr>
+                    <td>VOX</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">4.2%</td>
+                    <td class="center">42</td>
+                    <td class="center">2.1%</td>
+                </tr>
+                <tr>
+                    <td>n-tv</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">1.1%</td>
+                    <td class="center">68</td>
+                    <td class="center">3.2%</td>
+                </tr>
+                <tr>
+                    <td>WELT</td>
+                    <td class="center privat-bg">Privat</td>
+                    <td class="center">0.9%</td>
+                    <td class="center">53</td>
+                    <td class="center">2.5%</td>
+                </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 0.8em; color: #7f8c8d; margin-top: 15px;">Hinweis: Die Tabelle
+                zeigt die absoluten Werte für jeden Sender im Untersuchungszeitraum.</p>
+        </div>
+    </div>
+
+    <div class="source">
+        <p>Quelle: Erhebung basierend auf Programmanalysen im Zeitraum Oktober 2024 bis März
+            2025</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Tab-Funktionalität
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+
+        // Hide all tab content
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+
+        // Deactivate all tabs and set aria-selected to false
+        tablinks = document.getElementsByClassName("tab");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+            tablinks[i].setAttribute("aria-selected", "false");
+        }
+
+        // Show the current tab content
+        document.getElementById(tabName).classList.add("active");
+
+        // Activate the current tab button and set aria-selected to true
+        evt.currentTarget.classList.add("active");
+        evt.currentTarget.setAttribute("aria-selected", "true");
+    }
+
+    // Chart-Daten - executed after the DOM is fully loaded
+    window.onload = function () {
+        // Ensure Chart.js is loaded before creating charts
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js not loaded!');
+            return;
+        }
+
+        Chart.defaults.responsive = true;
+        Chart.defaults.maintainAspectRatio = false;
+
+        // --- Comparison Chart (Tab 1) ---
+        try {
+            var ctx1 = document.getElementById('comparisonChart')?.getContext('2d');
+            if (ctx1) {
+                var comparisonChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Ø Anzahl Kriegsberichte', 'Ø Sendezeit Krieg (%)', 'Intensität (vs. Marktanteil %)'],
+                        datasets: [{
+                            label: 'Öffentlich-rechtliche Sender',
+                            data: [200, 8.25, 121], // Using 121 for intensity from Tab 2
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Private Sender',
+                            data: [50, 2.42, 87], // Using 87 for intensity from Tab 2
+                            backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Gesamtdurchschnitt',
+                            data: [110, 4.75, 100], // Avg intensity is 100% by definition
+                            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Makes bars horizontal for better label reading
+                        scales: {
+                            x: { // Use x-axis for values now
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Wert / Prozent'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Vergleich: Öffentlich-rechtlich vs. Privat vs. Durchschnitt'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            // Add % sign for percentage values
+                                            if (context.label.includes('%')) {
+                                                label += context.parsed.x + '%';
+                                            } else {
+                                                label += context.parsed.x;
+                                            }
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.error("Canvas element 'comparisonChart' not found");
+            }
+        } catch (e) {
+            console.error("Error creating comparisonChart:", e);
+        }
+
+
+        // --- Time Series Chart (Tab 2) ---
+        try {
+            var ctx2 = document.getElementById('timeSeriesChart')?.getContext('2d');
+            if (ctx2) {
+                var timeSeriesChart = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: ['Okt 24', 'Nov 24', 'Dez 24', 'Jan 25', 'Feb 25', 'Mär 25'],
+                        datasets: [{
+                            label: 'Öffentlich-rechtliche Sender (Ø Berichte)',
+                            data: [185, 195, 210, 205, 198, 207],
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.3, // Slightly less curvy
+                            fill: true,
+                            pointRadius: 4, // Make points visible
+                            pointHoverRadius: 6
+                        }, {
+                            label: 'Private Sender (Ø Berichte)',
+                            data: [48, 52, 55, 47, 49, 49],
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Durchschnittliche Anzahl Kriegsberichte pro Monat'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Zeitlicher Verlauf der Kriegsberichte (Durchschnitt pro Sendergruppe)'
+                            },
+                            tooltip: {mode: 'index', intersect: false} // Show tooltip for both lines at once
+                        },
+                        interaction: { // Better hover interaction
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                });
+            } else {
+                console.error("Canvas element 'timeSeriesChart' not found");
+            }
+        } catch (e) {
+            console.error("Error creating timeSeriesChart:", e);
+        }
+
+
+        // --- Individual Sender Chart (Tab 3) ---
+        try {
+            var ctx3 = document.getElementById('individualChart')?.getContext('2d');
+            if (ctx3) {
+                var individualChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: ['ARD', 'ZDF', 'Phoenix', '3sat', 'RTL', 'Sat.1', 'ProSieben', 'VOX', 'n-tv', 'WELT'],
+                        datasets: [{
+                            label: 'Kriegsberichte (Anzahl)',
+                            data: [235, 242, 185, 138, 87, 62, 38, 42, 68, 53],
+                            backgroundColor: [
+                                'rgba(52, 152, 219, 0.7)', 'rgba(52, 152, 219, 0.7)',
+                                'rgba(52, 152, 219, 0.7)', 'rgba(52, 152, 219, 0.7)',
+                                'rgba(231, 76, 60, 0.7)', 'rgba(231, 76, 60, 0.7)',
+                                'rgba(231, 76, 60, 0.7)', 'rgba(231, 76, 60, 0.7)',
+                                'rgba(231, 76, 60, 0.7)', 'rgba(231, 76, 60, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(52, 152, 219, 1)', 'rgba(52, 152, 219, 1)',
+                                'rgba(52, 152, 219, 1)', 'rgba(52, 152, 219, 1)',
+                                'rgba(231, 76, 60, 1)', 'rgba(231, 76, 60, 1)',
+                                'rgba(231, 76, 60, 1)', 'rgba(231, 76, 60, 1)',
+                                'rgba(231, 76, 60, 1)', 'rgba(231, 76, 60, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Anzahl der Kriegsberichte im Zeitraum'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Anzahl Kriegsberichte pro Sender (Okt 24 - Mär 25)'
+                            },
+                            legend: {display: false} // Legend not really needed for single dataset
+                        }
+                    }
+                });
+            } else {
+                console.error("Canvas element 'individualChart' not found");
+            }
+        } catch (e) {
+            console.error("Error creating individualChart:", e);
+        }
+
+    };
+</script>
+</body>
+</html>
