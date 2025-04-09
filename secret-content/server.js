@@ -121,12 +121,12 @@ const server = http.createServer((req, res) => {
                 const { password } = data;
                 console.log('Passwort-Check:', password);
 
-                if (password === '1') {
+                if (password === '💋') {
                     console.log('Passwort korrekt für: opener');
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');
                     res.end(JSON.stringify({ success: true, type: 'opener' }));
-                } else if (password === '2') {
+                } else if (password === '😘') {
                     console.log('Passwort korrekt für: dates');
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');

@@ -32,11 +32,11 @@ function App() {
         console.log('Passwort-Check:', password);
 
         // Lokale Überprüfung statt Server-Request
-        if (password === '1') {
+        if (password === '💋') {
             console.log('Passwort korrekt für opener-Ansicht');
             loadOpenerData();
             setView('opener');
-        } else if (password === '2') {
+        } else if (password === '😘') {
             console.log('Passwort korrekt für dates-Ansicht');
             loadDatesData();
             setView('dates');

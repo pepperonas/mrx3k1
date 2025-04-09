@@ -1,3 +1,4 @@
+// Verbesserte Version von AccordionItem.js
 import React, { useState } from 'react';
 
 function AccordionItem({ category, activities }) {
@@ -15,8 +16,8 @@ function AccordionItem({ category, activities }) {
                 {formattedCategory} <span className="arrow">{isOpen ? '▲' : '▼'}</span>
             </div>
             <div
-                className="accordion-content"
-                style={{ maxHeight: isOpen ? `${activities.length * 50}px` : '0' }}
+                className={`accordion-content ${isOpen ? 'open' : ''}`}
+                style={{ maxHeight: isOpen ? `${activities.length * 60}px` : '0' }}
             >
                 <ul>
                     {activities.map((activity, index) => (

@@ -265,3 +265,94 @@ input[type="password"]:focus {
   40% {transform: translateY(-20px);}
   60% {transform: translateY(-10px);}
 }
+
+/* Ergänzungen für App.css */
+
+/* Hauptcontainer für den App-Inhalt */
+.app {
+  max-width: 800px; /* Erhöht von 650px */
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Anpassungen für das Accordion */
+.accordion {
+  width: 100%;
+  margin: 10px 0;
+  text-align: left;
+}
+
+.accordion-item {
+  margin-bottom: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.accordion-header {
+  background-color: var(--container-bg);
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.accordion-content {
+  background-color: #323447;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-content.open {
+  max-height: 1000px; /* Höhere max-height als zuvor */
+}
+
+/* Verbesserte Listen-Anzeige im Accordion */
+.accordion-content ul {
+  padding: 20px;
+  margin: 0;
+  list-style-type: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.accordion-content li {
+  padding: 12px 8px;
+  border-bottom: 1px solid #4A4C5A;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.accordion-content li:last-child {
+  border-bottom: none;
+}
+
+/* Responsive Design für kleinere Bildschirme */
+@media (max-width: 768px) {
+  .app {
+    padding: 0 10px;
+  }
+
+  .accordion-header {
+    padding: 12px 15px;
+    font-size: 15px;
+  }
+
+  .accordion-content li {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+}
