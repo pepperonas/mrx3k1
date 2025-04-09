@@ -153,6 +153,21 @@
             color: #FFA500;
             font-style: italic;
         }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .volume-control label {
+            margin-right: 10px;
+        }
+
+        .volume-control input {
+            width: 100px;
+        }
     </style>
 </head>
 <body>
@@ -162,6 +177,7 @@
     <div class="game-container">
         <div class="song-selection">
             <select id="song-select">
+                <option value="x">Power of Love</option>
                 <option value="example">Beispielsong: La La La</option>
             </select>
         </div>
@@ -169,6 +185,11 @@
         <div class="control-panel">
             <button id="start-btn">Mikrofon aktivieren & starten</button>
             <button id="stop-btn" disabled>Stoppen</button>
+        </div>
+
+        <div class="volume-control">
+            <label for="volume-slider">Lautstärke:</label>
+            <input type="range" id="volume-slider" min="0" max="100" value="70">
         </div>
 
         <div class="status-message" id="status-message">
@@ -199,7 +220,7 @@
     const songs = {
         example: {
             title: "La La La",
-            audioUrl: "https://cdnjs.cloudflare.com/ajax/libs/bacon/2.0.7/bacon.js", // Dummy URL, wird nicht wirklich gespielt
+            audioUrl: "https://ia801602.us.archive.org/11/items/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp3", // Beispielsong URL
             lyrics: [
                 {time: 0, text: "La la la", pitch: 60, duration: 2},
                 {time: 2, text: "La la la, höher", pitch: 65, duration: 2},
@@ -208,6 +229,300 @@
                 {time: 8, text: "La la la, ganz tief", pitch: 55, duration: 2},
                 {time: 10, text: "La la la, mittelhoch", pitch: 62, duration: 2},
                 {time: 12, text: "Letztes La la la", pitch: 65, duration: 2},
+            ]
+        },
+        x: {
+            "title": "The Power Of Love - Huey Lewis And The News",
+            "audioUrl": "the-power-of-love.mp3", // Temporäre URL für Testzwecke
+            "lyrics": [
+                {
+                    "time": 0.44117913832199546,
+                    "text": "(Intro Music/Synth)", // War "[Kurzes Segment 1]"
+                    "pitch": 85,
+                    "duration": 0.44117913832199546
+                },
+                {
+                    "time": 0.9287981859410431,
+                    "text": "(Intro Music/Synth)", // War "oh"
+                    "pitch": 60,
+                    "duration": 11.586757369614514
+                },
+                {
+                    "time": 13.119274376417234,
+                    "text": "(Intro Music/Synth)", // War "oh"
+                    "pitch": 58,
+                    "duration": 1.4628571428571426
+                },
+                {
+                    "time": 14.605351473922903,
+                    "text": "The", // War "but"
+                    "pitch": 56,
+                    "duration": 1.2306575963718807
+                },
+                {
+                    "time": 15.905668934240364,
+                    "text": "power", // War "[Kurzes Segment 5]"
+                    "pitch": 53,
+                    "duration": 0.18575963718820887
+                },
+                {
+                    "time": 16.137868480725622,
+                    "text": "of", // War "[Kurzes Segment 6]"
+                    "pitch": 57,
+                    "duration": 0.46439909297052395
+                },
+                {
+                    "time": 16.62548752834467,
+                    "text": "love is a", // War "thank you" (Dauer passt ungefähr)
+                    "pitch": 58,
+                    "duration": 1.8343764172335604
+                },
+                {
+                    "time": 18.64562358276644,
+                    "text": "curious", // War "[Kurzes Segment 8]"
+                    "pitch": 59,
+                    "duration": 0.7662585034013603
+                },
+                {
+                    "time": 19.435102040816325,
+                    "text": "thing", // War "[Kurzes Segment 9]"
+                    "pitch": 53,
+                    "duration": 0.4411791383219956
+                },
+                {
+                    "time": 19.9459410430839,
+                    "text": "(Music)", // War "[Kurzes Segment 10]"
+                    "pitch": 66,
+                    "duration": 0.6037188208616797
+                },
+                {
+                    "time": 20.712199546485262,
+                    "text": "Make a", // War "what" (Dauer passt ungefähr)
+                    "pitch": 75,
+                    "duration": 1.9040362811791383
+                },
+                {
+                    "time": 22.709115646258503,
+                    "text": "one man weep,", // War "at your" (Dauer passt ungefähr)
+                    "pitch": 58,
+                    "duration": 2.0201360544217692
+                },
+                {
+                    "time": 24.752471655328797,
+                    "text": "make another", // War "the a to one" (Dauer passt ungefähr)
+                    "pitch": 63,
+                    "duration": 1.9736961451247161
+                },
+                {
+                    "time": 26.749387755102042,
+                    "text": "man sing", // War "the" (Dauer passt ungefähr)
+                    "pitch": 62,
+                    "duration": 2.0201360544217692
+                },
+                {
+                    "time": 28.792743764172336,
+                    "text": "Change", // War "[Kurzes Segment 15]"
+                    "pitch": 54,
+                    "duration": 0.3482993197278894
+                },
+                {
+                    "time": 29.30358276643991,
+                    "text": "a hawk", // War "but" (Dauer passt ungefähr)
+                    "pitch": 67,
+                    "duration": 1.4164172335600895
+                },
+                {
+                    "time": 30.812879818594105,
+                    "text": "to a little white", // War "and no one" (Dauer passt ungefähr)
+                    "pitch": 67,
+                    "duration": 3.993832199546482
+                },
+                {
+                    "time": 34.853151927437644,
+                    "text": "dove / More than a feeling,", // War "at what thing" (Dauer passt ungefähr)
+                    "pitch": 65,
+                    "duration": 4.783310657596367
+                },
+                {
+                    "time": 39.68290249433107,
+                    "text": "that's", // War "[Kurzes Segment 19]"
+                    "pitch": 57,
+                    "duration": 0.44117913832199207
+                },
+                {
+                    "time": 40.170521541950116,
+                    "text": "the", // War "[Kurzes Segment 20]"
+                    "pitch": 65,
+                    "duration": 0.673378684807254
+                },
+                {
+                    "time": 40.96,
+                    "text": "power of love / (Verse 2 starts) Tougher than diamonds,", // War "what did i bring to the good the" (Dauer passt ungefähr)
+                    "pitch": 68,
+                    "duration": 8.057324263038545
+                },
+                {
+                    "time": 49.04054421768708,
+                    "text": "rich like cream / Stronger and harder than a bad girl's dream / Make a bad one good, make a wrong one right / Power of love will keep you home at night / (Chorus 1 starts) You don't need money, don't take fame / Don't need no credit card to ride this train / It's strong and it's sudden and it's cruel sometimes", // War "and appeared to you..." (Sehr langes Segment, enthält V2 + Anfang C1)
+                    "pitch": 70,
+                    "duration": 25.379410430838995
+                },
+                {
+                    "time": 74.55927437641724,
+                    "text": "But it", // War "[Kurzes Segment 23]"
+                    "pitch": 80,
+                    "duration": 0.27863945578231153
+                },
+                {
+                    "time": 74.86113378684807,
+                    "text": "might just save your life / That's the power of love", // War "or are one and the pope" (Dauer passt ungefähr)
+                    "pitch": 67,
+                    "duration": 6.5480272108843565
+                },
+                {
+                    "time": 81.43238095238095,
+                    "text": "That's the", // War "it"
+                    "pitch": 56,
+                    "duration": 1.253877551020409
+                },
+                {
+                    "time": 82.70947845804989,
+                    "text": "power", // War "[Kurzes Segment 26]"
+                    "pitch": 57,
+                    "duration": 0.6037188208616726
+                },
+                {
+                    "time": 83.47573696145125,
+                    "text": "of love / (Verse 3 starts) First time you feel it, it might make you", // War "what's that and and..." (Dauer passt ungefähr)
+                    "pitch": 64,
+                    "duration": 8.034104308390027
+                },
+                {
+                    "time": 91.57950113378685,
+                    "text": "sad", // War "[Kurzes Segment 28]"
+                    "pitch": 56,
+                    "duration": 0.46439909297052395
+                },
+                {
+                    "time": 92.0671201814059,
+                    "text": "Next time you", // War "what" (Dauer passt ungefähr)
+                    "pitch": 76,
+                    "duration": 1.486077097505671
+                },
+                {
+                    "time": 93.59963718820862,
+                    "text": "feel it, it might make you mad / But you'll be glad, baby, when you've found / That's the power that makes the world go 'round / (Chorus 2 starts) And it don't take money, don't take fame / Don't need no credit card to ride this train / It's strong and it's sudden, it can be cruel sometimes / But it might just save your life / (Bridge starts) They say that all in love is fair / Yeah, but you don't care / But you know what to do (what to do) / When it gets hold of you / And with a little help from above / You feel the power of love", // War "what about with them..." (Sehr langes Segment, enthält Rest V3, C2, Bridge)
+                    "pitch": 69,
+                    "duration": 43.88571428571427
+                },
+                {
+                    "time": 137.62467120181407,
+                    "text": "You feel the power of love", // War "in" (Dauer passt ungefähr)
+                    "pitch": 77,
+                    "duration": 2.39165532879818
+                },
+                {
+                    "time": 140.17886621315193,
+                    "text": "Can you feel it? Hmmmm / (Chorus 3 starts) It don't", // War "and it have to" (Dauer passt ungefähr)
+                    "pitch": 65,
+                    "duration": 3.9241723356009004
+                },
+                {
+                    "time": 144.21913832199547,
+                    "text": "take money and it don't take fame / Don't need no credit card to ride this train", // War "and if they are things..." (Dauer passt ungefähr)
+                    "pitch": 64,
+                    "duration": 9.334421768707472
+                },
+                {
+                    "time": 153.57678004535148,
+                    "text": "Tougher", // War "[Kurzes Segment 34]"
+                    "pitch": 58,
+                    "duration": 0.11609977324260967
+                },
+                {
+                    "time": 153.83219954648527,
+                    "text": "than", // War "[Kurzes Segment 35]"
+                    "pitch": 57,
+                    "duration": 0.46439909297052395
+                },
+                {
+                    "time": 154.34303854875284,
+                    "text": "diamonds", // War "and" (Dauer passt ungefähr)
+                    "pitch": 84,
+                    "duration": 1.904036281179117
+                },
+                {
+                    "time": 156.3631746031746,
+                    "text": "and stronger", // War "what that" (Dauer passt ungefähr)
+                    "pitch": 60,
+                    "duration": 2.507755102040818
+                },
+                {
+                    "time": 158.89414965986396,
+                    "text": "than steel", // War "one and" (Dauer passt ungefähr)
+                    "pitch": 70,
+                    "duration": 2.7631746031746047
+                },
+                {
+                    "time": 161.68054421768707,
+                    "text": "You", // War "[Kurzes Segment 39]"
+                    "pitch": 52,
+                    "duration": 0.2321995464852762
+                },
+                {
+                    "time": 161.93596371882086,
+                    "text": "won't feel nothin' 'til", // War "it where what's that" (Dauer passt ungefähr)
+                    "pitch": 80,
+                    "duration": 4.458231292517013
+                },
+                {
+                    "time": 166.46385487528346,
+                    "text": "you feel / You feel the power,", // War "what" (Dauer passt ungefähr)
+                    "pitch": 78,
+                    "duration": 8.080544217687049
+                },
+                {
+                    "time": 174.56761904761905,
+                    "text": "just the power of love / That's the power, that's the power of love / You feel the power of love / You feel the power of love / (Outro with Guitar Solo and Fade)", // War "what and none that..." (Sehr langes Segment, enthält Rest C3 und Outro)
+                    "pitch": 71,
+                    "duration": 47.8098866213152
+                },
+                {
+                    "time": 222.4471655328798,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 43]"
+                    "pitch": 55,
+                    "duration": 0.13931972789117708
+                },
+                {
+                    "time": 222.7025850340136,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 44]"
+                    "pitch": 54,
+                    "duration": 0.3482993197279143
+                },
+                {
+                    "time": 223.19020408163266,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 45]"
+                    "pitch": 59,
+                    "duration": 0.25541950113378675
+                },
+                {
+                    "time": 223.72426303854874,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 46]"
+                    "pitch": 76,
+                    "duration": 0.2089795918367372
+                },
+                {
+                    "time": 224.18866213151927,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 47]"
+                    "pitch": 53,
+                    "duration": 0.1160997732426381
+                },
+                {
+                    "time": 225.23356009070295,
+                    "text": "(Outro/Fade)", // War "[Kurzes Segment 48]"
+                    "pitch": 52,
+                    "duration": 0.06965986394558854
+                }
             ]
         }
     };
@@ -223,6 +538,7 @@
     const scoreElement = document.getElementById('score');
     const progressBar = document.getElementById('progress');
     const statusMessage = document.getElementById('status-message');
+    const volumeSlider = document.getElementById('volume-slider');
 
     // Audio-Kontext und Analyzer für FFT
     let audioContext;
@@ -232,6 +548,10 @@
     let dataArray;
     let currentNoteMarkers = [];
 
+    // Audio-Element für die Songwiedergabe
+    let audioElement;
+    let audioSource;
+
     // Spielvariablen
     let isPlaying = false;
     let gameLoop;
@@ -239,6 +559,13 @@
     let currentSong;
     let currentScore = 0;
     let noteAccuracy = [];
+
+    // Lautstärke-Einstellung
+    volumeSlider.addEventListener('input', () => {
+        if (audioElement) {
+            audioElement.volume = volumeSlider.value / 100;
+        }
+    });
 
     // Mikrofon initialisieren und Spiel starten
     startBtn.addEventListener('click', async () => {
@@ -382,6 +709,9 @@
         const songId = songSelect.value;
         currentSong = songs[songId];
 
+        // Audio laden und abspielen
+        loadAndPlayAudio(currentSong.audioUrl);
+
         // Spielvariablen zurücksetzen
         isPlaying = true;
         startTime = audioContext.currentTime;
@@ -400,10 +730,48 @@
         gameLoop = setInterval(updateGameState, 100);
     }
 
+    // Laden und Abspielen der Audio-Datei
+    function loadAndPlayAudio(url) {
+        // Bestehende Audio-Elemente stoppen und entfernen
+        if (audioElement) {
+            audioElement.pause();
+            if (audioSource) {
+                audioSource.disconnect();
+            }
+        }
+
+        // Neues Audio-Element erstellen
+        audioElement = new Audio(url);
+        audioElement.volume = volumeSlider.value / 100;
+
+        // Audio mit dem AudioContext verbinden
+        audioSource = audioContext.createMediaElementSource(audioElement);
+        audioSource.connect(audioContext.destination);
+
+        // Abspielen starten
+        audioElement.play().catch(error => {
+            console.error('Fehler beim Abspielen des Songs:', error);
+            statusMessage.textContent = "Fehler: Song konnte nicht abgespielt werden";
+        });
+
+        audioElement.addEventListener('ended', () => {
+            // Song zu Ende, Spiel beenden
+            finishGame();
+        });
+    }
+
     // Spiel stoppen
     function stopGame() {
         isPlaying = false;
         clearInterval(gameLoop);
+
+        // Audio stoppen
+        if (audioElement) {
+            audioElement.pause();
+            if (audioSource) {
+                audioSource.disconnect();
+            }
+        }
 
         if (microphone) {
             // Verbindungen trennen
@@ -454,8 +822,10 @@
     function updateGameState() {
         if (!isPlaying) return;
 
-        const currentTime = audioContext.currentTime - startTime;
-        const totalDuration = currentSong.lyrics[currentSong.lyrics.length - 1].time +
+        // Zeit vom Audio-Element verwenden
+        const currentTime = audioElement.currentTime;
+        const totalDuration = audioElement.duration ||
+            currentSong.lyrics[currentSong.lyrics.length - 1].time +
             currentSong.lyrics[currentSong.lyrics.length - 1].duration;
 
         // Fortschrittsbalken aktualisieren
@@ -539,7 +909,8 @@
     function checkAccuracy(midiNote) {
         if (!isPlaying) return;
 
-        const currentTime = audioContext.currentTime - startTime;
+        // Audio-Element Zeit verwenden
+        const currentTime = audioElement.currentTime;
 
         // Finde die aktuelle Note, die gesungen werden sollte
         for (let i = 0; i < currentSong.lyrics.length; i++) {
@@ -576,6 +947,14 @@
     function finishGame() {
         isPlaying = false;
         clearInterval(gameLoop);
+
+        // Audio stoppen
+        if (audioElement) {
+            audioElement.pause();
+            if (audioSource) {
+                audioSource.disconnect();
+            }
+        }
 
         // Berechnen der durchschnittlichen Genauigkeit
         let avgAccuracy = 0;
