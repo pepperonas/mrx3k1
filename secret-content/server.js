@@ -3,26 +3,33 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4996;
 
 // Middleware für JSON-Parsing
 app.use(express.json());
+
+// CORS-Middleware aktivieren
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    next();
+});
 
 // Statische Dateien aus dem Build-Verzeichnis bereitstellen
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // API-Route zum Überprüfen des Passworts
 app.post('/api/checkPassword', (req, res) => {
-    const { password } = req.body;
+    const {password} = req.body;
 
     // Passwörter sicher im Backend prüfen
-    // Man könnte diese auch in einer Umgebungsvariable oder Datenbank speichern
-    if (password === '🫦') {
-        return res.json({ success: true, type: 'opener' });
-    } else if (password === '🫠') {
-        return res.json({ success: true, type: 'dates' });
+    if (password === '1') {
+        return res.json({success: true, type: 'opener'});
+    } else if (password === '2') {
+        return res.json({success: true, type: 'dates'});
     } else {
-        return res.json({ success: false });
+        return res.json({success: false});
     }
 });
 
@@ -34,7 +41,7 @@ app.get('/api/getOpeners', async (req, res) => {
         res.json(openerData.opener);
     } catch (error) {
         console.error('Fehler beim Laden der Opener-Daten:', error);
-        res.status(500).json({ error: 'Serverfehler beim Laden der Daten' });
+        res.status(500).json({error: 'Serverfehler beim Laden der Daten'});
     }
 });
 
@@ -46,7 +53,7 @@ app.get('/api/getDates', async (req, res) => {
         res.json(datesData.aktivitaeten);
     } catch (error) {
         console.error('Fehler beim Laden der Dates-Daten:', error);
-        res.status(500).json({ error: 'Serverfehler beim Laden der Daten' });
+        res.status(500).json({error: 'Serverfehler beim Laden der Daten'});
     }
 });
 

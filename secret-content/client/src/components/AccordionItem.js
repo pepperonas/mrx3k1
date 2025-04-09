@@ -27,3 +27,5 @@ function AccordionItem({ category, activities }) {
         </div>
     );
 }
+
+export default AccordionItem;

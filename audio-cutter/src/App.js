@@ -33,8 +33,8 @@ const SaveIcon = () => (
 
 const ResetIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M1 4v16l7-8-7-8z" />
-        <path d="M23 12c0 5.52-4.48 10-10 10-2.76 0-5.26-1.12-7.07-2.93l1.42-1.42C8.84 19.21 10.83 20 13 20c4.42 0 8-3.58 8-8s-3.58-8-8-8c-2.17 0-4.16.79-5.65 2.35l-1.42-1.42C7.74 3.12 10.24 2 13 2c5.52 0 10 4.48 10 10z" />
+        <path d="M3 2v6h6" />
+        <path d="M3 8C5.33333 4.66667 8 3 12 3c5.5 0 10 4.5 10 10s-4.5 10-10 10c-4 0-7.33333-2.33333-10-7" />
     </svg>
 );
 
@@ -189,7 +189,7 @@ const styles = {
     }
 };
 
-export default function AudioCutter() {
+function AudioCutter() {
     const [file, setFile] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -235,18 +235,47 @@ export default function AudioCutter() {
     };
 
     // Load audio file
-    const loadAudioFile = (file) => {
+    const loadAudioFile = async (file) => {
+        console.log("Datei wird geladen:", file.name, file.type, file.size);
         const objectUrl = URL.createObjectURL(file);
+
+        // AudioContext entsperren, falls suspendiert
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+            console.log("AudioContext ist suspendiert, versuche zu starten...");
+            await audioContextRef.current.resume();
+            console.log("AudioContext-Status nach Resume:", audioContextRef.current.state);
+        }
 
         if (audioRef.current) {
             audioRef.current.src = objectUrl;
             audioRef.current.load();
 
+            // Mehr Logging für Fehlerursachen
             audioRef.current.onloadedmetadata = () => {
+                console.log("Metadaten geladen:", {
+                    duration: audioRef.current.duration,
+                    readyState: audioRef.current.readyState
+                });
                 setDuration(audioRef.current.duration);
                 setEndMarker(audioRef.current.duration);
                 setCurrentTime(0);
                 analyzeAudio(file);
+            };
+
+            // Fehlererkennung verbessern
+            audioRef.current.onerror = (e) => {
+                console.error("Audio-Ladefehler:", audioRef.current.error);
+                alert(`Fehler beim Laden der Audiodatei: ${audioRef.current.error ? audioRef.current.error.message : 'Unbekannter Fehler'}`);
+            };
+
+            // Fortschritt überwachen
+            audioRef.current.onprogress = () => {
+                console.log("Audio-Ladefortschritt:", audioRef.current.buffered);
+            };
+
+            // Status erreicht
+            audioRef.current.oncanplay = () => {
+                console.log("Audio kann abgespielt werden");
             };
         }
 
@@ -256,16 +285,48 @@ export default function AudioCutter() {
 
     // Analyze audio to create waveform data
     const analyzeAudio = async (file) => {
+        console.log("Audio-Analyse startet für:", file.name);
+
         if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext erstellt:", audioContextRef.current.state);
+            } catch (err) {
+                console.error("Fehler beim Erstellen des AudioContext:", err);
+                alert("Ihr Browser unterstützt möglicherweise die Audio Web API nicht vollständig.");
+                return;
+            }
         }
 
         try {
-            const arrayBuffer = await file.arrayBuffer();
-            const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+            console.log("Lese Datei als ArrayBuffer...");
+            const arrayBuffer = await file.arrayBuffer().catch(err => {
+                console.error("ArrayBuffer-Fehler:", err);
+                throw new Error("Fehler beim Lesen der Datei: " + err.message);
+            });
 
+            console.log("ArrayBuffer erhalten, Größe:", arrayBuffer.byteLength);
+
+            if (arrayBuffer.byteLength === 0) {
+                throw new Error("Die Datei scheint leer zu sein.");
+            }
+
+            console.log("Dekodiere Audio-Daten...");
+            const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer).catch(err => {
+                console.error("Dekodierungs-Fehler:", err);
+                throw new Error("Fehler beim Dekodieren der Audio-Daten: " + (err.message || "Unbekannter Fehler"));
+            });
+
+            console.log("Audio dekodiert:", {
+                duration: audioBuffer.duration,
+                sampleRate: audioBuffer.sampleRate,
+                numberOfChannels: audioBuffer.numberOfChannels,
+                length: audioBuffer.length
+            });
+
+            // Rest des Codes wie vorher...
             const channelData = audioBuffer.getChannelData(0);
-            const samples = 200; // Number of samples to display
+            const samples = 200;
             const blockSize = Math.floor(channelData.length / samples);
             const waveform = [];
 
@@ -278,10 +339,11 @@ export default function AudioCutter() {
                 waveform.push(sum / blockSize);
             }
 
+            console.log("Waveform generiert, Samples:", waveform.length);
             setWaveformData(waveform);
         } catch (error) {
-            console.error("Error analyzing audio:", error);
-            alert("Fehler beim Analysieren der Audiodatei. Bitte versuche es mit einer anderen Datei.");
+            console.error("Fehler bei der Audio-Analyse:", error);
+            alert(`Fehler beim Analysieren der Audiodatei: ${error.message}`);
         }
     };
 
@@ -750,3 +812,7 @@ export default function AudioCutter() {
         </div>
     );
 }
+
+// Exportiere die Komponente als Default und auch als benannte Komponente
+export default AudioCutter;
+export { AudioCutter };

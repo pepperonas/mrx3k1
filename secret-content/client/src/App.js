@@ -20,51 +20,33 @@ function App() {
     setTimeout(() => setToast({ show: false, message: '' }), 2000);
   };
 
-  // Passwort prüfen
-  const checkPassword = async (password) => {
-    try {
-      const response = await fetch('/api/checkPassword', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        if (data.type === 'opener') {
-          // Lade Opener-Daten
-          loadOpenerData();
-          setView('opener');
-        } else if (data.type === 'dates') {
-          // Lade Dates-Daten
-          loadDatesData();
-          setView('dates');
-        }
-      } else {
-        showToast("Falsches Passwort! 🔒");
-      }
-    } catch (error) {
-      console.error('Fehler beim Prüfen des Passworts:', error);
-      showToast('Serverfehler beim Prüfen des Passworts');
+  // Passwort prüfen - VEREINFACHT FÜR STATISCHEN BETRIEB
+  const checkPassword = (password) => {
+    // Lokale Überprüfung statt Server-Request
+    if (password === '🫦') {
+      loadOpenerData();
+      setView('opener');
+    } else if (password === '🫠') {
+      loadDatesData();
+      setView('dates');
+    } else {
+      showToast("Falsches Passwort! 🔒");
     }
   };
 
   // Opener-Daten laden
   const loadOpenerData = async () => {
     try {
-      const response = await fetch('/api/getOpeners');
+      // Absolute Pfade für statische JSON-Dateien
+      const response = await fetch('./api/opener.json');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setOpenerData(data);
+      setOpenerData(data.opener);
 
-      if (data.length > 0) {
-        // Zeige einen zufälligen Opener
-        showRandomOpener(data);
+      if (data.opener && data.opener.length > 0) {
+        showRandomOpener(data.opener);
       }
     } catch (error) {
       console.error('Fehler beim Laden der Opener-Daten:', error);
@@ -75,12 +57,13 @@ function App() {
   // Dates-Daten laden
   const loadDatesData = async () => {
     try {
-      const response = await fetch('/api/getDates');
+      // Absolute Pfade für statische JSON-Dateien
+      const response = await fetch('./api/dates.json');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setDatesData(data);
+      setDatesData(data.aktivitaeten);
     } catch (error) {
       console.error('Fehler beim Laden der Dates-Daten:', error);
     }
