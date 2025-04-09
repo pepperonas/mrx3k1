@@ -97,6 +97,31 @@ async function loadSongs() {
             }
         }
 
+        // Füge einen speziellen Song hinzu, der die Daten aus paste.txt verwendet
+        try {
+            const pasteResponse = await fetch('paste.txt');
+            if (pasteResponse.ok) {
+                const songJson = await pasteResponse.text();
+                const songData = JSON.parse(songJson);
+
+                // Erstelle einen neuen Song mit den Daten aus paste.txt
+                const customSong = {
+                    id: 'custom_song',
+                    title: 'Benutzerdefinierter Song',
+                    artist: 'Unbekannt',
+                    cover: 'https://via.placeholder.com/300x200/2C2E3B/FFFFFF?text=Custom+Song',
+                    audioUrl: '#', // Kein Audio
+                    difficulty: 3,
+                    lyrics: [], // Keine Lyrics
+                    notes: songData.notes // Verwende die Noten aus paste.txt
+                };
+
+                data.push(customSong);
+            }
+        } catch (err) {
+            console.error('Fehler beim Laden von paste.txt:', err);
+        }
+
         return data;
     } catch (error) {
         console.error('Fehler beim Laden der Songs:', error);
@@ -230,16 +255,24 @@ function playBackingTrack(song) {
     }
 
     // Neuen Audio-Player erstellen
-    audioPlayer = new Audio(song.audioUrl);
+    if (song.audioUrl && song.audioUrl !== '#') {
+        audioPlayer = new Audio(song.audioUrl);
 
-    // Event-Listener für das Ende des Songs
-    audioPlayer.addEventListener('ended', endGame);
+        // Event-Listener für das Ende des Songs
+        audioPlayer.addEventListener('ended', endGame);
 
-    // Starte Wiedergabe
-    audioPlayer.play().catch(error => {
-        console.error('Fehler beim Abspielen des Audios:', error);
-        alert('Fehler beim Abspielen des Songs. Bitte versuche es erneut.');
-    });
+        // Starte Wiedergabe
+        audioPlayer.play().catch(error => {
+            console.error('Fehler beim Abspielen des Audios:', error);
+            alert('Fehler beim Abspielen des Songs. Bitte versuche es erneut.');
+        });
+    } else {
+        // Falls kein Audio verfügbar ist, setzen wir den audioPlayer auf null
+        // und erstellen einen Timer, der den endGame nach einer bestimmten Zeit aufruft
+        audioPlayer = null;
+        const songDuration = 222; // Ungefähre Songlänge aus den Notendaten
+        setTimeout(endGame, songDuration * 1000);
+    }
 
     return audioPlayer;
 }
@@ -314,6 +347,16 @@ function updateNotes() {
         noteElement.style.top = top + '%';
         noteElement.style.width = width + '%';
 
+        // Setze zusätzliche Eigenschaften basierend auf den Notendaten
+        // Noten mit höherer Confidence bekommen intensivere Farbe
+        const confidence = note.confidence || 0.5;
+        noteElement.style.opacity = Math.max(0.5, confidence);
+
+        // Bei hoher pitch_accuracy eigene Klasse hinzufügen
+        if (note.pitch_accuracy && note.pitch_accuracy >= 0.9) {
+            noteElement.classList.add('high-accuracy');
+        }
+
         pitchIndicator.appendChild(noteElement);
 
         // Punkte berechnen, wenn Note aktiv ist
@@ -323,12 +366,18 @@ function updateNotes() {
             if (pitchDifference < 2) {
                 score += 100;
                 stats.perfect++;
+                // Visuelle Rückmeldung für perfekten Treffer
+                noteElement.classList.add('perfect-hit');
             } else if (pitchDifference < 4) {
                 score += 50;
                 stats.good++;
+                // Visuelle Rückmeldung für guten Treffer
+                noteElement.classList.add('good-hit');
             } else if (pitchDifference < 6) {
                 score += 20;
                 stats.ok++;
+                // Visuelle Rückmeldung für ok Treffer
+                noteElement.classList.add('ok-hit');
             } else {
                 stats.missed++;
             }
@@ -352,7 +401,7 @@ function updateNotes() {
 
 // Fortschritt aktualisieren
 function updateProgress() {
-    let duration = 40; // Standard-Fallback
+    let duration = 222; // Standard-Fallback - nutzt die ungefähre Länge aus dem JSON
 
     // Wenn Audio-Player verfügbar, nimm die tatsächliche Dauer
     if (audioPlayer && audioPlayer.duration && !isNaN(audioPlayer.duration)) {

@@ -1,18 +1,26 @@
 [
   {
-    "id": "old_thing_back",
-    "title": "Old Thing Back",
-    "artist": "BIG",
-    "cover": "https://via.placeholder.com/300",
-    "difficulty": 3,
-    "audioUrl": "songs/old_thing_back.m4a"
+    "id": "custom_song",
+    "title": "Gesangsdaten-Visualisierung",
+    "artist": "Aus deinen Daten",
+    "cover": "https://via.placeholder.com/300x200/2C2E3B/FFFFFF?text=Deine+Gesangsdaten",
+    "audioUrl": "#",
+    "difficulty": 3
   },
   {
     "id": "welcome-to-st-tropez",
-    "title": "Welcome to St. Tropez (DJ Antoine vs Mad Mark Remix)",
-    "artist": "DJ Antoine vs Timati feat. Kalenna",
-    "cover": "img/welcome-to-st-tropez.jpg",
-    "difficulty": 3,
-    "audioUrl": "songs/welcome-to-st-tropez.mp3"
+    "title": "Welcome to St. Tropez",
+    "artist": "DJ Antoine",
+    "cover": "https://via.placeholder.com/300x200/2C2E3B/FFFFFF?text=St+Tropez",
+    "audioUrl": "audio/welcome-to-st-tropez.mp3",
+    "difficulty": 2
+  },
+  {
+    "id": "old_thing_back",
+    "title": "Old Thing Back",
+    "artist": "Notorious B.I.G.",
+    "cover": "https://via.placeholder.com/300x200/2C2E3B/FFFFFF?text=Old+Thing+Back",
+    "audioUrl": "audio/old_thing_back.mp3",
+    "difficulty": 3
   }
 ]
