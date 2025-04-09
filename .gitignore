@@ -208,8 +208,3 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-
-xxx
-xxx/*
-secret-content
-secret-content/*

@@ -1,0 +1,128 @@
+{
+  "aktivitaeten": [
+    {
+      "kategorie": "kreativ",
+      "aktivitaeten": [
+        "gemeinsam Kochen (Sushi / Fondue / Burger selbst belegen / Kuchen / Pralinen)",
+        "Fotoshooting (er von ihr / gegenseitig / an cooler Location z.B altes Industriegebiet)",
+        "IKEA / Möbelhäuser",
+        "Cocktails selbst mixen",
+        "gemeinsam töpfern",
+        "Fingerfarben malen",
+        "Landschaften malen / Portrait malen"
+      ]
+    },
+    {
+      "kategorie": "aktiv",
+      "aktivitaeten": [
+        "Bladen / Skaten (in Rollerdisco)",
+        "Frisbee spielen",
+        "Badminton spielen",
+        "Tischtennis spielen",
+        "Speedminton",
+        "Paintball",
+        "Erlebnispfade / Lernpfade im Wald",
+        "Indoor Klettern",
+        "Treetboot / Ruderboot / Elektroboot / Schlauchboot fahren",
+        "Schwimmen gehen (bei Dunkelheit / im geschlossenen Freibad)",
+        "Schlittschuhlaufen (mit Glühwein / in der Innenstadt)",
+        "Geocaching",
+        "Crossgolfen",
+        "Probetanzstunde (oft Teil einer Tanzparty oder Salsaparty)",
+        "Billard",
+        "Minigolf",
+        "Skifahren / Snowboarden",
+        "Erlebnisbad (Miramar / Alpamare / Thermen)",
+        "Schlittenfahren (bei Nacht / mit Glühwein)",
+        "Bowling",
+        "Tierheim",
+        "Go-Kart fahren",
+        "Tandem fahren",
+        "Drachen steigen lassen",
+        "Canyoing",
+        "Schneemann / Iglu bauen",
+        "Schneeballschlacht",
+        "Modellflugzeug / Schiff / Auto spielen",
+        "Kitesurf Schnupperkurs",
+        "Golf Schnupperstunden",
+        "Erbeeren pflücken"
+      ]
+    },
+    {
+      "kategorie": "chillig",
+      "aktivitaeten": [
+        "Café / Coffee Shop / Shisha Café",
+        "Lounges",
+        "Bar (gemütlich, nicht zu laut / Strandbar)",
+        "Shoppen / Schaufensterbummel",
+        "Festivals aller Art",
+        "Flohmarktbummel",
+        "Eisessen",
+        "Spaziergänge (im Park / Schlosspark / Wald / bei Nacht mit Fackeln)",
+        "Wellnesstag (zu Hause / im Hotel)",
+        "Museen (mit Versuchsvorführungen / vielen Knöpfen zum drücken)",
+        "Ausstellungen (Körperwelten / außergewöhnliche Ausstellungen)",
+        "Messen (interessante! / z.B. CBR, Erotik, Esoterik)",
+        "Picknick (mit Aussicht / auf dem Dach / in schöner Natur / vor toller Kulisse / im (Mais)feld)",
+        "Stadtführung (von ihm für sie)",
+        "Biergarten",
+        "Open Air Kino / Autokino / 3D / 4D / IMAX",
+        "Theater / Oper / Musical / Improtheater / Improoper",
+        "Schifffahrt",
+        "Nachts am See",
+        "Sauna / Saunalandschaften / türk. Hamam",
+        "Sushibar (mit Fließband)",
+        "Weihnachtsmarkt",
+        "Lokales Kulturangebot",
+        "DVD-Abend (an ungewöhnlichen Orten / Im Kombi / Im Zelt)",
+        "Sportveranstaltungen (Eishockey im Stadion / Fußball / Formel 1)",
+        "Pyjama-Party",
+        "Dinner zu Hause von Mietkoch",
+        "Angeln",
+        "Weinprobe",
+        "Brettspiele spielen",
+        "Floating"
+      ]
+    },
+    {
+      "kategorie": "faszinierend",
+      "aktivitaeten": [
+        "Aussichtsplattformen (des Flughafens / auf Bergen / auf Gebäuden / bei Dunkelheit)",
+        "Planetarium",
+        "Sternwarte",
+        "natürliche Sehenswürdigkeiten besichtigen (mit Proviant)",
+        "Burg / Schloss besichtigen",
+        "Erlebnisrestaurant (Lying Dinner / auf Aussichtstürmen / Dunkelrestaurant / Rittermahl)",
+        "Zirkus",
+        "Rundflug (Hubschrauber / kleiner Flieger)",
+        "Aussichtsturm",
+        "Ballonfahrt",
+        "Sterne beobachten (mit Teleskop)",
+        "Salzbergwerk",
+        "Nostalgiefotos machen lassen"
+      ]
+    },
+    {
+      "kategorie": "abenteuerlich",
+      "aktivitaeten": [
+        "Zoo / Wildpark / Alpentierpark",
+        "Spielhalle",
+        "Karaoke Bar",
+        "Kissenschlacht",
+        "Kasino",
+        "Labyrinth (im Maisfeld)",
+        "Kurztrip (in die Berge / nach Paris / ans Meer)",
+        "Sommerrodelbahn",
+        "Freizeitpark / Westernpark",
+        "Floßfahrt",
+        "Adrenalinsportarten (Bungee-springen / Rafting / Bodyflying / Fallschirmspringen)",
+        "Pilze suchen",
+        "Ausflug ins Blaue",
+        "Ritterfeste",
+        "Segway Tour",
+        "Segeltour",
+        "Hochseilgarten"
+      ]
+    }
+  ]
+}

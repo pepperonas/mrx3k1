@@ -1,0 +1,267 @@
+/* src/App.css */
+:root {
+  --background-color: #2C2E3B;
+  --text-color: #f0f0f0;
+  --container-bg: #3B3D4C;
+  --container-border: #4A4C5A;
+  --button-primary-bg: #5C69FF;
+  --button-primary-hover: #4A57EA;
+  --button-secondary-bg: #FF5C8D;
+  --button-secondary-hover: #EA4A7B;
+  --box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h1 {
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.content-container {
+  background-color: var(--container-bg);
+  border: 1px solid var(--container-border);
+  border-radius: 16px;
+  padding: 30px;
+  margin: 30px 0;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--box-shadow);
+  word-wrap: break-word;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-image: linear-gradient(135deg, rgba(92, 105, 255, 0.05) 0%, rgba(255, 92, 141, 0.05) 100%);
+}
+
+.content-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+}
+
+.content-text {
+  display: inline-block;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.content-text.fade-in {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.content-text.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 1.5rem;
+}
+
+button {
+  border: none;
+  color: white;
+  padding: 13px 28px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+button:hover::after {
+  opacity: 1;
+}
+
+button:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.primary-btn {
+  background-color: var(--button-primary-bg);
+}
+
+.primary-btn:hover {
+  background-color: var(--button-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(92, 105, 255, 0.3);
+}
+
+.secondary-btn {
+  background-color: var(--button-secondary-bg);
+}
+
+.secondary-btn:hover {
+  background-color: var(--button-secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 92, 141, 0.3);
+}
+
+/* Passwort-Formular */
+.password-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.password-form form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+input[type="password"] {
+  background-color: #3B3D4C;
+  border: 1px solid #4A4C5A;
+  color: var(--text-color);
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 30px;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+input[type="password"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(92, 105, 255, 0.3);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background-color: #333;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Accordion für Dates */
+.accordion {
+  width: 100%;
+  margin: 10px 0;
+  text-align: left;
+}
+
+.accordion-item {
+  margin-bottom: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.accordion-header {
+  background-color: var(--container-bg);
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.accordion-header:hover {
+  background-color: #4A4C5A;
+}
+
+.accordion-content {
+  background-color: #323447;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-content ul {
+  padding: 20px;
+  margin: 0;
+  list-style-type: none;
+}
+
+.accordion-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #4A4C5A;
+}
+
+.accordion-content li:last-child {
+  border-bottom: none;
+}
+
+/* Animation */
+.emoji {
+  display: inline-block;
+  animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+  40% {transform: translateY(-20px);}
+  60% {transform: translateY(-10px);}
+}
