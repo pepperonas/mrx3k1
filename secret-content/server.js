@@ -19,6 +19,9 @@ app.use((req, res, next) => {
 // Statische Dateien aus dem Build-Verzeichnis bereitstellen
 app.use(express.static(path.join(__dirname, 'client/build')));
 
+// Stelle auch die JSON-Dateien direkt zur Verfügung
+app.use('/api', express.static(path.join(__dirname, 'data')));
+
 // API-Route zum Überprüfen des Passworts
 app.post('/api/checkPassword', (req, res) => {
     const {password} = req.body;
