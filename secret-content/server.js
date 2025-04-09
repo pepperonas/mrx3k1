@@ -1,70 +1,172 @@
-// server.js
-const express = require('express');
+// server.js - Vereinfachter Server ohne Express-Routing
+const http = require('http');
+const fs = require('fs');
 const path = require('path');
-const fs = require('fs').promises;
-const app = express();
 const PORT = process.env.PORT || 4996;
 
-// Middleware für JSON-Parsing
-app.use(express.json());
+// Einfacher HTTP-Server
+const server = http.createServer((req, res) => {
+    console.log(`${new Date().toISOString()} [REQUEST] ${req.method} ${req.url}`);
 
-// CORS-Middleware aktivieren
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    next();
-});
+    // CORS-Header
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Statische Dateien aus dem Build-Verzeichnis bereitstellen
-app.use(express.static(path.join(__dirname, 'client/build')));
+    // OPTIONS-Requests sofort beantworten
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 200;
+        res.end();
+        return;
+    }
 
-// Stelle auch die JSON-Dateien direkt zur Verfügung
-app.use('/api', express.static(path.join(__dirname, 'data')));
+    // Einfaches Routing basierend auf URL-Pfad
+    const url = req.url;
 
-// API-Route zum Überprüfen des Passworts
-app.post('/api/checkPassword', (req, res) => {
-    const {password} = req.body;
+    // API-Endpoint für Opener-Daten
+    if (url === '/api/getOpeners' && req.method === 'GET') {
+        try {
+            console.log('Lese opener.json...');
+            const filePath = path.join(__dirname, 'data', 'opener.json');
 
-    // Passwörter sicher im Backend prüfen
-    if (password === '1') {
-        return res.json({success: true, type: 'opener'});
-    } else if (password === '2') {
-        return res.json({success: true, type: 'dates'});
-    } else {
-        return res.json({success: false});
+            // Prüfe ob Datei existiert
+            if (!fs.existsSync(filePath)) {
+                console.error('Datei nicht gefunden:', filePath);
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: 'Datei nicht gefunden' }));
+                return;
+            }
+
+            // Datei lesen
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            console.log('Dateiinhalt gelesen, Länge:', fileContent.length);
+
+            try {
+                const data = JSON.parse(fileContent);
+                if (!data.opener) {
+                    throw new Error('Ungültiges Datenformat: opener-Feld fehlt');
+                }
+
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(data.opener));
+            } catch (parseError) {
+                console.error('JSON-Parse-Fehler:', parseError.message);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: 'Fehler beim Parsen der Daten' }));
+            }
+        } catch (error) {
+            console.error('Server-Fehler:', error.message);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'Interner Serverfehler' }));
+        }
+    }
+
+    // API-Endpoint für Dates-Daten
+    else if (url === '/api/getDates' && req.method === 'GET') {
+        try {
+            console.log('Lese dates.json...');
+            const filePath = path.join(__dirname, 'data', 'dates.json');
+
+            // Prüfe ob Datei existiert
+            if (!fs.existsSync(filePath)) {
+                console.error('Datei nicht gefunden:', filePath);
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: 'Datei nicht gefunden' }));
+                return;
+            }
+
+            // Datei lesen
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            console.log('Dateiinhalt gelesen, Länge:', fileContent.length);
+
+            try {
+                const data = JSON.parse(fileContent);
+                if (!data.aktivitaeten) {
+                    throw new Error('Ungültiges Datenformat: aktivitaeten-Feld fehlt');
+                }
+
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(data.aktivitaeten));
+            } catch (parseError) {
+                console.error('JSON-Parse-Fehler:', parseError.message);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: 'Fehler beim Parsen der Daten' }));
+            }
+        } catch (error) {
+            console.error('Server-Fehler:', error.message);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'Interner Serverfehler' }));
+        }
+    }
+
+    // API-Endpoint für Passwort-Check
+    else if (url === '/api/checkPassword' && req.method === 'POST') {
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const { password } = data;
+                console.log('Passwort-Check:', password);
+
+                if (password === '1') {
+                    console.log('Passwort korrekt für: opener');
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ success: true, type: 'opener' }));
+                } else if (password === '2') {
+                    console.log('Passwort korrekt für: dates');
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ success: true, type: 'dates' }));
+                } else {
+                    console.log('Falsches Passwort');
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ success: false }));
+                }
+            } catch (error) {
+                console.error('Fehler beim Parsen des Request-Body:', error);
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: 'Ungültiges Request-Format' }));
+            }
+        });
+    }
+
+    // 404 für alle anderen Routen
+    else {
+        console.log('Route nicht gefunden:', url);
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Nicht gefunden' }));
     }
 });
 
-// API-Route zum Laden der Opener-Daten
-app.get('/api/getOpeners', async (req, res) => {
-    try {
-        const data = await fs.readFile(path.join(__dirname, 'data/opener.json'), 'utf8');
-        const openerData = JSON.parse(data);
-        res.json(openerData.opener);
-    } catch (error) {
-        console.error('Fehler beim Laden der Opener-Daten:', error);
-        res.status(500).json({error: 'Serverfehler beim Laden der Daten'});
-    }
+// Starte den Server
+server.listen(PORT, () => {
+    console.log(`Server läuft auf http://localhost:${PORT}`);
+    console.log(`Server-Verzeichnis: ${__dirname}`);
+    console.log(`Datenverzeichnis: ${path.join(__dirname, 'data')}`);
 });
 
-// API-Route zum Laden der Dates-Daten
-app.get('/api/getDates', async (req, res) => {
-    try {
-        const data = await fs.readFile(path.join(__dirname, 'data/dates.json'), 'utf8');
-        const datesData = JSON.parse(data);
-        res.json(datesData.aktivitaeten);
-    } catch (error) {
-        console.error('Fehler beim Laden der Dates-Daten:', error);
-        res.status(500).json({error: 'Serverfehler beim Laden der Daten'});
-    }
+// Fehlerbehandlung
+server.on('error', (error) => {
+    console.error('Server-Fehler:', error);
 });
 
-// Alle anderen Anfragen an die React-App weiterleiten
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
-app.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
+process.on('uncaughtException', (error) => {
+    console.error('Unbehandelte Ausnahme:', error);
 });
