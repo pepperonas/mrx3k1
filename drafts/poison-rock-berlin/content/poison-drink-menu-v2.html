@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POISON Rock Karaoke Bar - Getränkekarte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Oswald:wght@500;700&family=Playfair+Display:ital@0;1&display=swap"
+          rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0D0D0D;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+        }
+
+        .skull-icon {
+            font-size: 2.5rem;
+            display: inline-block;
+            margin-bottom: 10px;
+            transform: rotate(0deg);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #FFD700, 0 0 10px #8A2BE2;
+            }
+            to {
+                text-shadow: 0 0 10px #FFD700, 0 0 15px #FF8C00;
+            }
+        }
+
+        .menu {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .menu-section {
+            width: 48%;
+            margin-bottom: 30px;
+        }
+
+        .menu-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #8A2BE2;
+            color: #FFD700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .menu-item-name {
+            font-weight: 500;
+            flex-grow: 1;
+            color: #FFF1C1;
+        }
+
+        .menu-item-price {
+            font-weight: 700;
+            min-width: 60px;
+            text-align: right;
+            color: #FFD700;
+        }
+
+        .menu-item-description {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #A9A9A9;
+            margin-top: 3px;
+        }
+
+        .subsection-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            margin: 20px 0 15px;
+            color: #FF8C00;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #A9A9A9;
+        }
+
+        @media (max-width: 768px) {
+            .menu-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <div class="skull-icon">☠️</div>
+        <h1>POISON Rock Karaoke Bar</h1>
+        <p style="color: #FF8C00; font-family: 'Oswald', sans-serif; letter-spacing: 1px;">
+            BERLIN</p>
+    </div>
+
+    <div class="menu">
+        <div class="menu-section">
+            <h2 class="menu-title">Beeres</h2>
+
+            <div class="subsection-title">From the tap, 0.5/0.3 L</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Heinecken (Pils)</span>
+                <span class="menu-item-price">4.50/3.70 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Strongbow Apple Cider Dry</span>
+                <span class="menu-item-price">4.60/3.90 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Newcastle Brown Ale</span>
+                <span class="menu-item-price">4.80/4.10 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Radler</span>
+                <span class="menu-item-price">4.10/3.60 €</span>
+            </div>
+            <div class="menu-item-description">(beer and lemon soda)</div>
+
+            <div class="subsection-title">Bottled</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Desperados</span>
+                <span class="menu-item-price">4.20 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Starnberger (Lager/Helles)</span>
+                <span class="menu-item-price">4.80 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Krombacher (Hefeweizen)</span>
+                <span class="menu-item-price">4.90 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">BRLO IPA</span>
+                <span class="menu-item-price">4.50 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Heinecken 0.0 %</span>
+                <span class="menu-item-price">4.00 €</span>
+            </div>
+
+            <div class="subsection-title">Classic Long Drinks 310 ml</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Gin & Tonic</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Moscow Mule</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Cuba Libre</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item-description">(Bacardi Cola)</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Dark & Stormy</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Vodka Soda</span>
+                <span class="menu-item-price">7.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Martini & Tonic</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Whiskey Cola</span>
+                <span class="menu-item-price">7.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Vodka Lemon/Orange/Cola</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Extra 2 cl</span>
+                <span class="menu-item-price">2.00 €</span>
+            </div>
+            <div class="menu-item-description">Rum, Gin, Vodka, Whiskey, Martini or Liqueur</div>
+        </div>
+
+        <div class="menu-section">
+            <h2 class="menu-title">Cocktails</h2>
+            <div class="menu-item">
+                <span class="menu-item-name">Tequila Sunrise</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Mojito</span>
+                <span class="menu-item-price">11.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Long Island Ice Tea</span>
+                <span class="menu-item-price">15.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Negroni</span>
+                <span class="menu-item-price">8.70 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Pink</span>
+                <span class="menu-item-price">10.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Gin Basil Smash</span>
+                <span class="menu-item-price">9.50 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Margarita</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Whiskey Sour</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item-description">(diverse alcohols)</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Golden Tropics</span>
+                <span class="menu-item-price">9.50 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Lemon Pie</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Caipirinha</span>
+                <span class="menu-item-price">9.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Daiquiri</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Tequila Paloma</span>
+                <span class="menu-item-price">8.40 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Godfather</span>
+                <span class="menu-item-price">8.20 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Sex on the Beach</span>
+                <span class="menu-item-price">9.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Espresso Martini</span>
+                <span class="menu-item-price">9.00 €</span>
+            </div>
+
+            <div class="subsection-title">Spritz</div>
+            <div class="menu-item">
+                <span class="menu-item-name">Fiero Spritz</span>
+                <span class="menu-item-price">7.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Campari Spritz</span>
+                <span class="menu-item-price">7.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Peach Spritz</span>
+                <span class="menu-item-price">7.00 €</span>
+            </div>
+            <div class="menu-item">
+                <span class="menu-item-name">Limoncello Spritz</span>
+                <span class="menu-item-price">7.00 €</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.1rem;">
+            Sing your heart out & drink responsibly 🎤</p>
+        <div style="margin-top: 15px; font-family: 'Oswald', sans-serif; color: #8B0000;">
+            POISON ROCK KARAOKE BAR © 2025
+        </div>
+    </div>
+</div>
+</body>
+</html>

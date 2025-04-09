@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POISON - Rock Karaoke Cocktail Bar Berlin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Inter:wght@400;500;700&family=Playfair+Display:ital@0;1&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Open Graph Meta Tags für Link-Vorschau -->
+    <meta property="og:title" content="POISON - Rock Karaoke Cocktail Bar Berlin">
+    <meta property="og:description"
+          content="Die ultimative Rock Karaoke Bar im Herzen von Berlin Neukölln">
+    <meta property="og:image" content="poison.jpg">
+    <meta property="og:type" content="website">
+
+    <style>
+        :root {
+            --primary: #FFD700;
+            --secondary-purple: #8A2BE2;
+            --secondary-orange: #FF8C00;
+            --background: #0D0D0D;
+            --text-light: #FFFFFF;
+            --text-warm: #FFF1C1;
+            --text-muted: #A9A9A9;
+            --accent-red: #8B0000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* HEADER & NAVIGATION */
+        header {
+            background-color: rgba(13, 13, 13, 0.95);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 30px;
+        }
+
+        .nav-links a {
+            color: var(--text-warm);
+            text-decoration: none;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            height: 100vh;
+            /*background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1200/800') center/cover no-repeat;*/
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent, var(--background));
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(138, 43, 226, 0.3);
+            }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: var(--text-warm);
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: var(--background);
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-orange);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+        }
+
+        /* ABOUT SECTION */
+        section {
+            padding: 100px 0;
+        }
+
+        .section-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-align: center;
+            margin-bottom: 50px;
+            color: var(--primary);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary-purple);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .about-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .about-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .about-image {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .about-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .about-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(138, 43, 226, 0.3), rgba(255, 140, 0, 0.3));
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .about-image:hover::after {
+            opacity: 1;
+        }
+
+        .highlight {
+            color: var(--secondary-orange);
+            font-weight: 700;
+        }
+
+        .feature-list {
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .feature-icon {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .feature-text h3 {
+            font-family: 'Oswald', sans-serif;
+            margin-bottom: 5px;
+            color: var(--text-warm);
+        }
+
+        /* MENU SECTION */
+        .menu {
+            background-color: rgba(20, 20, 20, 0.7);
+            position: relative;
+        }
+
+        .menu::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/1200/800') center/cover no-repeat fixed;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .menu-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .menu-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .menu-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .menu-tab:hover {
+            color: var(--text-warm);
+        }
+
+        .menu-content {
+            display: none;
+        }
+
+        .menu-content.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .menu-item {
+            background-color: rgba(13, 13, 13, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .menu-item-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .menu-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .menu-item:hover .menu-item-image img {
+            transform: scale(1.1);
+        }
+
+        .menu-item-content {
+            padding: 20px;
+        }
+
+        .menu-item-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .menu-item-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .menu-item-price {
+            font-weight: 700;
+            color: var(--text-warm);
+        }
+
+        /* EVENTS SECTION */
+        .events-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .event-card {
+            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.9), rgba(13, 13, 13, 0.95));
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .event-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .event-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .event-card:hover .event-image img {
+            transform: scale(1.1);
+        }
+
+        .event-content {
+            padding: 20px;
+        }
+
+        .event-date {
+            display: inline-block;
+            background-color: var(--accent-red);
+            color: var(--text-light);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .event-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: var(--text-warm);
+            letter-spacing: 1px;
+        }
+
+        .event-description {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* CONTACT SECTION */
+        .contact-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .contact-info h3 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--text-warm);
+            letter-spacing: 1px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .contact-icon {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .contact-text h4 {
+            font-family: 'Oswald', sans-serif;
+            margin-bottom: 5px;
+            color: var(--text-warm);
+        }
+
+        .contact-text p {
+            color: var(--text-muted);
+        }
+
+        .opening-hours {
+            margin-top: 30px;
+        }
+
+        .day {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+        }
+
+        .day-name {
+            font-weight: 500;
+        }
+
+        .day.today {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .map {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .map iframe {
+            width: 100%;
+            height: 350px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: rgba(10, 10, 10, 0.9);
+            padding: 60px 0 20px;
+            position: relative;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-logo h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .footer-logo p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background-color: var(--primary);
+            color: var(--background);
+            transform: translateY(-3px);
+        }
+
+        .footer-links {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-links h3 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--text-warm);
+            letter-spacing: 1px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .newsletter {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .newsletter-form {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            border-radius: 30px 0 0 30px;
+            outline: none;
+        }
+
+        .newsletter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .newsletter-btn {
+            background-color: var(--primary);
+            color: var(--background);
+            border: none;
+            padding: 0 20px;
+            border-radius: 0 30px 30px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .newsletter-btn:hover {
+            background-color: var(--secondary-orange);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(169, 169, 169, 0.2);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* BACK TO TOP BUTTON */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: var(--background);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-orange);
+            transform: translateY(-3px);
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 0;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 70%;
+                height: 100vh;
+                background-color: rgba(13, 13, 13, 0.97);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                transition: right 0.5s ease;
+                z-index: 1001;
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            .nav-links li {
+                margin: 20px 0;
+            }
+
+            .hamburger {
+                display: block;
+                z-index: 1002;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .menu-tabs {
+                flex-wrap: wrap;
+            }
+
+            .menu-tab {
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+            }
+
+            .menu-content.active {
+                grid-template-columns: 1fr;
+            }
+
+            .events-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ANIMATIONS */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* QUOTE STYLES */
+        .quote {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--text-warm);
+            text-align: center;
+            max-width: 800px;
+            margin: 50px auto;
+            position: relative;
+            padding: 30px;
+        }
+
+        .quote::before,
+        .quote::after {
+            content: '"';
+            font-size: 4rem;
+            color: var(--secondary-purple);
+            opacity: 0.4;
+            position: absolute;
+        }
+
+        .quote::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .quote::after {
+            bottom: -30px;
+            right: 0;
+        }
+
+        .quote-author {
+            font-family: 'Inter', sans-serif;
+            font-style: normal;
+            font-size: 1rem;
+            color: var(--primary);
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        /* MODAL */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--background);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--primary);
+        }
+
+        .modal-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-warm);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: var(--background);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-btn:hover {
+            background-color: var(--secondary-orange);
+        }
+    </style>
+</head>
+<body>
+<!-- HEADER -->
+<header>
+    <div class="container">
+        <nav class="navbar">
+            <a href="#" class="logo">POISON</a>
+            <ul class="nav-links">
+                <li><a href="#about">Über Uns</a></li>
+                <li><a href="#menu">Drinks</a></li>
+                <li><a href="#events">Events</a></li>
+                <li><a href="#contact">Kontakt</a></li>
+                <li><a href="#" class="reservation-btn">Reservieren</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- HERO SECTION -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Poison Rock Karaoke Bar</h1>
+        <p>Die ultimative Rock Karaoke Bar im Herzen von Berlin Neukölln</p>
+        <a href="#" class="btn reservation-btn">Tisch Reservieren</a>
+    </div>
+</section>
+
+<!-- ABOUT SECTION -->
+<section id="about" class="about">
+    <div class="container">
+        <h2 class="section-title fade-in">Über Uns</h2>
+        <div class="about-content">
+            <div class="about-text fade-in">
+                <p>Entdecke <span class="highlight">Poison – die ultimative Rock Karaoke Bar im Herzen von Berlin Neukölln!</span>
+                    Dieser Ort ist ein absolutes Paradies für jeden, der Rock- und Metalmusik liebt
+                    und den Drang verspürt, seine Lieblingshymnen selbst auf der Bühne zu performen.
+                </p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Einzigartiges Konzept</h3>
+                            <p>Poison ist keine gewöhnliche Karaoke-Bar. Hier steht Rock, Punk und
+                                Metal im Mittelpunkt! Die Songauswahl ist gigantisch und speziell
+                                auf diese Genres zugeschnitten.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-cocktail"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Fantastische Atmosphäre</h3>
+                            <p>Sobald du eintrittst, spürst du die energiegeladene und gleichzeitig
+                                super entspannte Stimmung. Dunkles, gemütliches Ambiente trifft auf
+                                coole Rock'n'Roll-Deko.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Tolle Community</h3>
+                            <p>Hier treffen sich Gleichgesinnte! Das Publikum ist leidenschaftlich,
+                                offen und unglaublich unterstützend. Egal, ob du ein erfahrener
+                                Sänger bist oder zum ersten Mal auf der Bühne stehst – hier wirst du
+                                angefeuert und kannst dich total frei fühlen.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-microphone-alt"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Super Sound & Bühne</h3>
+                            <p>Die Technik sorgt dafür, dass dein Auftritt auch richtig gut klingt.
+                                Fühl dich wie ein echter Rockstar auf der einladenden Bühne!</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Faire Preise</h3>
+                            <p>Genieße deine Lieblingsdrinks von der gut sortierten Bar zu absolut
+                                fairen Neuköllner Preisen.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image fade-in">
+                <img src="/api/placeholder/600/400" alt="POISON Bar Atmosphäre">
+            </div>
+        </div>
+        <div class="quote fade-in">
+            Ein grandioser Ort, um die Sau rauszulassen und Musik mit jeder Faser zu leben!
+            <div class="quote-author">- Berliner Nightlife Magazin</div>
+        </div>
+    </div>
+</section>
+
+<!-- MENU SECTION -->
+<section id="menu" class="menu">
+    <div class="container">
+        <h2 class="section-title fade-in">Unsere Drinks</h2>
+        <div class="menu-tabs fade-in">
+            <div class="menu-tab active" data-tab="cocktails">Signature Cocktails</div>
+            <div class="menu-tab" data-tab="beer">Bier</div>
+            <div class="menu-tab" data-tab="shots">Shots</div>
+            <div class="menu-tab" data-tab="nonalcoholic">Alkoholfrei</div>
+        </div>
+
+        <!-- COCKTAILS -->
+        <div class="menu-content active" id="cocktails">
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Metal Madness Cocktail">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Metal Madness</h3>
+                    <p class="menu-item-description">Tequila, Limettensaft, schwarze Johannisbeere,
+                        Chili-Sirup & frische Minze. Stark und intensiv.</p>
+                    <p class="menu-item-price">12 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Purple Haze Cocktail">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Purple Haze</h3>
+                    <p class="menu-item-description">Gin, Violettenlikör, Zitronensaft, Blaubeeren &
+                        Prosecco. Eine Hommage an Jimi Hendrix.</p>
+                    <p class="menu-item-price">11 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Screaming Eagle Cocktail">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Screaming Eagle</h3>
+                    <p class="menu-item-description">Bourbon, Ahornsirup, Orange Bitters,
+                        geräucherte Noten. Für echte Whiskey-Fans.</p>
+                    <p class="menu-item-price">13 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Black Sabbath Cocktail">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Black Sabbath</h3>
+                    <p class="menu-item-description">Schwarzer Rum, Espresso, Kaffeelikör,
+                        Vanillesirup. Unser Signature-Espresso-Martini.</p>
+                    <p class="menu-item-price">12 €</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BEER -->
+        <div class="menu-content" id="beer">
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Berliner Pilsner">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Berliner Pilsner</h3>
+                    <p class="menu-item-description">Klassisches Berliner Pilsner vom Fass, frisch
+                        gezapft.</p>
+                    <p class="menu-item-price">4 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="BRLO Pale Ale">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">BRLO Pale Ale</h3>
+                    <p class="menu-item-description">Berliner Craft Beer mit frischen Hopfennoten
+                        und fruchtigem Abgang.</p>
+                    <p class="menu-item-price">5,50 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Stone IPA">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Stone IPA</h3>
+                    <p class="menu-item-description">Kräftiges American IPA mit intensiver
+                        Hopfennote.</p>
+                    <p class="menu-item-price">6 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Schneider Weisse">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Schneider Weisse</h3>
+                    <p class="menu-item-description">Traditionelles bayrisches Hefeweizen mit
+                        Bananen- und Gewürznelkennoten.</p>
+                    <p class="menu-item-price">4,50 €</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHOTS -->
+        <div class="menu-content" id="shots">
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Headbanger Shot">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Headbanger</h3>
+                    <p class="menu-item-description">Jägermeister, Energydrink & ein Hauch von
+                        Chili. Weckt die Toten auf.</p>
+                    <p class="menu-item-price">4 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Fire Starter Shot">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Fire Starter</h3>
+                    <p class="menu-item-description">Feuriger Cinnamon-Whiskey mit einem Spritzer
+                        Tabasco. Nichts für schwache Nerven!</p>
+                    <p class="menu-item-price">4 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Black Metal Shot">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Black Metal</h3>
+                    <p class="menu-item-description">Vodka, Kaffeelikör und ein Hauch von
+                        Aktivkohle. Schwarz wie die Nacht.</p>
+                    <p class="menu-item-price">4 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Golden God Shot">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Golden God</h3>
+                    <p class="menu-item-description">Goldtequila, Orangenlikör und echte
+                        Goldflocken. Für Rockgötter.</p>
+                    <p class="menu-item-price">5 €</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NON ALCOHOLIC -->
+        <div class="menu-content" id="nonalcoholic">
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Roadie Refresher">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Roadie Refresher</h3>
+                    <p class="menu-item-description">Maracuja, Minze, Limette und Soda. Erfrischend
+                        mit tropischer Note.</p>
+                    <p class="menu-item-price">7 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Dark Side Mocktail">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Dark Side</h3>
+                    <p class="menu-item-description">Aktivkohle, Brombeersaft, Zitrone und
+                        Ingwerbier. Schwarzer alkoholfreier Cocktail.</p>
+                    <p class="menu-item-price">8 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Fritz-Kola">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Fritz-Kola</h3>
+                    <p class="menu-item-description">Kult-Kola aus Hamburg mit extra viel
+                        Koffein.</p>
+                    <p class="menu-item-price">3,50 €</p>
+                </div>
+            </div>
+            <div class="menu-item fade-in">
+                <div class="menu-item-image">
+                    <img src="/api/placeholder/400/300" alt="Rock Water">
+                </div>
+                <div class="menu-item-content">
+                    <h3 class="menu-item-title">Rock Water</h3>
+                    <p class="menu-item-description">Stilles oder sprudelndes Mineralwasser. Perfekt
+                        für Sänger!</p>
+                    <p class="menu-item-price">2,50 €</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- EVENTS SECTION -->
+<section id="events" class="events">
+    <div class="container">
+        <h2 class="section-title fade-in">Kommende Events</h2>
+        <div class="events-container">
+            <div class="event-card fade-in">
+                <div class="event-image">
+                    <img src="/api/placeholder/400/300" alt="Rock Karaoke Night">
+                </div>
+                <div class="event-content">
+                    <span class="event-date"><i
+                            class="far fa-calendar-alt"></i> Jeden Mittwoch</span>
+                    <h3 class="event-title">Rock Karaoke Night</h3>
+                    <p class="event-description">Unser klassischer Karaoke-Abend mit Fokus auf Rock
+                        und Metal. Zeig, was du drauf hast!</p>
+                    <a href="#" class="btn">Mehr Info</a>
+                </div>
+            </div>
+            <div class="event-card fade-in">
+                <div class="event-image">
+                    <img src="/api/placeholder/400/300" alt="Metal Monday">
+                </div>
+                <div class="event-content">
+                    <span class="event-date"><i
+                            class="far fa-calendar-alt"></i> Jeden Dienstag</span>
+                    <h3 class="event-title">Rockstar Tuesday</h3>
+                    <p class="event-description">Spezialabend mit Tribute-Songs der größten
+                        Rocklegenden aller Zeiten.</p>
+                    <a href="#" class="btn">Mehr Info</a>
+                </div>
+            </div>
+            <div class="event-card fade-in">
+                <div class="event-image">
+                    <img src="/api/placeholder/400/300" alt="Band Battle">
+                </div>
+                <div class="event-content">
+                    <span class="event-date"><i
+                            class="far fa-calendar-alt"></i> 15. April 2025</span>
+                    <h3 class="event-title">Band Battle Night</h3>
+                    <p class="event-description">Bilde spontan Bands und performt zusammen! Der
+                        Gewinner erhält Freigetränke.</p>
+                    <a href="#" class="btn">Mehr Info</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT SECTION -->
+<section id="contact" class="contact">
+    <div class="container">
+        <h2 class="section-title fade-in">Kontakt & Anfahrt</h2>
+        <div class="contact-container">
+            <div class="contact-info fade-in">
+                <h3>Finde uns</h3>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-text">
+                        <h4>Adresse</h4>
+                        <p>Flughafenstraße 39, 12053 Berlin</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <div class="contact-text">
+                        <h4>Telefon</h4>
+                        <p>0176 31479374</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-text">
+                        <h4>Email</h4>
+                        <p>info@poison-bar.de</p>
+                    </div>
+                </div>
+                <div class="opening-hours">
+                    <h4>Öffnungszeiten</h4>
+                    <div class="day">
+                        <span class="day-name">Montag</span>
+                        <span class="day-hours">Geschlossen</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Dienstag</span>
+                        <span class="day-hours">20:00–03:00</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Mittwoch</span>
+                        <span class="day-hours">20:00–03:00</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Donnerstag</span>
+                        <span class="day-hours">20:00–03:00</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Freitag</span>
+                        <span class="day-hours">20:00–05:00</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Samstag</span>
+                        <span class="day-hours">20:00–05:00</span>
+                    </div>
+                    <div class="day">
+                        <span class="day-name">Sonntag</span>
+                        <span class="day-hours">20:00–03:00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="map fade-in">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2429.3122540469!2d13.4321423!3d52.4819566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47a84fb46c8c3897%3A0x4a4ac35b9e7d71b0!2sFlughafenstra%C3%9Fe%2039%2C%2012053%20Berlin!5e0!3m2!1sen!2sde!4v1712619595131!5m2!1sen!2sde"
+                        allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <h2>POISON</h2>
+                <p>Die ultimative Rock Karaoke Bar in Berlin Neukölln. Erlebe unvergessliche Nächte
+                    voller Musik und guter Stimmung.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="#about">Über Uns</a></li>
+                    <li><a href="#menu">Drinks</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#contact">Kontakt</a></li>
+                    <li><a href="#">Impressum</a></li>
+                    <li><a href="#">Datenschutz</a></li>
+                </ul>
+            </div>
+            <div class="newsletter">
+                <h3>Newsletter</h3>
+                <p>Melde dich für unseren Newsletter an und erhalte Updates zu kommenden Events und
+                    Specials.</p>
+                <form class="newsletter-form">
+                    <input type="email" class="newsletter-input" placeholder="Deine Email-Adresse">
+                    <button type="submit" class="newsletter-btn"><i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 POISON Rock Karaoke Bar Berlin. Alle Rechte vorbehalten.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- RESERVATION MODAL -->
+<div class="modal" id="reservation-modal">
+    <div class="modal-content">
+        <span class="close-modal"><i class="fas fa-times"></i></span>
+        <h3 class="modal-title">Tisch Reservieren</h3>
+        <form id="reservation-form">
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Telefon</label>
+                <input type="tel" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Datum</label>
+                <input type="date" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Uhrzeit</label>
+                <input type="time" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Anzahl Personen</label>
+                <input type="number" class="form-input" min="1" max="20" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nachricht (optional)</label>
+                <textarea class="form-input"></textarea>
+            </div>
+            <button type="submit" class="form-btn">Reservieren</button>
+        </form>
+    </div>
+</div>
+
+<!-- BACK TO TOP BUTTON -->
+<div class="back-to-top" id="back-to-top">
+    <i class="fas fa-chevron-up"></i>
+</div>
+
+<script>
+    // Menu Tabs
+    const menuTabs = document.querySelectorAll('.menu-tab');
+    const menuContents = document.querySelectorAll('.menu-content');
+
+    menuTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and contents
+            menuTabs.forEach(t => t.classList.remove('active'));
+            menuContents.forEach(c => c.classList.remove('active'));
+
+            // Add active class to clicked tab
+            tab.classList.add('active');
+
+            // Show corresponding content
+            const tabId = tab.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+
+    // Mobile Menu Toggle
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.querySelector('.nav-links');
+
+    hamburger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+
+        // Toggle hamburger icon
+        const icon = hamburger.querySelector('i');
+        if (icon.classList.contains('fa-bars')) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        } else {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        }
+    });
+
+    // Close mobile menu when clicking a link
+    const navItems = document.querySelectorAll('.nav-links a');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            const icon = hamburger.querySelector('i');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        });
+    });
+
+    // Modal Functionality
+    const reservationBtns = document.querySelectorAll('.reservation-btn');
+    const reservationModal = document.getElementById('reservation-modal');
+    const closeModal = document.querySelector('.close-modal');
+
+    reservationBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            reservationModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    closeModal.addEventListener('click', () => {
+        reservationModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === reservationModal) {
+            reservationModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // Form Submission (Prevent default for demo)
+    const reservationForm = document.getElementById('reservation-form');
+    if (reservationForm) {
+        reservationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Vielen Dank für deine Reservierung! Wir werden uns so schnell wie möglich bei dir melden.');
+            reservationModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            reservationForm.reset();
+        });
+    }
+
+    // Back to Top Button
+    const backToTopBtn = document.getElementById('back-to-top');
+
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // Scroll Animation
+    const fadeElements = document.querySelectorAll('.fade-in');
+
+    const fadeInOnScroll = () => {
+        fadeElements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            const windowHeight = window.innerHeight;
+
+            if (elementTop < windowHeight - 100) {
+                element.classList.add('active');
+            }
+        });
+    };
+
+    // Initial check on page load
+    fadeInOnScroll();
+
+    // Check on scroll
+    window.addEventListener('scroll', fadeInOnScroll);
+
+    // Set current day in opening hours
+    const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    const today = new Date().getDay();
+    const todayElement = document.querySelectorAll('.day')[today];
+    if (todayElement) {
+        todayElement.classList.add('today');
+    }
+</script>
+</body>
+</html>
