@@ -77,7 +77,17 @@ async function loadSongs() {
                 const notesResponse = await fetch(`notes/${song.id}.json`);
                 if (notesResponse.ok) {
                     const notesData = await notesResponse.json();
-                    song.notes = notesData;
+                    // Überprüfen des Formats der Noten und einheitliche Verarbeitung
+                    if (Array.isArray(notesData)) {
+                        // Format von old_thing_back.json: direktes Array
+                        song.notes = notesData;
+                    } else if (notesData.notes && Array.isArray(notesData.notes)) {
+                        // Format von welcome-to-st-tropez.json: { notes: [...] }
+                        song.notes = notesData.notes;
+                    } else {
+                        console.warn(`Unbekanntes Notenformat für Song ${song.id}`);
+                        song.notes = [];
+                    }
                 } else {
                     console.warn(`Notes für Song ${song.id} konnten nicht geladen werden`);
                     song.notes = [];
