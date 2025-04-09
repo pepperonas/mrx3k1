@@ -10,4 +10,4 @@ node app.js
 
 ## Todo
 
-* [ ] Support mobile devices (implement NavBar) 
+* [x] Support mobile devices (implement NavBar) 
