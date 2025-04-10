@@ -1,0 +1,274 @@
+/* Zusätzliche Styles für den KaraokePlayer */
+
+/* Upload Container */
+.upload-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .upload-container {
+        flex-direction: column;
+    }
+}
+
+.upload-card {
+    flex: 1;
+    background-color: rgba(42, 44, 58, 0.3);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.upload-title {
+    font-size: 1.125rem;
+    color: var(--primary-light);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.start-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+/* Player Card */
+.player-card {
+    border-left: 4px solid var(--primary);
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.song-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.song-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.player-score {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.score-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-right: 0.5rem;
+}
+
+.score-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-light);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-large {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--primary-dark);
+    color: var(--primary-light);
+}
+
+.btn-outline:hover {
+    background-color: rgba(139, 92, 246, 0.1);
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Karaoke Container */
+.karaoke-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .karaoke-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Lyrics Card */
+.lyrics-card {
+    border-left: 4px solid var(--accent);
+}
+
+.lyrics-display {
+    display: flex;
+    flex-direction: column;
+    max-height: 20rem;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: var(--inner-bg);
+    border-radius: 0.5rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.lyric-line {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--text-muted);
+    font-size: 1.125rem;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.lyric-line.active {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--text-light);
+    font-weight: 600;
+    transform: scale(1.05);
+    transform-origin: left center;
+    border-left: 3px solid var(--primary);
+}
+
+.lyric-line.past {
+    color: var(--text-dimmed);
+}
+
+/* Pitch Card */
+.pitch-card {
+    border-left: 4px solid var(--success);
+}
+
+.pitch-display {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.pitch-meter-container {
+    display: flex;
+    align-items: stretch;
+    flex: 1;
+}
+
+.pitch-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.pitch-meter {
+    position: relative;
+    flex: 1;
+    background: linear-gradient(to bottom,
+    #7f1d1d, /* Sehr hoch - rot */ #b45309, /* Hoch - orange */ #047857, /* Mittel - grün */ #1d4ed8, /* Tief - blau */ #4c1d95 /* Sehr tief - lila */
+    );
+    border-radius: 0.375rem;
+    height: 12rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.target-pitch {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.current-pitch {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+    transform: translateX(-50%);
+    left: 50%;
+    margin-bottom: -4px;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+}
+
+.pitch-stats {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 8rem;
+}
+
+.pitch-stat-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+}
+
+.pitch-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.pitch-stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.pitch-accuracy {
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pitch-history {
+    position: relative;
+    height: 5rem;
+    background-color: var(--inner-bg);
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pitch-history-bar {
+    position: absolute;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--primary);
+    opacity: 0.7;
+    transition: height 0.1s ease;
+}
+
+/* Card Numbers mit Icons */
+.card-number svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: white;
+}
