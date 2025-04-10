@@ -26,6 +26,85 @@ const KaraokePlayer = () => {
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
 
+    // Füge einen eigenen Stylesheet für den Neon-Effekt hinzu
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes neon-glow {
+                0% {
+                    color: #fff;
+                    text-shadow: 0 0 10px #fff, 
+                                0 0 20px #fff, 
+                                0 0 30px #8b5cf6,
+                                0 0 40px #8b5cf6, 
+                                0 0 70px #8b5cf6, 
+                                0 0 80px #8b5cf6;
+                    transform: scale(1.05);
+                }
+                50% {
+                    color: #fff;
+                    text-shadow: 0 0 5px #fff, 
+                                0 0 10px #fff, 
+                                0 0 15px #a78bfa,
+                                0 0 30px #a78bfa, 
+                                0 0 40px #a78bfa, 
+                                0 0 50px #a78bfa;
+                    transform: scale(1.1);
+                }
+                100% {
+                    color: #fff;
+                    text-shadow: 0 0 10px #fff, 
+                                0 0 20px #fff, 
+                                0 0 30px #8b5cf6,
+                                0 0 40px #8b5cf6, 
+                                0 0 70px #8b5cf6, 
+                                0 0 80px #8b5cf6;
+                    transform: scale(1.05);
+                }
+            }
+            
+            @keyframes neon-border {
+                0% {
+                    box-shadow: 0 0 15px 5px rgba(139, 92, 246, 0.7);
+                }
+                100% {
+                    box-shadow: 0 0 25px 8px rgba(139, 92, 246, 0.9);
+                }
+            }
+            
+            .lyric-line.active {
+                animation: neon-glow 1.2s infinite;
+                color: #fff;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                z-index: 10;
+                background-color: rgba(139, 92, 246, 0.2);
+                border-left: 5px solid #8b5cf6;
+                backdrop-filter: brightness(1.2);
+                transform-origin: center;
+                position: relative;
+            }
+            
+            .lyric-line.active::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-radius: 0.5rem;
+                box-shadow: 0 0 15px 5px rgba(139, 92, 246, 0.7);
+                z-index: -1;
+                animation: neon-border 1.2s infinite alternate;
+            }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
     const updateDomTime = (time) => {
         const currentTimeElement = document.querySelector('.time-current');
         const totalTimeElement = document.querySelector('.time-total');
@@ -45,12 +124,33 @@ const KaraokePlayer = () => {
         const lyricsContainer = lyricsDisplayRef.current;
         if (!lyricsContainer) return;
 
+        console.log("Aktualisiere Lyrics-Stil für Index:", index);
+
         // Entferne bestehende Klassen
         const allLyrics = lyricsContainer.querySelectorAll('.lyric-line');
         allLyrics.forEach((line, idx) => {
             line.classList.remove('active', 'past');
+
+            // Wichtig: Alle alten Elemente entfernen
+            if (line.querySelector('.glow-overlay')) {
+                line.removeChild(line.querySelector('.glow-overlay'));
+            }
+
             if (idx === index) {
+                console.log("Stelle aktiven Lyric ein:", idx);
                 line.classList.add('active');
+
+                // Schaffe einen benutzerdefinierten Overlay für den Glüheffekt
+                const glowOverlay = document.createElement('div');
+                glowOverlay.className = 'glow-overlay';
+                glowOverlay.style.position = 'absolute';
+                glowOverlay.style.inset = '0';
+                glowOverlay.style.pointerEvents = 'none';
+                glowOverlay.style.zIndex = '-1';
+                glowOverlay.style.borderRadius = '0.5rem';
+                glowOverlay.style.opacity = '0.8';
+                line.style.position = 'relative';
+                line.appendChild(glowOverlay);
             } else if (idx < index) {
                 line.classList.add('past');
             }
@@ -821,7 +921,7 @@ const KaraokePlayer = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jsong Karaoke Player | Made with ♥
+                jsong Karaoke Player | Made with ❤️ by Martin Pfeffer
             </footer>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
 import '../App.css';
 
@@ -97,7 +97,7 @@ const KaraokeJsonGenerator = () => {
     // Update lyric text
     const updateLyricText = (id, text) => {
         setLyrics(lyrics.map(lyric =>
-            lyric.id === id ? { ...lyric, text } : lyric
+            lyric.id === id ? {...lyric, text} : lyric
         ));
     };
 
@@ -213,7 +213,7 @@ const KaraokeJsonGenerator = () => {
     const downloadJson = () => {
         if (!jsonOutput) return;
 
-        const blob = new Blob([jsonOutput], { type: 'application/json' });
+        const blob = new Blob([jsonOutput], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -246,7 +246,9 @@ const KaraokeJsonGenerator = () => {
                         Audio hochladen
                     </h2>
                     <label className="file-upload">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                             strokeLinejoin="round">
                             <path d="M9 18V5l12-2v13"></path>
                             <circle cx="6" cy="18" r="3"></circle>
                             <circle cx="18" cy="16" r="3"></circle>
@@ -275,7 +277,9 @@ const KaraokeJsonGenerator = () => {
                                     onClick={togglePlayback}
                                     className={`btn ${isPlaying ? 'btn-error' : 'btn-primary'}`}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
                                         {isPlaying ? (
                                             <rect x="6" y="4" width="4" height="16"></rect>
                                         ) : (
@@ -292,16 +296,16 @@ const KaraokeJsonGenerator = () => {
                                 </div>
                             </div>
 
-                            <audio ref={audioRef} src={audioUrl} />
+                            <audio ref={audioRef} src={audioUrl}/>
 
                             <div className="progress-container">
                                 <div
                                     className="progress-bar"
-                                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                                    style={{width: `${(currentTime / duration) * 100}%`}}
                                 />
                                 <div
                                     className="progress-handle"
-                                    style={{ left: `${(currentTime / duration) * 100}%` }}
+                                    style={{left: `${(currentTime / duration) * 100}%`}}
                                 />
                             </div>
                         </section>
@@ -317,7 +321,9 @@ const KaraokeJsonGenerator = () => {
                                     onClick={addLyricLine}
                                     className="btn btn-primary"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
@@ -332,15 +338,22 @@ const KaraokeJsonGenerator = () => {
                                         className={`lyric-item ${index === currentLyricIndex ? 'active' : ''}`}
                                     >
                                         <div className="lyric-meta">
-                                            <span className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <span
+                                                className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}>
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round">
                                                     <circle cx="12" cy="12" r="10"></circle>
                                                     <polyline points="12 6 12 12 16 14"></polyline>
                                                 </svg>
                                                 Start: {formatTime(lyric.startTime)}
                                             </span>
                                             <span className="lyric-pitch">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M9 18V5l12-2v13"></path>
                                                     <circle cx="6" cy="18" r="3"></circle>
                                                 </svg>
@@ -356,9 +369,13 @@ const KaraokeJsonGenerator = () => {
                                                 placeholder="Lyric text eingeben..."
                                             />
                                             <div className="lyric-edit-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M12 20h9"></path>
-                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                    <path
+                                                        d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                                 </svg>
                                             </div>
                                         </div>
@@ -367,14 +384,18 @@ const KaraokeJsonGenerator = () => {
 
                                 {lyrics.length === 0 && (
                                     <div className="empty-lyrics">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path
+                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                             <line x1="16" y1="13" x2="8" y2="13"></line>
                                             <line x1="16" y1="17" x2="8" y2="17"></line>
                                             <polyline points="10 9 9 9 8 9"></polyline>
                                         </svg>
-                                        <p>Klicke auf "+ Zeile" während der Wiedergabe,<br />um Lyrics zu erfassen</p>
+                                        <p>Klicke auf "+ Zeile" während der Wiedergabe,<br/>um
+                                            Lyrics zu erfassen</p>
                                     </div>
                                 )}
                             </div>
@@ -393,7 +414,10 @@ const KaraokeJsonGenerator = () => {
                                 >
                                     {isAnalyzing ? (
                                         <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
                                                 <rect x="6" y="4" width="4" height="16"></rect>
                                                 <rect x="14" y="4" width="4" height="16"></rect>
                                             </svg>
@@ -401,16 +425,24 @@ const KaraokeJsonGenerator = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <path
+                                                    d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
                                             </svg>
                                             Analyse starten
                                         </>
                                     )}
                                 </button>
-                                <div className={`mic-status ${isAnalyzing ? 'active' : 'inactive'}`}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <div
+                                    className={`mic-status ${isAnalyzing ? 'active' : 'inactive'}`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                                         <line x1="12" y1="19" x2="12" y2="23"></line>
                                         <line x1="8" y1="23" x2="16" y2="23"></line>
@@ -436,17 +468,20 @@ const KaraokeJsonGenerator = () => {
                                                 opacity: 0.7 + Math.min(data.pitch / 500, 0.3)
                                             }}
                                         >
-                                            <div className="pitch-dot" />
+                                            <div className="pitch-dot"/>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="empty-pitch">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                                         <line x1="12" y1="19" x2="12" y2="23"></line>
                                         <line x1="8" y1="23" x2="16" y2="23"></line>
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                     </svg>
                                     <p>Starte die Analyse und singe, um Pitch-Daten zu sammeln</p>
                                 </div>
@@ -465,7 +500,9 @@ const KaraokeJsonGenerator = () => {
                                         onClick={generateJson}
                                         className="btn btn-primary"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="16 18 22 12 16 6"></polyline>
                                             <polyline points="8 6 2 12 8 18"></polyline>
                                         </svg>
@@ -476,8 +513,11 @@ const KaraokeJsonGenerator = () => {
                                         disabled={!jsonOutput}
                                         className={`btn ${jsonOutput ? 'btn-success' : 'btn-disabled'}`}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path
+                                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                             <polyline points="7 10 12 15 17 10"></polyline>
                                             <line x1="12" y1="15" x2="12" y2="3"></line>
                                         </svg>
@@ -492,24 +532,34 @@ const KaraokeJsonGenerator = () => {
                                         <code>{jsonOutput}</code>
                                     </pre>
                                     <button
-                                        onClick={() => {navigator.clipboard.writeText(jsonOutput)}}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(jsonOutput)
+                                        }}
                                         className="json-copy-btn"
                                         title="In die Zwischenablage kopieren"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2"
+                                                  ry="2"></rect>
+                                            <path
+                                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                         </svg>
                                     </button>
                                 </div>
                             ) : (
                                 <div className="empty-json">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                         <path d="M10 12a1 1 0 0 0 0 2h4a1 1 0 0 0 0-2h-4z"></path>
                                     </svg>
-                                    <p>Klicke auf "Generieren", um das JSON für deine<br />Karaoke-App zu erstellen</p>
+                                    <p>Klicke auf "Generieren", um das JSON für deine<br/>Karaoke-App
+                                        zu erstellen</p>
                                 </div>
                             )}
                         </section>
@@ -517,7 +567,7 @@ const KaraokeJsonGenerator = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jsong Karaoke JSON Generator | Made with ♥
+                jsong Karaoke JSON Generator | Made with ❤️ by Martin Pfeffer
             </footer>
         </div>
     );
