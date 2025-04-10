@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Immobilien-Komplettrechner</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Immobilien-Rechner</title>
+    <link rel="stylesheet" href="styles.css">
 
     <!-- Open Graph Meta Tags für Link-Vorschau -->
-    <meta property="og:title" content="Immobilien-Komplettrechner">
+    <meta property="og:title" content="Immobilien-Rechner">
     <meta property="og:description" content="Made with ❤️ by Martin Pfeffer">
     <meta property="og:image" content="immo.jpg">
     <meta property="og:type" content="website">
 
     <!-- Twitter Card Tags für Twitter-Vorschau -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Immobilien-Komplettrechner">
+    <meta name="twitter:title" content="Immobilien-Rechner">
     <meta name="twitter:description" content="Made with ❤️ by Martin Pfeffer">
     <meta name="twitter:image" content="immo.jpg">
 
@@ -25,131 +25,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-
-    <style>
-        :root {
-            --primary-color: #1F1F2B;
-            --secondary-color: #2C2C3E;
-            --background-color: #121218;
-            --white: #ffffff;
-            --text-color: #E0E0E0;
-            --accent-blue: #4A90E2;
-            --accent-green: #2ECC71;
-            --accent-orange: #F39C12;
-            --accent-purple: #9B59B6;
-            --accent-red: #E74C3C;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--background-color);
-            margin: 0;
-            padding: 40px;
-            color: var(--text-color);
-        }
-
-        .container {
-            max-width: 950px;
-            margin: auto;
-            background: var(--primary-color);
-            border-radius: 16px;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--white);
-            margin-bottom: 32px;
-            font-weight: 700;
-        }
-
-        .section {
-            margin-bottom: 32px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text-color);
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            font-size: 1rem;
-            border: 1px solid var(--secondary-color);
-            border-radius: 8px;
-            margin-bottom: 16px;
-            background-color: #2C2C3E;
-            color: var(--white);
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-        }
-
-        .result {
-            background: var(--accent-green);
-            color: var(--white);
-            padding: 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-
-        .formel, .note {
-            font-size: 0.9rem;
-            color: #A0A0A0;
-            margin-bottom: 16px;
-        }
-
-        .box {
-            padding: 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .netto-box {
-            background: var(--accent-orange);
-            color: var(--white);
-        }
-
-        .tilgung-box {
-            background: var(--accent-blue);
-            color: var(--white);
-        }
-
-        .wert-box {
-            background: var(--accent-purple);
-            color: var(--white);
-        }
-
-        .break-even-box {
-            background: var(--accent-red);
-            color: var(--white);
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 20px;
-            }
-
-            .container {
-                padding: 20px;
-            }
-        }
-    </style>
 </head>
 <body>
 <div class="container">
-    <h1>🏡 Immobilien-Komplettrechner</h1>
+    <h1>🏡 Immobilien-Rechner</h1>
 
     <div class="section">
         <label>Kaufpreis (€)</label>
@@ -183,10 +62,10 @@
     </div>
 
     <div class="section">
-        <div class="result" id="bruttoRendite">Bruttorendite: ...</div>
+        <div class="result" id="bruttoRendite">💵 Bruttorendite: ...</div>
         <div class="formel" id="formelBrutto"></div>
 
-        <div class="result netto-box" id="nettoRendite">Nettorendite: ...</div>
+        <div class="result netto-box" id="nettoRendite">💵 Nettorendite: ...</div>
         <div class="formel" id="formelNetto"></div>
     </div>
 
@@ -233,8 +112,8 @@
 
         get("gesamtkosten").textContent = formatEuro(gesamtkosten);
         get("fremdfinanzierung").textContent = formatEuro(darlehen);
-        get("bruttoRendite").textContent = `Bruttorendite: ${brutto.toFixed(2)} %`;
-        get("nettoRendite").textContent = `Nettorendite: ${netto.toFixed(2)} %`;
+        get("bruttoRendite").textContent = `💵 Bruttorendite: ${brutto.toFixed(2)} %`;
+        get("nettoRendite").textContent = `💵 Nettorendite: ${netto.toFixed(2)} %`;
         get("formelBrutto").textContent = `(${formatEuro(mieteJahr)} ÷ ${formatEuro(gesamtkosten)}) × 100`;
         get("formelNetto").textContent = `(${formatEuro(mieteJahr)} – ${formatEuro(nuJahr)} ÷ ${formatEuro(gesamtkosten)}) × 100`;
 
