@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as Tone from 'tone';
-import './App.css';
+import '../App.css';
 
 const KaraokeJsonGenerator = () => {
     const [audioFile, setAudioFile] = useState(null);
@@ -234,7 +234,7 @@ const KaraokeJsonGenerator = () => {
     return (
         <div className="app-container">
             <header className="app-header">
-                <h1 className="app-title">jSong</h1>
+                <h1 className="app-title">jsong</h1>
                 <p className="app-subtitle">Karaoke JSON Generator</p>
             </header>
 
@@ -332,20 +332,20 @@ const KaraokeJsonGenerator = () => {
                                         className={`lyric-item ${index === currentLyricIndex ? 'active' : ''}`}
                                     >
                                         <div className="lyric-meta">
-                      <span className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        Start: {formatTime(lyric.startTime)}
-                      </span>
+                                            <span className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                                Start: {formatTime(lyric.startTime)}
+                                            </span>
                                             <span className="lyric-pitch">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 18V5l12-2v13"></path>
-                          <circle cx="6" cy="18" r="3"></circle>
-                        </svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M9 18V5l12-2v13"></path>
+                                                    <circle cx="6" cy="18" r="3"></circle>
+                                                </svg>
                                                 {lyric.pitchTargets.length} Pitch-Punkte
-                      </span>
+                                            </span>
                                         </div>
                                         <div className="lyric-input-container">
                                             <input
@@ -488,9 +488,9 @@ const KaraokeJsonGenerator = () => {
 
                             {jsonOutput ? (
                                 <div className="json-preview">
-                  <pre className="json-output">
-                    <code>{jsonOutput}</code>
-                  </pre>
+                                    <pre className="json-output">
+                                        <code>{jsonOutput}</code>
+                                    </pre>
                                     <button
                                         onClick={() => {navigator.clipboard.writeText(jsonOutput)}}
                                         className="json-copy-btn"
@@ -517,7 +517,7 @@ const KaraokeJsonGenerator = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jSong Karaoke JSON Generator | Made with ♥
+                jsong Karaoke JSON Generator | Made with ♥
             </footer>
         </div>
     );

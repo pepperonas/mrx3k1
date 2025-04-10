@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as Tone from 'tone';
-import './App.css';
+import '../App.css';
+import '../Player.css';
 
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
@@ -277,7 +278,7 @@ const KaraokePlayer = () => {
     return (
         <div className="app-container">
             <header className="app-header">
-                <h1 className="app-title">jSong Player</h1>
+                <h1 className="app-title">jsong Player</h1>
                 <p className="app-subtitle">Karaoke Spiel</p>
             </header>
 
@@ -301,7 +302,7 @@ const KaraokePlayer = () => {
                                         <polyline points="10 9 9 9 8 9"></polyline>
                                     </svg>
                                     <p className="file-upload-text">{songData ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
-                                    <p className="file-upload-hint">{!songData && '(Mit dem jSong Generator erstellt)'}</p>
+                                    <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
                                     <input
                                         type="file"
                                         accept="application/json"
@@ -408,15 +409,15 @@ const KaraokePlayer = () => {
                         <div className="karaoke-container">
                             <section className="card lyrics-card">
                                 <h2 className="card-title">
-                  <span className="card-number">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                  </span>
+                                    <span className="card-number">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg>
+                                    </span>
                                     Lyrics
                                 </h2>
 
@@ -434,13 +435,13 @@ const KaraokePlayer = () => {
 
                             <section className="card pitch-card">
                                 <h2 className="card-title">
-                  <span className="card-number">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18V5l12-2v13"></path>
-                      <circle cx="6" cy="18" r="3"></circle>
-                      <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                  </span>
+                                    <span className="card-number">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M9 18V5l12-2v13"></path>
+                                            <circle cx="6" cy="18" r="3"></circle>
+                                            <circle cx="18" cy="16" r="3"></circle>
+                                        </svg>
+                                    </span>
                                     Pitch
                                 </h2>
 
@@ -483,14 +484,14 @@ const KaraokePlayer = () => {
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Dein Pitch:</span>
                                             <span className="pitch-stat-value" style={{ color: getAccuracyColor() }}>
-                        {currentPitch || '-'}
-                      </span>
+                                                {currentPitch || '-'}
+                                            </span>
                                         </div>
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Ziel Pitch:</span>
                                             <span className="pitch-stat-value">
-                        {targetPitch || '-'}
-                      </span>
+                                                {targetPitch || '-'}
+                                            </span>
                                         </div>
                                         <div className="pitch-accuracy" style={{ backgroundColor: getAccuracyColor() }}>
                                             {currentPitch && targetPitch ? (
@@ -521,7 +522,7 @@ const KaraokePlayer = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jSong Karaoke Player | Made with ♥
+                jsong Karaoke Player | Made with ♥
             </footer>
         </div>
     );

@@ -10,7 +10,7 @@ function App() {
     return (
         <div className="app-container">
             <nav className="app-nav">
-                <div className="nav-logo">jSong</div>
+                <div className="nav-logo">jsong</div>
                 <div className="nav-links">
                     <button
                         className={`nav-link ${activePage === 'generator' ? 'active' : ''}`}
