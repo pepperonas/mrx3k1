@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
-import '../App.css';
-import '../Player.css';
+// import '../App.css';
+// import '../Player.css';
 
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
@@ -105,6 +105,15 @@ const KaraokePlayer = () => {
         };
     }, []);
 
+    // Aktualisierung des currentLyricIndex Effect
+    useEffect(() => {
+        // Nur wenn wir einen gültigen Index haben, DOM aktualisieren
+        if (currentLyricIndex >= 0 && lyricsDisplayRef.current) {
+            console.log(`Effect ausgelöst durch currentLyricIndex Änderung: ${currentLyricIndex}`);
+            updateDomLyrics(currentLyricIndex);
+        }
+    }, [currentLyricIndex]);
+
     const updateDomTime = (time) => {
         const currentTimeElement = document.querySelector('.time-current');
         const totalTimeElement = document.querySelector('.time-total');
@@ -119,25 +128,40 @@ const KaraokePlayer = () => {
     };
 
     const updateDomLyrics = (index) => {
-        if (!songData || !songData.lyrics) return;
+        if (!songData || !songData.lyrics || index < 0) return;
 
         const lyricsContainer = lyricsDisplayRef.current;
-        if (!lyricsContainer) return;
+        if (!lyricsContainer) {
+            console.log("Kein Lyrics-Container gefunden!");
+            return;
+        }
 
-        console.log("Aktualisiere Lyrics-Stil für Index:", index);
+        if (debugMode) {
+            console.log(`updateDomLyrics aufgerufen mit Index: ${index}`);
+        }
 
         // Entferne bestehende Klassen
         const allLyrics = lyricsContainer.querySelectorAll('.lyric-line');
+
+        if (debugMode) {
+            console.log(`Gefundene Lyric-Elemente: ${allLyrics.length}`);
+        }
+
         allLyrics.forEach((line, idx) => {
+            // Klassen zurücksetzen
             line.classList.remove('active', 'past');
 
             // Wichtig: Alle alten Elemente entfernen
-            if (line.querySelector('.glow-overlay')) {
-                line.removeChild(line.querySelector('.glow-overlay'));
+            const existingOverlay = line.querySelector('.glow-overlay');
+            if (existingOverlay) {
+                line.removeChild(existingOverlay);
             }
 
+            // Setze Klassen basierend auf Index
             if (idx === index) {
-                console.log("Stelle aktiven Lyric ein:", idx);
+                if (debugMode) {
+                    console.log(`Aktiviere Element ${idx}`);
+                }
                 line.classList.add('active');
 
                 // Schaffe einen benutzerdefinierten Overlay für den Glüheffekt
@@ -164,6 +188,27 @@ const KaraokePlayer = () => {
                 block: 'center'
             });
         }
+    };
+
+    // Finde den aktuellen Lyric-Index basierend auf der Zeit
+    const findCurrentLyricIndex = (time) => {
+        if (!songData || !songData.lyrics || songData.lyrics.length === 0) return -1;
+
+        for (let i = 0; i < songData.lyrics.length; i++) {
+            const lyric = songData.lyrics[i];
+            const nextLyric = songData.lyrics[i + 1];
+
+            if (nextLyric) {
+                if (time >= lyric.startTime && time < nextLyric.startTime) {
+                    return i;
+                }
+            } else if (time >= lyric.startTime) {
+                // Letzter Lyric
+                return i;
+            }
+        }
+
+        return -1;
     };
 
     // Debug-Funktion, um Probleme zu diagnostizieren
@@ -195,6 +240,20 @@ const KaraokePlayer = () => {
                 );
             });
         }
+
+        // DOM-Elemente überprüfen
+        if (lyricsDisplayRef.current) {
+            console.log("Lyrics Display Element:", lyricsDisplayRef.current);
+            console.log("Lyric lines:", lyricsDisplayRef.current.querySelectorAll('.lyric-line').length);
+
+            // Aktiven Lyric überprüfen
+            const activeLines = lyricsDisplayRef.current.querySelectorAll('.lyric-line.active');
+            console.log("Aktive Lyric-Zeilen:", activeLines.length);
+            if (activeLines.length > 0) {
+                console.log("Aktive Linie:", activeLines[0].textContent);
+            }
+        }
+
         console.groupEnd();
     };
 
@@ -262,40 +321,20 @@ const KaraokePlayer = () => {
                 // State-Update für React
                 setCurrentTime(newTime);
 
-                // DIREKTES UPDATE DER LYRICS HIER
+                // Finde den aktuellen Lyric-Index basierend auf der Zeit
                 if (songData && songData.lyrics && songData.lyrics.length > 0) {
-                    // Finde den aktuellen Liedtext basierend auf der Zeit
-                    let foundIndex = -1;
-
-                    for (let i = 0; i < songData.lyrics.length; i++) {
-                        const lyric = songData.lyrics[i];
-                        const nextLyric = songData.lyrics[i + 1];
-
-                        if (nextLyric) {
-                            if (newTime >= lyric.startTime && newTime < nextLyric.startTime) {
-                                foundIndex = i;
-                                break;
-                            }
-                        } else if (newTime >= lyric.startTime) {
-                            // Letzter Liedtext
-                            foundIndex = i;
-                            break;
-                        }
-                    }
+                    const foundIndex = findCurrentLyricIndex(newTime);
 
                     if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
-                        console.log(`Updating lyric index to ${foundIndex} at time ${newTime.toFixed(2)}`);
+                        if (debugMode) {
+                            console.log(`Zeit ${newTime.toFixed(2)}: Ändere Lyric-Index von ${currentLyricIndex} zu ${foundIndex}`);
+                        }
 
-                        // Direkte DOM-Manipulation für die Lyrics-Hervorhebung
-                        updateDomLyrics(foundIndex);
-
-                        // State-Update für React
+                        // State-Update für React - dies triggert useEffect für updateDomLyrics
                         setCurrentLyricIndex(foundIndex);
 
-                        // Update target pitch if needed
-                        if (typeof updateTargetPitch === 'function') {
-                            updateTargetPitch(foundIndex, newTime);
-                        }
+                        // Update target pitch
+                        updateTargetPitch(foundIndex, newTime);
                     }
                 }
             };
@@ -317,10 +356,8 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {
-                });
-                audioElement.removeEventListener('error', () => {
-                });
+                audioElement.removeEventListener('play', () => {});
+                audioElement.removeEventListener('error', () => {});
             };
         }
     }, [audioUrl, songData]);
