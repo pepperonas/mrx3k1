@@ -1,0 +1,1302 @@
+{
+  "title": "Zsak - I Want Your Soul (Original Mix)",
+  "audioUrl": "your-soul.mp3",
+  "lyrics": [
+    {
+      "time": 0.0,
+      "text": "[Segment 1]",
+      "pitch": 96,
+      "duration": 0.37151927437641724
+    },
+    {
+      "time": 0.4876190476190476,
+      "text": "[Segment 2]",
+      "pitch": 92,
+      "duration": 0.3715192743764172
+    },
+    {
+      "time": 0.9752380952380952,
+      "text": "[Segment 3]",
+      "pitch": 100,
+      "duration": 0.3715192743764173
+    },
+    {
+      "time": 1.4628571428571429,
+      "text": "[Segment 4]",
+      "pitch": 92,
+      "duration": 0.3715192743764173
+    },
+    {
+      "time": 1.9504761904761905,
+      "text": "[Segment 5]",
+      "pitch": 98,
+      "duration": 0.3715192743764173
+    },
+    {
+      "time": 2.4380952380952383,
+      "text": "[Segment 6]",
+      "pitch": 91,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 2.9257142857142857,
+      "text": "[Segment 7]",
+      "pitch": 95,
+      "duration": 0.3715192743764173
+    },
+    {
+      "time": 3.4133333333333336,
+      "text": "[Segment 8]",
+      "pitch": 92,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 3.900952380952381,
+      "text": "[Segment 9]",
+      "pitch": 95,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 4.388571428571429,
+      "text": "[Segment 10]",
+      "pitch": 92,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 4.876190476190477,
+      "text": "[Segment 11]",
+      "pitch": 96,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 5.363809523809524,
+      "text": "[Segment 12]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 5.851428571428571,
+      "text": "[Segment 13]",
+      "pitch": 94,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 6.339047619047619,
+      "text": "[Segment 14]",
+      "pitch": 91,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 6.826666666666667,
+      "text": "[Segment 15]",
+      "pitch": 96,
+      "duration": 0.37151927437641685
+    },
+    {
+      "time": 7.314285714285714,
+      "text": "[Segment 16]",
+      "pitch": 93,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 7.801904761904762,
+      "text": "[Segment 17]",
+      "pitch": 95,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 8.289523809523809,
+      "text": "[Segment 18]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 8.777142857142858,
+      "text": "[Segment 19]",
+      "pitch": 95,
+      "duration": 0.37151927437641596
+    },
+    {
+      "time": 9.264761904761905,
+      "text": "[Segment 20]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 9.752380952380953,
+      "text": "[Segment 21]",
+      "pitch": 96,
+      "duration": 0.37151927437641596
+    },
+    {
+      "time": 10.24,
+      "text": "[Segment 22]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 10.727619047619047,
+      "text": "[Segment 23]",
+      "pitch": 95,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 11.215238095238096,
+      "text": "[Segment 24]",
+      "pitch": 91,
+      "duration": 0.37151927437641596
+    },
+    {
+      "time": 11.702857142857143,
+      "text": "[Segment 25]",
+      "pitch": 95,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 12.19047619047619,
+      "text": "[Segment 26]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 12.678095238095239,
+      "text": "[Segment 27]",
+      "pitch": 94,
+      "duration": 0.37151927437641596
+    },
+    {
+      "time": 13.165714285714285,
+      "text": "[Segment 28]",
+      "pitch": 93,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 13.931972789115646,
+      "text": "[Segment 29]",
+      "pitch": 105,
+      "duration": 0.09287981859410444
+    },
+    {
+      "time": 14.140952380952381,
+      "text": "[Segment 30]",
+      "pitch": 69,
+      "duration": 0.18575963718820887
+    },
+    {
+      "time": 14.419591836734694,
+      "text": "[Segment 31]",
+      "pitch": 104,
+      "duration": 0.09287981859410444
+    },
+    {
+      "time": 14.883990929705215,
+      "text": "[Segment 32]",
+      "pitch": 104,
+      "duration": 0.11609977324263099
+    },
+    {
+      "time": 15.116190476190477,
+      "text": "[Segment 33]",
+      "pitch": 67,
+      "duration": 0.1857596371882071
+    },
+    {
+      "time": 15.394829931972788,
+      "text": "[Segment 34]",
+      "pitch": 104,
+      "duration": 0.09287981859410444
+    },
+    {
+      "time": 15.603809523809524,
+      "text": "[Segment 35]",
+      "pitch": 86,
+      "duration": 0.3947392290249425
+    },
+    {
+      "time": 16.091428571428573,
+      "text": "[Segment 36]",
+      "pitch": 85,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 16.579047619047618,
+      "text": "[Segment 37]",
+      "pitch": 94,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 17.066666666666666,
+      "text": "[Segment 38]",
+      "pitch": 87,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 17.554285714285715,
+      "text": "[Segment 39]",
+      "pitch": 95,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 18.04190476190476,
+      "text": "[Segment 40]",
+      "pitch": 91,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 18.52952380952381,
+      "text": "[Segment 41]",
+      "pitch": 79,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 19.017142857142858,
+      "text": "[Segment 42]",
+      "pitch": 83,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 19.504761904761907,
+      "text": "[Segment 43]",
+      "pitch": 80,
+      "duration": 0.3715192743764142
+    },
+    {
+      "time": 19.99238095238095,
+      "text": "[Segment 44]",
+      "pitch": 81,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 20.503219954648525,
+      "text": "[Segment 45]",
+      "pitch": 96,
+      "duration": 0.34829931972789296
+    },
+    {
+      "time": 20.96761904761905,
+      "text": "[Segment 46]",
+      "pitch": 88,
+      "duration": 0.3715192743764142
+    },
+    {
+      "time": 21.478458049886623,
+      "text": "[Segment 47]",
+      "pitch": 96,
+      "duration": 0.3482993197278894
+    },
+    {
+      "time": 21.942857142857143,
+      "text": "[Segment 48]",
+      "pitch": 92,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 22.453696145124717,
+      "text": "[Segment 49]",
+      "pitch": 91,
+      "duration": 0.3482993197278894
+    },
+    {
+      "time": 22.918095238095237,
+      "text": "[Segment 50]",
+      "pitch": 85,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 23.42893424036281,
+      "text": "[Segment 51]",
+      "pitch": 92,
+      "duration": 0.34829931972789296
+    },
+    {
+      "time": 23.893333333333334,
+      "text": "[Segment 52]",
+      "pitch": 91,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 24.404172335600908,
+      "text": "[Segment 53]",
+      "pitch": 93,
+      "duration": 0.3482993197278894
+    },
+    {
+      "time": 24.891791383219953,
+      "text": "[Segment 54]",
+      "pitch": 88,
+      "duration": 0.34829931972789296
+    },
+    {
+      "time": 25.379410430839002,
+      "text": "[Segment 55]",
+      "pitch": 93,
+      "duration": 0.34829931972789296
+    },
+    {
+      "time": 25.86702947845805,
+      "text": "[Segment 56]",
+      "pitch": 88,
+      "duration": 0.3482993197278894
+    },
+    {
+      "time": 26.354648526077096,
+      "text": "[Segment 57]",
+      "pitch": 94,
+      "duration": 0.34829931972789296
+    },
+    {
+      "time": 26.842267573696144,
+      "text": "[Segment 58]",
+      "pitch": 85,
+      "duration": 0.37151927437641774
+    },
+    {
+      "time": 27.58530612244898,
+      "text": "[Segment 59]",
+      "pitch": 97,
+      "duration": 0.09287981859410266
+    },
+    {
+      "time": 27.794285714285714,
+      "text": "[Segment 60]",
+      "pitch": 76,
+      "duration": 0.18575963718820887
+    },
+    {
+      "time": 28.07292517006803,
+      "text": "[Segment 61]",
+      "pitch": 105,
+      "duration": 0.09287981859410266
+    },
+    {
+      "time": 28.560544217687074,
+      "text": "[Segment 62]",
+      "pitch": 105,
+      "duration": 0.09287981859410621
+    },
+    {
+      "time": 28.792743764172336,
+      "text": "[Segment 63]",
+      "pitch": 64,
+      "duration": 0.16253968253968054
+    },
+    {
+      "time": 29.048163265306123,
+      "text": "[Segment 64]",
+      "pitch": 104,
+      "duration": 0.09287981859410266
+    },
+    {
+      "time": 29.53578231292517,
+      "text": "[Segment 65]",
+      "pitch": 104,
+      "duration": 0.09287981859410266
+    },
+    {
+      "time": 29.76798185941043,
+      "text": "one of them",
+      "pitch": 70,
+      "duration": 3.3901133786848057
+    },
+    {
+      "time": 33.18131519274377,
+      "text": "[Segment 67]",
+      "pitch": 72,
+      "duration": 0.8359183673469346
+    },
+    {
+      "time": 34.04045351473923,
+      "text": "and the",
+      "pitch": 55,
+      "duration": 1.0681179138322037
+    },
+    {
+      "time": 35.131791383219955,
+      "text": "[Segment 69]",
+      "pitch": 62,
+      "duration": 0.8359183673469417
+    },
+    {
+      "time": 35.99092970521542,
+      "text": "i'd have done",
+      "pitch": 59,
+      "duration": 1.0681179138321966
+    },
+    {
+      "time": 37.08226757369614,
+      "text": "[Segment 71]",
+      "pitch": 71,
+      "duration": 0.8359183673469417
+    },
+    {
+      "time": 37.94140589569161,
+      "text": "i'd have but five",
+      "pitch": 64,
+      "duration": 1.927256235827663
+    },
+    {
+      "time": 39.8918820861678,
+      "text": "empty",
+      "pitch": 54,
+      "duration": 1.0681179138322037
+    },
+    {
+      "time": 40.983219954648526,
+      "text": "[Segment 74]",
+      "pitch": 64,
+      "duration": 0.8359183673469417
+    },
+    {
+      "time": 41.84235827664399,
+      "text": "but if the",
+      "pitch": 55,
+      "duration": 1.0681179138321966
+    },
+    {
+      "time": 42.93369614512471,
+      "text": "[Segment 76]",
+      "pitch": 66,
+      "duration": 0.8359183673469417
+    },
+    {
+      "time": 43.79283446712018,
+      "text": "it gifted",
+      "pitch": 56,
+      "duration": 1.0681179138322037
+    },
+    {
+      "time": 44.90739229024943,
+      "text": "[Segment 78]",
+      "pitch": 59,
+      "duration": 0.06965986394558144
+    },
+    {
+      "time": 45.139591836734695,
+      "text": "and what then",
+      "pitch": 67,
+      "duration": 3.622312925170064
+    },
+    {
+      "time": 48.78512471655329,
+      "text": "[Segment 80]",
+      "pitch": 68,
+      "duration": 0.8359183673469346
+    },
+    {
+      "time": 49.64426303854875,
+      "text": "it",
+      "pitch": 59,
+      "duration": 1.0681179138322037
+    },
+    {
+      "time": 50.73560090702948,
+      "text": "i have",
+      "pitch": 62,
+      "duration": 1.927256235827663
+    },
+    {
+      "time": 52.68607709750567,
+      "text": "[Segment 83]",
+      "pitch": 66,
+      "duration": 0.8359183673469417
+    },
+    {
+      "time": 53.54521541950113,
+      "text": "we moment an fund for one",
+      "pitch": 76,
+      "duration": 9.032562358276643
+    },
+    {
+      "time": 62.74031746031746,
+      "text": "[Segment 85]",
+      "pitch": 74,
+      "duration": 0.023219954648524777
+    },
+    {
+      "time": 63.227936507936505,
+      "text": "[Segment 86]",
+      "pitch": 81,
+      "duration": 0.2089795918367372
+    },
+    {
+      "time": 63.669115646258504,
+      "text": "[Segment 87]",
+      "pitch": 79,
+      "duration": 0.3250793650793611
+    },
+    {
+      "time": 65.29451247165532,
+      "text": "[Segment 88]",
+      "pitch": 54,
+      "duration": 0.09287981859411332
+    },
+    {
+      "time": 65.66603174603175,
+      "text": "[Segment 89]",
+      "pitch": 75,
+      "duration": 0.04643990929704955
+    },
+    {
+      "time": 65.87501133786849,
+      "text": "[Segment 90]",
+      "pitch": 54,
+      "duration": 0.0928798185940991
+    },
+    {
+      "time": 66.1536507936508,
+      "text": "[Segment 91]",
+      "pitch": 67,
+      "duration": 0.06965986394557433
+    },
+    {
+      "time": 66.85024943310657,
+      "text": "[Segment 92]",
+      "pitch": 57,
+      "duration": 0.09287981859411332
+    },
+    {
+      "time": 66.98956916099773,
+      "text": "[Segment 93]",
+      "pitch": 63,
+      "duration": 0.4179591836734744
+    },
+    {
+      "time": 67.52362811791383,
+      "text": "[Segment 94]",
+      "pitch": 70,
+      "duration": 0.3947392290249496
+    },
+    {
+      "time": 68.10412698412698,
+      "text": "[Segment 95]",
+      "pitch": 71,
+      "duration": 0.06965986394558854
+    },
+    {
+      "time": 68.22022675736962,
+      "text": "[Segment 96]",
+      "pitch": 74,
+      "duration": 0.06965986394557433
+    },
+    {
+      "time": 68.59174603174603,
+      "text": "[Segment 97]",
+      "pitch": 61,
+      "duration": 0.3250793650793753
+    },
+    {
+      "time": 68.94004535147393,
+      "text": "[Segment 98]",
+      "pitch": 76,
+      "duration": 0.16253968253967344
+    },
+    {
+      "time": 69.19546485260771,
+      "text": "[Segment 99]",
+      "pitch": 51,
+      "duration": 0.11609977324262388
+    },
+    {
+      "time": 69.35800453514739,
+      "text": "[Segment 100]",
+      "pitch": 69,
+      "duration": 0.5340589569160983
+    },
+    {
+      "time": 70.00816326530612,
+      "text": "[Segment 101]",
+      "pitch": 75,
+      "duration": 0.8591383219954594
+    },
+    {
+      "time": 70.98340136054422,
+      "text": "why",
+      "pitch": 80,
+      "duration": 1.3235374149659833
+    },
+    {
+      "time": 72.46947845804989,
+      "text": "[Segment 103]",
+      "pitch": 71,
+      "duration": 0.8359183673469346
+    },
+    {
+      "time": 73.44471655328798,
+      "text": "[Segment 104]",
+      "pitch": 73,
+      "duration": 0.46439909297052395
+    },
+    {
+      "time": 73.93233560090702,
+      "text": "[Segment 105]",
+      "pitch": 78,
+      "duration": 0.2089795918367372
+    },
+    {
+      "time": 74.16453514739229,
+      "text": "[Segment 106]",
+      "pitch": 77,
+      "duration": 0.09287981859411332
+    },
+    {
+      "time": 74.28063492063492,
+      "text": "[Segment 107]",
+      "pitch": 85,
+      "duration": 0.04643990929704955
+    },
+    {
+      "time": 74.4431746031746,
+      "text": "[Segment 108]",
+      "pitch": 75,
+      "duration": 0.046439909297063764
+    },
+    {
+      "time": 74.55927437641724,
+      "text": "[Segment 109]",
+      "pitch": 63,
+      "duration": 0.25541950113378675
+    },
+    {
+      "time": 74.8843537414966,
+      "text": "what a what",
+      "pitch": 77,
+      "duration": 9.195102040816323
+    },
+    {
+      "time": 84.12589569160998,
+      "text": "when it the one that why and if the one and a what",
+      "pitch": 74,
+      "duration": 46.78820861678004
+    },
+    {
+      "time": 130.93732426303856,
+      "text": "up and and vote for a month of that of food and and and and that that thump thump of one and thump thump thump of that and found him of philip philip film",
+      "pitch": 65,
+      "duration": 32.08997732426303
+    },
+    {
+      "time": 163.07374149659864,
+      "text": "[Segment 113]",
+      "pitch": 55,
+      "duration": 0.998458049886608
+    },
+    {
+      "time": 164.39727891156463,
+      "text": "[Segment 114]",
+      "pitch": 57,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 164.88489795918366,
+      "text": "[Segment 115]",
+      "pitch": 88,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 165.37251700680272,
+      "text": "[Segment 116]",
+      "pitch": 54,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 165.86013605442176,
+      "text": "[Segment 117]",
+      "pitch": 54,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 166.34775510204082,
+      "text": "[Segment 118]",
+      "pitch": 57,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 166.83537414965986,
+      "text": "[Segment 119]",
+      "pitch": 57,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 167.32299319727892,
+      "text": "[Segment 120]",
+      "pitch": 57,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 167.6712925170068,
+      "text": "[Segment 121]",
+      "pitch": 60,
+      "duration": 0.023219954648510566
+    },
+    {
+      "time": 167.81061224489795,
+      "text": "[Segment 122]",
+      "pitch": 59,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 168.29823129251702,
+      "text": "[Segment 123]",
+      "pitch": 61,
+      "duration": 0.16253968253965922
+    },
+    {
+      "time": 168.78585034013605,
+      "text": "[Segment 124]",
+      "pitch": 85,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 169.2734693877551,
+      "text": "[Segment 125]",
+      "pitch": 60,
+      "duration": 0.16253968253965922
+    },
+    {
+      "time": 169.76108843537415,
+      "text": "[Segment 126]",
+      "pitch": 68,
+      "duration": 0.16253968253968765
+    },
+    {
+      "time": 170.17904761904762,
+      "text": "[Segment 127]",
+      "pitch": 65,
+      "duration": 0.23219954648524777
+    },
+    {
+      "time": 170.5273469387755,
+      "text": "[Segment 128]",
+      "pitch": 75,
+      "duration": 0.37151927437642485
+    },
+    {
+      "time": 171.01496598639457,
+      "text": "[Segment 129]",
+      "pitch": 73,
+      "duration": 0.3947392290249354
+    },
+    {
+      "time": 171.47936507936507,
+      "text": "[Segment 130]",
+      "pitch": 78,
+      "duration": 0.9055782312925373
+    },
+    {
+      "time": 172.45460317460316,
+      "text": "[Segment 131]",
+      "pitch": 78,
+      "duration": 0.9055782312925373
+    },
+    {
+      "time": 173.42984126984126,
+      "text": "[Segment 132]",
+      "pitch": 65,
+      "duration": 0.4179591836734744
+    },
+    {
+      "time": 173.91746031746032,
+      "text": "[Segment 133]",
+      "pitch": 74,
+      "duration": 0.11609977324260967
+    },
+    {
+      "time": 174.05678004535147,
+      "text": "[Segment 134]",
+      "pitch": 64,
+      "duration": 0.27863945578232574
+    },
+    {
+      "time": 174.4282993197279,
+      "text": "[Segment 135]",
+      "pitch": 66,
+      "duration": 0.06965986394556012
+    },
+    {
+      "time": 174.5443990929705,
+      "text": "what are the what",
+      "pitch": 76,
+      "duration": 26.63328798185941
+    },
+    {
+      "time": 201.20090702947846,
+      "text": "why what",
+      "pitch": 77,
+      "duration": 16.137868480725615
+    },
+    {
+      "time": 217.43165532879817,
+      "text": "one of one of it what what if and an found vote for the fun of fun",
+      "pitch": 70,
+      "duration": 45.116371882086185
+    },
+    {
+      "time": 262.5712471655329,
+      "text": "up at five one of the",
+      "pitch": 70,
+      "duration": 6.687346938775477
+    },
+    {
+      "time": 269.2818140589569,
+      "text": "i'm hopeful and",
+      "pitch": 62,
+      "duration": 1.904036281179117
+    },
+    {
+      "time": 271.2322902494331,
+      "text": "and have fun and the five five up one and five found the",
+      "pitch": 62,
+      "duration": 5.828208616780046
+    },
+    {
+      "time": 277.0837188208617,
+      "text": "move on",
+      "pitch": 63,
+      "duration": 1.044897959183686
+    },
+    {
+      "time": 278.2214965986395,
+      "text": "[Segment 143]",
+      "pitch": 55,
+      "duration": 0.5108390022675735
+    },
+    {
+      "time": 278.77877551020407,
+      "text": "[Segment 144]",
+      "pitch": 55,
+      "duration": 0.2089795918367372
+    },
+    {
+      "time": 279.0341950113379,
+      "text": "[Segment 145]",
+      "pitch": 60,
+      "duration": 0.0928798185940991
+    },
+    {
+      "time": 279.2663945578231,
+      "text": "[Segment 146]",
+      "pitch": 62,
+      "duration": 0.4643990929705524
+    },
+    {
+      "time": 279.7540136054422,
+      "text": "[Segment 147]",
+      "pitch": 83,
+      "duration": 0.32507936507931845
+    },
+    {
+      "time": 280.2184126984127,
+      "text": "[Segment 148]",
+      "pitch": 54,
+      "duration": 0.4411791383220134
+    },
+    {
+      "time": 280.7524716553288,
+      "text": "[Segment 149]",
+      "pitch": 80,
+      "duration": 0.6269387755102116
+    },
+    {
+      "time": 281.4490702947846,
+      "text": "[Segment 150]",
+      "pitch": 93,
+      "duration": 0.3947392290249354
+    },
+    {
+      "time": 281.95990929705215,
+      "text": "[Segment 151]",
+      "pitch": 97,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 282.4475283446712,
+      "text": "[Segment 152]",
+      "pitch": 91,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 282.9351473922903,
+      "text": "[Segment 153]",
+      "pitch": 98,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 283.4227664399093,
+      "text": "[Segment 154]",
+      "pitch": 94,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 283.91038548752834,
+      "text": "[Segment 155]",
+      "pitch": 98,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 284.3980045351474,
+      "text": "[Segment 156]",
+      "pitch": 86,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 284.8856235827664,
+      "text": "[Segment 157]",
+      "pitch": 85,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 285.3732426303855,
+      "text": "[Segment 158]",
+      "pitch": 83,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 285.86086167800454,
+      "text": "[Segment 159]",
+      "pitch": 99,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 286.3484807256236,
+      "text": "[Segment 160]",
+      "pitch": 94,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 286.8360997732426,
+      "text": "[Segment 161]",
+      "pitch": 96,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 287.3237188208617,
+      "text": "[Segment 162]",
+      "pitch": 93,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 287.81133786848073,
+      "text": "[Segment 163]",
+      "pitch": 99,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 288.29895691609977,
+      "text": "[Segment 164]",
+      "pitch": 93,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 288.7865759637188,
+      "text": "[Segment 165]",
+      "pitch": 96,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 289.2741950113379,
+      "text": "[Segment 166]",
+      "pitch": 92,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 289.76181405895693,
+      "text": "[Segment 167]",
+      "pitch": 99,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 290.24943310657596,
+      "text": "[Segment 168]",
+      "pitch": 92,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 290.737052154195,
+      "text": "[Segment 169]",
+      "pitch": 96,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 291.22467120181403,
+      "text": "[Segment 170]",
+      "pitch": 94,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 291.7122902494331,
+      "text": "[Segment 171]",
+      "pitch": 98,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 292.19990929705216,
+      "text": "[Segment 172]",
+      "pitch": 82,
+      "duration": 0.3947392290249354
+    },
+    {
+      "time": 292.6875283446712,
+      "text": "[Segment 173]",
+      "pitch": 88,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 293.1751473922902,
+      "text": "[Segment 174]",
+      "pitch": 84,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 293.6627664399093,
+      "text": "[Segment 175]",
+      "pitch": 98,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 294.15038548752835,
+      "text": "[Segment 176]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 294.8934240362812,
+      "text": "[Segment 177]",
+      "pitch": 105,
+      "duration": 0.11609977324258125
+    },
+    {
+      "time": 295.1256235827664,
+      "text": "[Segment 178]",
+      "pitch": 73,
+      "duration": 0.1857596371881982
+    },
+    {
+      "time": 295.38104308390024,
+      "text": "[Segment 179]",
+      "pitch": 105,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 295.636462585034,
+      "text": "[Segment 180]",
+      "pitch": 56,
+      "duration": 0.16253968253971607
+    },
+    {
+      "time": 295.8686621315193,
+      "text": "up",
+      "pitch": 87,
+      "duration": 1.1145578231292461
+    },
+    {
+      "time": 297.0760997732426,
+      "text": "[Segment 182]",
+      "pitch": 93,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 297.56371882086165,
+      "text": "[Segment 183]",
+      "pitch": 101,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 298.05133786848074,
+      "text": "[Segment 184]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 298.5389569160998,
+      "text": "[Segment 185]",
+      "pitch": 100,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 299.0265759637188,
+      "text": "[Segment 186]",
+      "pitch": 92,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 299.51419501133785,
+      "text": "[Segment 187]",
+      "pitch": 99,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 300.00181405895694,
+      "text": "[Segment 188]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 300.489433106576,
+      "text": "[Segment 189]",
+      "pitch": 97,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 300.977052154195,
+      "text": "[Segment 190]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 301.46467120181404,
+      "text": "[Segment 191]",
+      "pitch": 97,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 301.95229024943313,
+      "text": "[Segment 192]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 302.43990929705217,
+      "text": "[Segment 193]",
+      "pitch": 96,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 302.9275283446712,
+      "text": "[Segment 194]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 303.41514739229024,
+      "text": "[Segment 195]",
+      "pitch": 96,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 303.90276643990927,
+      "text": "[Segment 196]",
+      "pitch": 93,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 304.39038548752836,
+      "text": "[Segment 197]",
+      "pitch": 96,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 304.8780045351474,
+      "text": "[Segment 198]",
+      "pitch": 91,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 305.36562358276643,
+      "text": "[Segment 199]",
+      "pitch": 99,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 305.85324263038547,
+      "text": "[Segment 200]",
+      "pitch": 91,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 306.34086167800456,
+      "text": "[Segment 201]",
+      "pitch": 97,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 306.8284807256236,
+      "text": "[Segment 202]",
+      "pitch": 92,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 307.3160997732426,
+      "text": "[Segment 203]",
+      "pitch": 98,
+      "duration": 0.3715192743763964
+    },
+    {
+      "time": 307.80371882086166,
+      "text": "[Segment 204]",
+      "pitch": 91,
+      "duration": 0.37151927437645327
+    },
+    {
+      "time": 308.5467573696145,
+      "text": "[Segment 205]",
+      "pitch": 104,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 308.7789569160998,
+      "text": "[Segment 206]",
+      "pitch": 73,
+      "duration": 0.1857596371881982
+    },
+    {
+      "time": 309.03437641723355,
+      "text": "[Segment 207]",
+      "pitch": 105,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 309.5219954648526,
+      "text": "[Segment 208]",
+      "pitch": 105,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 309.75419501133786,
+      "text": "[Segment 209]",
+      "pitch": 67,
+      "duration": 0.1857596371881982
+    },
+    {
+      "time": 310.00961451247167,
+      "text": "[Segment 210]",
+      "pitch": 105,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 310.4972335600907,
+      "text": "[Segment 211]",
+      "pitch": 105,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 310.729433106576,
+      "text": "[Segment 212]",
+      "pitch": 71,
+      "duration": 0.1857596371881982
+    },
+    {
+      "time": 310.98485260770974,
+      "text": "[Segment 213]",
+      "pitch": 104,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 311.4724716553288,
+      "text": "[Segment 214]",
+      "pitch": 106,
+      "duration": 0.1160997732426381
+    },
+    {
+      "time": 311.70467120181405,
+      "text": "[Segment 215]",
+      "pitch": 67,
+      "duration": 0.1857596371881982
+    },
+    {
+      "time": 311.96009070294787,
+      "text": "[Segment 216]",
+      "pitch": 103,
+      "duration": 0.1160997732426381
+    }
+  ]
+}
