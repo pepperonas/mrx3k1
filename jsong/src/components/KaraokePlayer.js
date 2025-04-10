@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
 import '../App.css';
 import '../Player.css';
@@ -17,10 +17,86 @@ const KaraokePlayer = () => {
     const [score, setScore] = useState(0);
     const [pitchHistory, setPitchHistory] = useState([]);
     const [showUpload, setShowUpload] = useState(true);
+    const [debugMode, setDebugMode] = useState(false);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
     const microphone = useRef(null);
+    const lyricsDisplayRef = useRef(null);
+    const timeUpdateIntervalRef = useRef(null);
+    const firstPlayRef = useRef(true);
+
+    const updateDomTime = (time) => {
+        const currentTimeElement = document.querySelector('.time-current');
+        const totalTimeElement = document.querySelector('.time-total');
+
+        if (currentTimeElement) {
+            currentTimeElement.textContent = formatTime(time);
+        }
+
+        if (totalTimeElement && audioRef.current) {
+            totalTimeElement.textContent = formatTime(audioRef.current.duration || 0);
+        }
+    };
+
+    const updateDomLyrics = (index) => {
+        if (!songData || !songData.lyrics) return;
+
+        const lyricsContainer = lyricsDisplayRef.current;
+        if (!lyricsContainer) return;
+
+        // Entferne bestehende Klassen
+        const allLyrics = lyricsContainer.querySelectorAll('.lyric-line');
+        allLyrics.forEach((line, idx) => {
+            line.classList.remove('active', 'past');
+            if (idx === index) {
+                line.classList.add('active');
+            } else if (idx < index) {
+                line.classList.add('past');
+            }
+        });
+
+        // Scrolle zum aktiven Lyric
+        const activeLyric = lyricsContainer.querySelector('.active');
+        if (activeLyric) {
+            activeLyric.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    };
+
+    // Debug-Funktion, um Probleme zu diagnostizieren
+    const debugState = () => {
+        console.group("KaraokePlayer Debug Info");
+        console.log("Audio Element:", audioRef.current);
+        console.log("Current Time:", currentTime);
+        console.log("Duration:", duration);
+        console.log("Is Playing:", isPlaying);
+        console.log("Audio URL exists:", !!audioUrl);
+        console.log("Song Data:", songData);
+        console.log("Current Lyric Index:", currentLyricIndex);
+
+        if (songData && songData.lyrics) {
+            console.log("Lyrics count:", songData.lyrics.length);
+            console.log("Current time check:");
+
+            songData.lyrics.forEach((lyric, idx) => {
+                const nextLyric = songData.lyrics[idx + 1];
+                const isCurrentByTime = nextLyric
+                    ? (currentTime >= lyric.startTime && currentTime < nextLyric.startTime)
+                    : (currentTime >= lyric.startTime);
+
+                console.log(
+                    `Lyric ${idx}: "${lyric.text.substring(0, 15)}..." - ` +
+                    `startTime: ${lyric.startTime} - ` +
+                    `is current: ${isCurrentByTime} - ` +
+                    `matches currentLyricIndex: ${idx === currentLyricIndex}`
+                );
+            });
+        }
+        console.groupEnd();
+    };
 
     // Handle JSON file upload
     const handleJsonUpload = (e) => {
@@ -30,6 +106,7 @@ const KaraokePlayer = () => {
             reader.onload = (event) => {
                 try {
                     const jsonData = JSON.parse(event.target.result);
+                    console.log("Parsed JSON data:", jsonData);
                     setSongData(jsonData);
                 } catch (error) {
                     console.error("Error parsing JSON file:", error);
@@ -46,6 +123,7 @@ const KaraokePlayer = () => {
         if (file) {
             setAudioFile(file);
             const url = URL.createObjectURL(file);
+            console.log("Created audio URL:", url);
             setAudioUrl(url);
 
             // Reset states
@@ -53,85 +131,189 @@ const KaraokePlayer = () => {
             setCurrentTime(0);
             setScore(0);
             setPitchHistory([]);
+            setCurrentLyricIndex(-1);
         }
     };
 
     // Initialize audio element
     useEffect(() => {
         if (audioRef.current && audioUrl) {
-            audioRef.current.onloadedmetadata = () => {
-                setDuration(audioRef.current.duration);
+            console.log("Audio URL changed, setting up listeners");
+
+            // Wichtig: Speichere eine Referenz zum aktuellen Audio-Element
+            const audioElement = audioRef.current;
+
+            // Forciere das erneute Laden
+            audioElement.load();
+
+            // Metadaten-Listener
+            const handleMetadata = () => {
+                console.log("Metadata loaded, duration:", audioElement.duration);
+                setDuration(audioElement.duration);
             };
-        }
-    }, [audioUrl]);
 
-    // Update current time and handle lyrics timing
-    useEffect(() => {
-        if (audioRef.current && songData) {
-            const updateTime = () => {
-                setCurrentTime(audioRef.current.currentTime);
+            // Aktualisiere Zeit bei jedem Zeitupdate
+            const handleTimeUpdate = () => {
+                const newTime = audioElement.currentTime;
 
-                // Find current lyric based on timestamp
-                const index = songData.lyrics.findIndex((lyric, idx) => {
-                    const nextLyric = songData.lyrics[idx + 1];
-                    if (nextLyric) {
-                        return audioRef.current.currentTime >= lyric.startTime &&
-                            audioRef.current.currentTime < nextLyric.startTime;
-                    }
-                    return audioRef.current.currentTime >= lyric.startTime;
-                });
+                // Direkte DOM-Manipulation für die Zeitanzeige
+                updateDomTime(newTime);
 
-                if (index !== -1 && index !== currentLyricIndex) {
-                    setCurrentLyricIndex(index);
-                }
+                // State-Update für React
+                setCurrentTime(newTime);
 
-                // Find target pitch
-                if (index !== -1) {
-                    const currentLyric = songData.lyrics[index];
-                    // Get the pitch target closest to current time
-                    if (currentLyric.pitchTargets && currentLyric.pitchTargets.length > 0) {
-                        const relativeTime = audioRef.current.currentTime - currentLyric.startTime;
-                        let closestTarget = currentLyric.pitchTargets[0];
-                        let minDiff = Math.abs(relativeTime - closestTarget.time);
+                // DIREKTES UPDATE DER LYRICS HIER
+                if (songData && songData.lyrics && songData.lyrics.length > 0) {
+                    // Finde den aktuellen Liedtext basierend auf der Zeit
+                    let foundIndex = -1;
 
-                        for (let i = 1; i < currentLyric.pitchTargets.length; i++) {
-                            const target = currentLyric.pitchTargets[i];
-                            const diff = Math.abs(relativeTime - target.time);
-                            if (diff < minDiff) {
-                                minDiff = diff;
-                                closestTarget = target;
+                    for (let i = 0; i < songData.lyrics.length; i++) {
+                        const lyric = songData.lyrics[i];
+                        const nextLyric = songData.lyrics[i + 1];
+
+                        if (nextLyric) {
+                            if (newTime >= lyric.startTime && newTime < nextLyric.startTime) {
+                                foundIndex = i;
+                                break;
                             }
+                        } else if (newTime >= lyric.startTime) {
+                            // Letzter Liedtext
+                            foundIndex = i;
+                            break;
                         }
+                    }
 
-                        // Only update if we're close enough to the target
-                        if (minDiff < 0.5) {
-                            setTargetPitch(closestTarget.pitch);
-                        } else {
-                            setTargetPitch(null);
+                    if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
+                        console.log(`Updating lyric index to ${foundIndex} at time ${newTime.toFixed(2)}`);
+
+                        // Direkte DOM-Manipulation für die Lyrics-Hervorhebung
+                        updateDomLyrics(foundIndex);
+
+                        // State-Update für React
+                        setCurrentLyricIndex(foundIndex);
+
+                        // Update target pitch if needed
+                        if (typeof updateTargetPitch === 'function') {
+                            updateTargetPitch(foundIndex, newTime);
                         }
-                    } else {
-                        setTargetPitch(null);
                     }
                 }
             };
 
-            const timeUpdateInterval = setInterval(updateTime, 100);
-            return () => clearInterval(timeUpdateInterval);
-        }
-    }, [songData, currentLyricIndex]);
+            // Höre auf Events
+            audioElement.addEventListener('loadedmetadata', handleMetadata);
+            audioElement.addEventListener('timeupdate', handleTimeUpdate);
+            audioElement.addEventListener('durationchange', handleMetadata);
+            audioElement.addEventListener('play', () => console.log("Audio play event"));
+            audioElement.addEventListener('error', (e) => console.error("Audio error:", e));
 
-    // Play/pause audio
-    const togglePlayback = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play();
-                if (!isAnalyzing) {
-                    startPitchAnalysis();
+            // Falls das Element bereits geladen ist
+            if (audioElement.readyState >= 1) {
+                setDuration(audioElement.duration);
+            }
+
+            // Cleanup
+            return () => {
+                audioElement.removeEventListener('loadedmetadata', handleMetadata);
+                audioElement.removeEventListener('timeupdate', handleTimeUpdate);
+                audioElement.removeEventListener('durationchange', handleMetadata);
+                audioElement.removeEventListener('play', () => {
+                });
+                audioElement.removeEventListener('error', () => {
+                });
+            };
+        }
+    }, [audioUrl, songData]);
+
+    // Separate Funktion für Pitch-Target-Updates
+    const updateTargetPitch = (lyricIndex, time) => {
+        if (!songData || !songData.lyrics || lyricIndex === -1) {
+            setTargetPitch(null);
+            return;
+        }
+
+        const currentLyric = songData.lyrics[lyricIndex];
+
+        // Get the pitch target closest to current time
+        if (currentLyric.pitchTargets && currentLyric.pitchTargets.length > 0) {
+            const relativeTime = time - currentLyric.startTime;
+            let closestTarget = currentLyric.pitchTargets[0];
+            let minDiff = Math.abs(relativeTime - closestTarget.time);
+
+            for (let i = 1; i < currentLyric.pitchTargets.length; i++) {
+                const target = currentLyric.pitchTargets[i];
+                const diff = Math.abs(relativeTime - target.time);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestTarget = target;
                 }
             }
-            setIsPlaying(!isPlaying);
+
+            // Only update if we're close enough to the target
+            if (minDiff < 0.5) {
+                setTargetPitch(closestTarget.pitch);
+            } else {
+                setTargetPitch(null);
+            }
+        } else {
+            setTargetPitch(null);
+        }
+    };
+
+    // Play/pause audio
+    const togglePlayback = async () => {
+        if (audioRef.current) {
+            try {
+                if (debugMode) {
+                    debugState();
+                }
+
+                // Starte Tone.js nur beim ersten Klick
+                if (firstPlayRef.current) {
+                    await Tone.start();
+                    console.log('Tone.js context started successfully');
+                    firstPlayRef.current = false;
+                }
+
+                if (isPlaying) {
+                    console.log("Pausing audio");
+                    audioRef.current.pause();
+                } else {
+                    console.log("Starting audio playback");
+                    try {
+                        // WICHTIG: Setze currentTime auf einen kleinen Wert größer als 0,
+                        // falls die Zeit 0 ist, um timeupdate-Events zu triggern
+                        if (audioRef.current.currentTime === 0) {
+                            audioRef.current.currentTime = 0.01;
+                        }
+
+                        // Versuche abzuspielen
+                        const playPromise = audioRef.current.play();
+                        if (playPromise !== undefined) {
+                            playPromise
+                                .then(() => console.log("Audio playback started successfully"))
+                                .catch(error => {
+                                    console.error('Error playing audio:', error);
+                                    alert("Fehler beim Abspielen der Audio-Datei: " + error.message);
+                                });
+                        }
+
+                        if (!isAnalyzing) {
+                            startPitchAnalysis();
+                        }
+                    } catch (error) {
+                        console.error('Error during play attempt:', error);
+                        alert("Fehler beim Abspielen: " + error.message);
+                    }
+                }
+                setIsPlaying(!isPlaying);
+            } catch (err) {
+                console.error('Failed to start audio context:', err);
+                alert("Fehler beim Starten des Audio-Kontexts: " + err.message);
+            }
+        } else {
+            console.error("Audio reference is not available");
+            alert("Audio-Element nicht verfügbar");
         }
     };
 
@@ -169,10 +351,11 @@ const KaraokePlayer = () => {
         setIsAnalyzing(true);
 
         try {
-            await Tone.start();
+            // Tone.js wird bereits in togglePlayback initialisiert
 
             microphone.current = new Tone.UserMedia();
             await microphone.current.open();
+            console.log("Microphone access granted");
 
             analyser.current = new Tone.Analyser('fft', 1024);
             microphone.current.connect(analyser.current);
@@ -187,7 +370,7 @@ const KaraokePlayer = () => {
 
                         // Update pitch history for visualization
                         setPitchHistory(prev => {
-                            const newHistory = [...prev, { time: currentTime, pitch }];
+                            const newHistory = [...prev, {time: currentTime, pitch}];
                             // Keep only the last 100 pitch values
                             if (newHistory.length > 100) {
                                 return newHistory.slice(newHistory.length - 100);
@@ -213,8 +396,12 @@ const KaraokePlayer = () => {
                 }
             }, 100);
 
+            timeUpdateIntervalRef.current = analyzeInterval;
+
             return () => {
-                clearInterval(analyzeInterval);
+                if (timeUpdateIntervalRef.current) {
+                    clearInterval(timeUpdateIntervalRef.current);
+                }
                 if (microphone.current) {
                     microphone.current.close();
                 }
@@ -228,6 +415,9 @@ const KaraokePlayer = () => {
     // Stop pitch analysis
     const stopPitchAnalysis = () => {
         setIsAnalyzing(false);
+        if (timeUpdateIntervalRef.current) {
+            clearInterval(timeUpdateIntervalRef.current);
+        }
         if (microphone.current) {
             microphone.current.close();
         }
@@ -247,14 +437,22 @@ const KaraokePlayer = () => {
 
     // Format time as MM:SS
     const formatTime = (time) => {
+        if (isNaN(time) || time === undefined) return "00:00";
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
     // Start the game (hide uploads and show player)
-    const startGame = () => {
+    const startGame = async () => {
         if (songData && audioUrl) {
+            try {
+                await Tone.start();
+                console.log('Tone.js context started successfully');
+                firstPlayRef.current = false;
+            } catch (err) {
+                console.error('Failed to start Tone.js context:', err);
+            }
             setShowUpload(false);
         } else {
             alert("Bitte lade sowohl eine JSON-Datei als auch eine Audio-Datei hoch");
@@ -273,6 +471,22 @@ const KaraokePlayer = () => {
         setPitchHistory([]);
         setCurrentLyricIndex(-1);
         stopPitchAnalysis();
+    };
+
+    // Seek audio to specific position when clicking progress bar
+    const handleProgressClick = (e) => {
+        if (audioRef.current && duration > 0) {
+            const container = e.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = x / rect.width;
+            const newTime = percentage * duration;
+
+            audioRef.current.currentTime = newTime;
+            setCurrentTime(newTime);
+
+            console.log(`Seek to time: ${newTime.toFixed(2)}`);
+        }
     };
 
     return (
@@ -294,8 +508,11 @@ const KaraokePlayer = () => {
                             <div className="upload-card">
                                 <h3 className="upload-title">JSON Datei</h3>
                                 <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                         <line x1="16" y1="13" x2="8" y2="13"></line>
                                         <line x1="16" y1="17" x2="8" y2="17"></line>
@@ -314,7 +531,9 @@ const KaraokePlayer = () => {
                             <div className="upload-card">
                                 <h3 className="upload-title">MP3 Datei</h3>
                                 <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M9 18V5l12-2v13"></path>
                                         <circle cx="6" cy="18" r="3"></circle>
                                         <circle cx="18" cy="16" r="3"></circle>
@@ -336,11 +555,29 @@ const KaraokePlayer = () => {
                                 className={`btn ${songData && audioUrl ? 'btn-success' : 'btn-disabled'}`}
                                 disabled={!songData || !audioUrl}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round">
                                     <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                 </svg>
                                 Spiel starten
                             </button>
+                        </div>
+
+                        <div style={{marginTop: '20px', textAlign: 'center'}}>
+                            <label style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <input
+                                    type="checkbox"
+                                    checked={debugMode}
+                                    onChange={() => setDebugMode(!debugMode)}
+                                    style={{marginRight: '8px'}}
+                                />
+                                Debug-Modus
+                            </label>
                         </div>
                     </section>
                 ) : (
@@ -356,17 +593,31 @@ const KaraokePlayer = () => {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={resetGame}
-                                    className="btn btn-small btn-outline"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
-                                        <path d="M22 11.5A10 10 0 0 0 3 9"></path>
-                                        <path d="M2 13a10 10 0 0 0 18.5 3"></path>
-                                    </svg>
-                                    Neues Lied
-                                </button>
+                                <div style={{display: 'flex', gap: '8px'}}>
+                                    <button
+                                        onClick={resetGame}
+                                        className="btn btn-small btn-outline"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
+                                            <path d="M22 11.5A10 10 0 0 0 3 9"></path>
+                                            <path d="M2 13a10 10 0 0 0 18.5 3"></path>
+                                        </svg>
+                                        Neues Lied
+                                    </button>
+
+                                    {debugMode && (
+                                        <button
+                                            onClick={debugState}
+                                            className="btn btn-small btn-outline"
+                                            style={{backgroundColor: 'rgba(239, 68, 68, 0.2)'}}
+                                        >
+                                            Debug
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="player-controls">
@@ -374,7 +625,9 @@ const KaraokePlayer = () => {
                                     onClick={togglePlayback}
                                     className={`btn ${isPlaying ? 'btn-error' : 'btn-primary'} btn-large`}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
                                         {isPlaying ? (
                                             <rect x="6" y="4" width="4" height="16"></rect>
                                         ) : (
@@ -391,16 +644,40 @@ const KaraokePlayer = () => {
                                 </div>
                             </div>
 
-                            <audio ref={audioRef} src={audioUrl} />
+                            <audio
+                                ref={audioRef}
+                                src={audioUrl}
+                                preload="auto"
+                                crossOrigin="anonymous"
+                                // Inline Event-Handler für zusätzliche Sicherheit
+                                onTimeUpdate={(e) => {
+                                    const time = e.target.currentTime;
+                                    updateDomTime(time);
+                                    console.log("Time update direct:", time);
+                                }}
+                                onDurationChange={(e) => {
+                                    const duration = e.target.duration;
+                                    const totalTimeElement = document.querySelector('.time-total');
+                                    if (totalTimeElement) {
+                                        totalTimeElement.textContent = formatTime(duration);
+                                    }
+                                    setDuration(duration);
+                                }}
+                                onPlay={() => console.log("Play event")}
+                                onError={(e) => console.error("Audio error event:", e)}
+                            />
 
-                            <div className="progress-container">
+                            <div
+                                className="progress-container"
+                                onClick={handleProgressClick}
+                            >
                                 <div
                                     className="progress-bar"
-                                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                                    style={{width: `${(currentTime / Math.max(duration, 0.01)) * 100}%`}}
                                 />
                                 <div
                                     className="progress-handle"
-                                    style={{ left: `${(currentTime / duration) * 100}%` }}
+                                    style={{left: `${(currentTime / Math.max(duration, 0.01)) * 100}%`}}
                                 />
                             </div>
                         </section>
@@ -410,8 +687,11 @@ const KaraokePlayer = () => {
                             <section className="card lyrics-card">
                                 <h2 className="card-title">
                                     <span className="card-number">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path
+                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                             <line x1="16" y1="13" x2="8" y2="13"></line>
                                             <line x1="16" y1="17" x2="8" y2="17"></line>
@@ -421,13 +701,28 @@ const KaraokePlayer = () => {
                                     Lyrics
                                 </h2>
 
-                                <div className="lyrics-display">
-                                    {songData.lyrics.map((lyric, index) => (
+                                <div className="lyrics-display" ref={lyricsDisplayRef}>
+                                    {songData && songData.lyrics && songData.lyrics.map((lyric, index) => (
                                         <div
                                             key={index}
                                             className={`lyric-line ${index === currentLyricIndex ? 'active' : ''} ${index < currentLyricIndex ? 'past' : ''}`}
+                                            style={debugMode ? {
+                                                border: '1px dashed #333',
+                                                padding: '8px'
+                                            } : null}
                                         >
                                             {lyric.text}
+                                            {debugMode && (
+                                                <div style={{
+                                                    fontSize: '10px',
+                                                    color: '#999',
+                                                    marginTop: '4px'
+                                                }}>
+                                                    Zeit: {lyric.startTime.toFixed(2)}s |
+                                                    Index: {index} |
+                                                    Aktiv: {index === currentLyricIndex ? 'Ja' : 'Nein'}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -436,7 +731,9 @@ const KaraokePlayer = () => {
                             <section className="card pitch-card">
                                 <h2 className="card-title">
                                     <span className="card-number">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M9 18V5l12-2v13"></path>
                                             <circle cx="6" cy="18" r="3"></circle>
                                             <circle cx="18" cy="16" r="3"></circle>
@@ -448,7 +745,7 @@ const KaraokePlayer = () => {
                                 <div className="pitch-display">
                                     <div className="pitch-meter-container">
                                         <div className="pitch-labels">
-                                            {Array.from({ length: 5 }, (_, i) => {
+                                            {Array.from({length: 5}, (_, i) => {
                                                 const note = ((targetPitch || 60) - 12) + (i * 6);
                                                 return (
                                                     <div key={i} className="pitch-label">
@@ -463,7 +760,7 @@ const KaraokePlayer = () => {
                                             {targetPitch && (
                                                 <div
                                                     className="target-pitch"
-                                                    style={{ bottom: `${((targetPitch - ((targetPitch || 60) - 12)) / 24) * 100}%` }}
+                                                    style={{bottom: `${((targetPitch - ((targetPitch || 60) - 12)) / 24) * 100}%`}}
                                                 ></div>
                                             )}
 
@@ -483,7 +780,8 @@ const KaraokePlayer = () => {
                                     <div className="pitch-stats">
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Dein Pitch:</span>
-                                            <span className="pitch-stat-value" style={{ color: getAccuracyColor() }}>
+                                            <span className="pitch-stat-value"
+                                                  style={{color: getAccuracyColor()}}>
                                                 {currentPitch || '-'}
                                             </span>
                                         </div>
@@ -493,7 +791,8 @@ const KaraokePlayer = () => {
                                                 {targetPitch || '-'}
                                             </span>
                                         </div>
-                                        <div className="pitch-accuracy" style={{ backgroundColor: getAccuracyColor() }}>
+                                        <div className="pitch-accuracy"
+                                             style={{backgroundColor: getAccuracyColor()}}>
                                             {currentPitch && targetPitch ? (
                                                 Math.abs(currentPitch - targetPitch) <= 2 ? 'Perfekt!' :
                                                     Math.abs(currentPitch - targetPitch) <= 4 ? 'Gut!' :
