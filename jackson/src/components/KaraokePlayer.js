@@ -20,6 +20,7 @@ const KaraokePlayer = () => {
     const [pitchHistory, setPitchHistory] = useState([]);
     const [showUpload, setShowUpload] = useState(true);
     const [debugMode, setDebugMode] = useState(false);
+    const [currentTargetPitchData, setCurrentTargetPitchData] = useState(null);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
@@ -124,19 +125,21 @@ const KaraokePlayer = () => {
             console.log("Current time check:");
 
             songData.lyrics.forEach((lyric, idx) => {
-                const nextLyric = songData.lyrics[idx + 1];
-                const isCurrentByTime = nextLyric
-                    ? (currentTime >= lyric.startTime && currentTime < nextLyric.startTime)
-                    : (currentTime >= lyric.startTime);
+                const isCurrentByTime = lyric.hasOwnProperty('endTime')
+                    ? (currentTime >= lyric.startTime && currentTime < lyric.endTime)
+                    : false;
 
                 console.log(
                     `Lyric ${idx}: "${lyric.text.substring(0, 15)}..." - ` +
                     `startTime: ${lyric.startTime} - ` +
+                    `endTime: ${lyric.endTime} - ` +
                     `is current: ${isCurrentByTime} - ` +
                     `matches currentLyricIndex: ${idx === currentLyricIndex}`
                 );
             });
         }
+
+        console.log("Current Target Pitch Data:", currentTargetPitchData);
 
         // DOM-Elemente überprüfen
         if (lyricsDisplayRef.current) {
@@ -163,10 +166,29 @@ const KaraokePlayer = () => {
                 try {
                     const jsonData = JSON.parse(event.target.result);
                     console.log("Parsed JSON data:", jsonData);
+
+                    // Format validieren - prüfe auf erwartete Felder
+                    if (!jsonData.lyrics || !Array.isArray(jsonData.lyrics) ||
+                        !jsonData.pitchData || !Array.isArray(jsonData.pitchData)) {
+                        alert("Die JSON-Datei hat nicht das erwartete Format. Überprüfe die Datenstruktur.");
+                        return;
+                    }
+
+                    // Stelle sicher, dass alle Lyrics ein startTime-Feld haben
+                    const validLyrics = jsonData.lyrics.every(lyric =>
+                        lyric.hasOwnProperty('text') &&
+                        lyric.hasOwnProperty('startTime')
+                    );
+
+                    if (!validLyrics) {
+                        alert("Die Lyrics in der JSON-Datei haben nicht alle benötigten Felder (text, startTime).");
+                        return;
+                    }
+
                     setSongData(jsonData);
                 } catch (error) {
                     console.error("Error parsing JSON file:", error);
-                    alert("Fehler beim Parsen der JSON-Datei");
+                    alert("Fehler beim Parsen der JSON-Datei: " + error.message);
                 }
             };
             reader.readAsText(file);
@@ -223,6 +245,11 @@ const KaraokePlayer = () => {
                     updateTargetPitch(foundIndex, newTime);
                 }
 
+                // Finde passende Pitch-Daten für die aktuelle Zeit
+                if (songData && songData.pitchData) {
+                    findMatchingPitchData(newTime);
+                }
+
                 // Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
                 const shouldHaveActiveLyric = songData && songData.lyrics && songData.lyrics.some(lyric =>
                     newTime >= lyric.startTime &&
@@ -261,16 +288,53 @@ const KaraokePlayer = () => {
         }
     }, [audioUrl, songData, currentLyricIndex]);
 
+    // Neue Funktion: Finde den nächstgelegenen Pitch-Datenpunkt für die aktuelle Zeit
+    const findMatchingPitchData = (time) => {
+        if (!songData || !songData.pitchData || songData.pitchData.length === 0) {
+            setCurrentTargetPitchData(null);
+            setTargetPitch(null);
+            return;
+        }
+
+        // Anstatt nach dem genauen Zeitpunkt zu suchen, nehmen wir den nächsten verfügbaren
+        // innerhalb eines Toleranzbereichs
+        const TOLERANCE = 0.5; // Zeittoleranz in Sekunden
+
+        let closestPitchData = null;
+        let minTimeDifference = Infinity;
+
+        // Finde den nächstgelegenen Pitch-Datenpunkt
+        for (const pitchData of songData.pitchData) {
+            const timeDifference = Math.abs(pitchData.time - time);
+
+            if (timeDifference < minTimeDifference) {
+                minTimeDifference = timeDifference;
+                closestPitchData = pitchData;
+            }
+        }
+
+        // Nur verwenden, wenn wir nahe genug sind
+        if (minTimeDifference <= TOLERANCE) {
+            setCurrentTargetPitchData(closestPitchData);
+            setTargetPitch(closestPitchData.pitch);
+        } else {
+            // Zu weit entfernt, kein gültiger Pitch
+            setCurrentTargetPitchData(null);
+            setTargetPitch(null);
+        }
+    };
+
     // Separate Funktion für Pitch-Target-Updates
     const updateTargetPitch = (lyricIndex, time) => {
         if (!songData || !songData.lyrics || lyricIndex === -1) {
-            setTargetPitch(null);
+            // Wenn kein Lyric ausgewählt ist, versuche direkt Pitch-Daten zu finden
+            findMatchingPitchData(time);
             return;
         }
 
         const currentLyric = songData.lyrics[lyricIndex];
 
-        // Get the pitch target closest to current time
+        // Wenn Lyric individuell pitchTargets hat (nicht im vorliegenden JSON)
         if (currentLyric.pitchTargets && currentLyric.pitchTargets.length > 0) {
             const relativeTime = time - currentLyric.startTime;
             let closestTarget = currentLyric.pitchTargets[0];
@@ -285,14 +349,16 @@ const KaraokePlayer = () => {
                 }
             }
 
-            // Only update if we're close enough to the target
+            // Nur aktualisieren, wenn wir nahe genug am Target sind
             if (minDiff < 0.5) {
                 setTargetPitch(closestTarget.pitch);
             } else {
-                setTargetPitch(null);
+                // Sonst versuche globale Pitch-Daten zu finden
+                findMatchingPitchData(time);
             }
         } else {
-            setTargetPitch(null);
+            // Keine lyric-spezifischen Pitch-Targets, verwende globale Pitch-Daten
+            findMatchingPitchData(time);
         }
     };
 
@@ -536,48 +602,41 @@ const KaraokePlayer = () => {
                         </h2>
 
                         <div className="upload-container">
-                            {/*<div className="upload-card">*/}
-                            {/*    <h3 className="upload-title">JSON Datei</h3>*/}
-                                <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path
-                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                    </svg>
-                                    <p className="file-upload-text">{songData ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
-                                    <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
-                                    <input
-                                        type="file"
-                                        accept="application/json"
-                                        onChange={handleJsonUpload}
-                                    />
-                                </label>
-                            {/*</div>*/}
-
-                            {/*<div className="upload-card">*/}
-                            {/*    <h3 className="upload-title">MP3 Datei</h3>*/}
-                                <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M9 18V5l12-2v13"></path>
-                                        <circle cx="6" cy="18" r="3"></circle>
-                                        <circle cx="18" cy="16" r="3"></circle>
-                                    </svg>
-                                    <p className="file-upload-text">{audioFile ? audioFile.name : 'MP3 Datei auswählen'}</p>
-                                    <p className="file-upload-hint">{!audioFile && '(Passend zur JSON Datei)'}</p>
-                                    <input
-                                        type="file"
-                                        accept="audio/*"
-                                        onChange={handleAudioUpload}
-                                    />
-                                </label>
-                            {/*</div>*/}
+                            <label className="file-upload">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round">
+                                    <path
+                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <p className="file-upload-text">{songData ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
+                                <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
+                                <input
+                                    type="file"
+                                    accept="application/json"
+                                    onChange={handleJsonUpload}
+                                />
+                            </label>
+                            <label className="file-upload">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                                <p className="file-upload-text">{audioFile ? audioFile.name : 'MP3 Datei auswählen'}</p>
+                                <p className="file-upload-hint">{!audioFile && '(Passend zur JSON Datei)'}</p>
+                                <input
+                                    type="file"
+                                    accept="audio/*"
+                                    onChange={handleAudioUpload}
+                                />
+                            </label>
                         </div>
 
                         <div className="start-container">
@@ -731,7 +790,7 @@ const KaraokePlayer = () => {
                                     <LyricsDisplay
                                         lyrics={songData.lyrics}
                                         currentLyricIndex={currentLyricIndex}
-                                        currentTime={currentTime} // Neue Prop hinzugefügt
+                                        currentTime={currentTime}
                                         debugMode={debugMode}
                                         lyricsDisplayRef={lyricsDisplayRef}
                                     />
