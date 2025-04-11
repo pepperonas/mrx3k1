@@ -10,18 +10,25 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
 
     const [visibleLyrics, setVisibleLyrics] = useState([]);
     const [showPastIndicator, setShowPastIndicator] = useState(false);
-    // Auto-Scroll standardmäßig aktiviert - WICHTIGER FIX
+    // Auto-Scroll standardmäßig aktiviert
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
     const [manualScrollDetected, setManualScrollDetected] = useState(false);
 
-    // Interne Ref für das Lyrics-Container-Element (für den Fall, dass die externe Ref nicht korrekt funktioniert)
+    // Neue State-Variable für den intern berechneten aktuellen Lyric-Index
+    // Dieser wird nur intern verwendet, um Sprünge zu vermeiden
+    const [stableCurrentIndex, setStableCurrentIndex] = useState(-1);
+
+    // Interne Ref für das Lyrics-Container-Element
     const internalLyricsContainerRef = useRef(null);
     const userScrollTimerRef = useRef(null);
     const lastScrollTimeRef = useRef(0);
-    // Neue Ref für das letzte angezeigte Lyric
-    const lastShownLyricIndexRef = useRef(-1);
-    // Neue Ref für die letzte Scroll-Position
     const lastScrollPositionRef = useRef(0);
+    // Ref für den Scroll-Timeout
+    const scrollTimeoutRef = useRef(null);
+    // Ref für den letzten stabilen Index
+    const lastStableIndexRef = useRef(-1);
+    // Zeitintervall-Ref für index-Stabilisierung
+    const indexStabilizationRef = useRef(null);
 
     // Log-Funktion für Debugging
     const logDebug = (message, data) => {
@@ -59,6 +66,66 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         return Math.min(Math.max((elapsed / total) * 100, 0), 100);
     };
 
+    // Verbesserte Funktion zur Berechnung des aktuellen Lyric-Index
+    const calculateCurrentLyricIndex = (time) => {
+        if (!lyrics || lyrics.length === 0) return -1;
+
+        // Durchlaufe alle Lyrics und finde den passenden für die aktuelle Zeit
+        for (let i = 0; i < lyrics.length; i++) {
+            const lyric = lyrics[i];
+
+            if (!lyric || !lyric.hasOwnProperty('startTime')) continue;
+
+            // Stelle sicher, dass startTime und endTime numerisch sind
+            const startTime = parseFloat(lyric.startTime);
+            if (isNaN(startTime)) continue;
+
+            const endTime = lyric.hasOwnProperty('endTime') ? parseFloat(lyric.endTime) : null;
+
+            // Fall 1: Wenn es ein endTime gibt, überprüfe den Bereich
+            if (endTime !== null && !isNaN(endTime)) {
+                if (time >= startTime && time < endTime) {
+                    return i;
+                }
+            }
+            // Fall 2: Wenn es kein endTime gibt, prüfe, ob wir zwischen diesem und dem nächsten liegen
+            else if (i < lyrics.length - 1) {
+                const nextLyric = lyrics[i + 1];
+                if (nextLyric && nextLyric.hasOwnProperty('startTime')) {
+                    const nextStartTime = parseFloat(nextLyric.startTime);
+                    if (!isNaN(nextStartTime) && time >= startTime && time < nextStartTime) {
+                        return i;
+                    }
+                }
+            }
+            // Fall 3: Letzter Lyric ohne endTime
+            else if (i === lyrics.length - 1 && time >= startTime) {
+                return i;
+            }
+        }
+
+        // Wenn kein passender Lyric gefunden wurde, aber die Zeit nach dem ersten Lyric ist
+        if (lyrics.length > 0 && lyrics[0].hasOwnProperty('startTime')) {
+            const firstStartTime = parseFloat(lyrics[0].startTime);
+            if (!isNaN(firstStartTime)) {
+                // Vor dem ersten Lyric
+                if (time < firstStartTime) {
+                    return -1;
+                }
+                // Nach dem letzten Lyric
+                const lastLyric = lyrics[lyrics.length - 1];
+                if (lastLyric && lastLyric.hasOwnProperty('endTime')) {
+                    const lastEndTime = parseFloat(lastLyric.endTime);
+                    if (!isNaN(lastEndTime) && time >= lastEndTime) {
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        return -1;
+    };
+
     // Verbesserte Funktion zur Erkennung von manuellem Scrollen
     const handleUserScroll = (e) => {
         // Aktuelle Scroll-Position erfassen
@@ -79,7 +146,7 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
             setManualScrollDetected(true);
             setAutoScrollEnabled(false);
 
-            // Timer zum Zurücksetzen des Auto-Scroll nach 5 Sekunden Inaktivität (erhöht von 3s)
+            // Timer zum Zurücksetzen des Auto-Scroll nach 5 Sekunden Inaktivität
             if (userScrollTimerRef.current) {
                 clearTimeout(userScrollTimerRef.current);
             }
@@ -88,25 +155,83 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                 logDebug("Auto-Scroll nach Inaktivität wieder aktiviert");
                 setManualScrollDetected(false);
                 setAutoScrollEnabled(true);
-            }, 5000); // Erhöht von 3000 auf 5000 ms
+            }, 5000);
         }
 
         lastScrollTimeRef.current = now;
         lastScrollPositionRef.current = currentScrollPosition;
     };
 
-    // Für Cleanups
+    // WICHTIG: Stabilisierung des currentLyricIndex
+    // Dieser Effekt sorgt dafür, dass kurzfristige Schwankungen im currentLyricIndex
+    // abgefangen werden, indem ein interner stableCurrentIndex verwendet wird
+    useEffect(() => {
+        // Wenn wir keinen aktuellen Index haben, nichts zu tun
+        if (!lyrics || lyrics.length === 0) {
+            setStableCurrentIndex(-1);
+            return;
+        }
+
+        // Berechne den internen Index direkt
+        const calculatedIndex = calculateCurrentLyricIndex(currentTime);
+
+        // Wenn der berechnete Index mit dem externen Index übereinstimmt, übernehmen wir ihn direkt
+        if (calculatedIndex === currentLyricIndex) {
+            setStableCurrentIndex(calculatedIndex);
+            lastStableIndexRef.current = calculatedIndex;
+            return;
+        }
+
+        // Sonst prüfen wir:
+        // 1. Ist der aktuelle externe Index gleich dem letzten stabilen Index?
+        //    Wenn ja, behalten wir ihn bei, um Sprünge zu vermeiden
+        if (currentLyricIndex === lastStableIndexRef.current) {
+            return;
+        }
+
+        // 2. Ist der berechnete Index valide und liegt innerhalb des Bereichs?
+        if (calculatedIndex >= 0 && calculatedIndex < lyrics.length) {
+            // Wir verwenden eine leichte Verzögerung, um kurze Flackern zu vermeiden
+            if (indexStabilizationRef.current) {
+                clearTimeout(indexStabilizationRef.current);
+            }
+
+            indexStabilizationRef.current = setTimeout(() => {
+                setStableCurrentIndex(calculatedIndex);
+                lastStableIndexRef.current = calculatedIndex;
+                logDebug(`Index stabilisiert: ${calculatedIndex}`);
+            }, 100); // Kurze Verzögerung
+        }
+        // 3. Wenn der externe Index valide ist, übernehmen wir ihn
+        else if (currentLyricIndex >= 0 && currentLyricIndex < lyrics.length) {
+            setStableCurrentIndex(currentLyricIndex);
+            lastStableIndexRef.current = currentLyricIndex;
+        }
+        // 4. Sonst verwenden wir -1 als Fallback
+        else {
+            setStableCurrentIndex(-1);
+            lastStableIndexRef.current = -1;
+        }
+    }, [currentTime, currentLyricIndex, lyrics]);
+
+    // Cleanup für Timer
     useEffect(() => {
         return () => {
             if (userScrollTimerRef.current) {
                 clearTimeout(userScrollTimerRef.current);
+            }
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+            if (indexStabilizationRef.current) {
+                clearTimeout(indexStabilizationRef.current);
             }
         };
     }, []);
 
     // Füge Scroll-Event-Listener hinzu und behandle Scrolling
     useEffect(() => {
-        // Referenz auf den Container sichern (entweder die externe Ref oder die interne)
+        // Referenz auf den Container sichern
         const lyricsContainer = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
 
         if (lyricsContainer) {
@@ -124,12 +249,15 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         }
     }, []);
 
-    // Bearbeiten der visibleLyrics basierend auf dem aktuellen Lyric-Index
+    // Bearbeiten der visibleLyrics basierend auf dem stabilisierten Lyric-Index
     useEffect(() => {
         if (!lyrics || lyrics.length === 0) return;
 
+        // Wir verwenden den stabilen Index statt des externen currentLyricIndex
+        const effectiveIndex = stableCurrentIndex;
+
         // Wenn kein aktueller Lyric ausgewählt ist, zeigen wir die ersten Lyrics an
-        if (currentLyricIndex < 0) {
+        if (effectiveIndex < 0) {
             const initialLyrics = lyrics.slice(0, VISIBLE_RANGE.future + 1).map((lyric, idx) => ({
                 ...lyric,
                 actualIndex: idx
@@ -140,8 +268,8 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         }
 
         // Bereich der sichtbaren Lyrics berechnen - mehr vergangene Lyrics anzeigen
-        let startIndex = Math.max(0, currentLyricIndex - VISIBLE_RANGE.past);
-        let endIndex = Math.min(lyrics.length, currentLyricIndex + VISIBLE_RANGE.future + 1);
+        const startIndex = Math.max(0, effectiveIndex - VISIBLE_RANGE.past);
+        const endIndex = Math.min(lyrics.length, effectiveIndex + VISIBLE_RANGE.future + 1);
 
         // Sichtbare Lyrics festlegen
         const newVisibleLyrics = lyrics.slice(startIndex, endIndex).map((lyric, idx) => ({
@@ -154,98 +282,54 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         // Past-Indikator anzeigen, wenn es vergangene Lyrics gibt, die nicht angezeigt werden
         setShowPastIndicator(startIndex > 0);
 
-        // Aktualisiere die Referenz auf den letzten angezeigten Lyric-Index
-        lastShownLyricIndexRef.current = currentLyricIndex;
+    }, [lyrics, stableCurrentIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past]);
 
-    }, [lyrics, currentLyricIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past]);
-
-    // VERBESSERTER Effekt zum Scrollen zum aktiven Lyric
+    // VERBESSERTER Scroll-Effekt - stabile Positionierung ohne Sprünge
     useEffect(() => {
-        // Wenn kein aktiver Lyric vorhanden ist oder manuell gescrollt wurde, abbrechen
-        if (currentLyricIndex < 0 || !autoScrollEnabled || manualScrollDetected) return;
+        // Frühes Beenden, wenn keine Auto-Scroll Bedingungen erfüllt sind
+        if (stableCurrentIndex < 0 || !autoScrollEnabled || manualScrollDetected) return;
 
-        // Prüfen, ob sich der Lyric-Index tatsächlich geändert hat
-        const hasLyricChanged = currentLyricIndex !== lastShownLyricIndexRef.current;
-
-        // Verwende entweder die externe Ref oder die interne Ref
         const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
         if (!container) return;
 
-        // Finde das aktive Lyric-Element
-        const activeLyric = container.querySelector('.lyric-line.active');
-        if (!activeLyric) return;
-
-        // Verzögerung nur einfügen, wenn der Lyric gewechselt hat
-        const scrollWithDelay = (delay = 0) => {
-            setTimeout(() => {
-                // Position des aktiven Lyrics berechnen
-                const containerRect = container.getBoundingClientRect();
-                const lyricRect = activeLyric.getBoundingClientRect();
-
-                // Optimierte Zielposition berechnen - 35% vom oberen Rand entfernt, nicht mittig
-                // Dies gibt mehr Kontext für kommende Lyrics
-                const scrollTargetY = activeLyric.offsetTop - (container.clientHeight * 0.35);
-
-                // Prüfe, ob wir scrollen müssen
-                const isVisible = (
-                    lyricRect.top >= containerRect.top &&
-                    lyricRect.bottom <= containerRect.bottom
-                );
-
-                if (!isVisible || hasLyricChanged) {
-                    logDebug(`Scrolling zu aktivem Lyric ${currentLyricIndex}: ${activeLyric.textContent.trim()}`);
-
-                    // Sanftes Scrollen mit erhöhter Geschwindigkeit
-                    container.scrollTo({
-                        top: scrollTargetY,
-                        behavior: 'smooth'
-                    });
-
-                    // Aktualisiere die Referenz
-                    lastShownLyricIndexRef.current = currentLyricIndex;
-                }
-            }, delay);
-        };
-
-        // Scrooll mit leichter Verzögerung, wenn der Lyric gewechselt hat
-        // Dies gibt dem DOM Zeit zum Aktualisieren
-        if (hasLyricChanged) {
-            scrollWithDelay(50);
-        } else {
-            // Kontinuierliches Update ohne Verzögerung bei Fortschritt desselben Lyrics
-            scrollWithDelay(0);
+        // Eventuelle frühere Timeouts löschen, um Überlappung zu vermeiden
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
         }
 
-    }, [currentLyricIndex, autoScrollEnabled, manualScrollDetected, currentTime]);
+        // Verzögerung für DOM-Update und Animation
+        scrollTimeoutRef.current = setTimeout(() => {
+            // Finde das aktive Lyric-Element
+            const activeLyric = container.querySelector('.lyric-line.active');
+            if (!activeLyric) return;
 
-    // Zusätzlicher Scroll-Effekt für kontinuierliches Scrollen basierend auf der Zeit
-    // Effekt etwas verändert für sanftere Bewegung
-    useEffect(() => {
-        // Nur scrollen, wenn Auto-Scroll aktiv ist und ein Lyric aktiv ist
-        if (!autoScrollEnabled || manualScrollDetected || currentLyricIndex < 0) return;
+            // Berechne die Position des aktiven Lyrics
+            const containerRect = container.getBoundingClientRect();
+            const lyricRect = activeLyric.getBoundingClientRect();
 
-        const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
-        if (!container) return;
+            // Prüfe ob das Element überhaupt im sichtbaren Bereich ist
+            const isVisible = (
+                lyricRect.top >= containerRect.top &&
+                lyricRect.bottom <= containerRect.bottom
+            );
 
-        const activeLyric = container.querySelector('.lyric-line.active');
-        if (!activeLyric || !lyrics[currentLyricIndex]) return;
+            // Wenn Lyric nicht sichtbar ist oder Index gewechselt hat
+            if (!isVisible) {
+                logDebug(`Scrolling zu Lyric ${stableCurrentIndex}`, activeLyric.textContent);
 
-        // Berechne den Fortschritt innerhalb des aktuellen Lyrics
-        const progress = calculateProgress(lyrics[currentLyricIndex], currentLyricIndex);
+                // WICHTIG: Eine feste Position vom Top, damit es keinen Sprung gibt
+                // Wir positionieren den aktiven Lyric bei 30% vom oberen Rand
+                const targetPosition = activeLyric.offsetTop - (container.clientHeight * 0.3);
 
-        // Berechne die optimierte Zielposition basierend auf dem Fortschritt
-        // Lyric beginnt weiter oben (30%), bewegt sich dann minimal während der Wiedergabe
-        const baseOffset = container.clientHeight * 0.3;
-        const dynamicOffset = (progress / 100) * (activeLyric.clientHeight * 0.5);
+                // Smooth scrolling zu der berechneten Position
+                container.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }, 50); // Kurze Verzögerung für DOM-Updates
 
-        const scrollTargetY = activeLyric.offsetTop - baseOffset + dynamicOffset;
-
-        // Sanfteres Scrollen mit reduzierter Geschwindigkeit für kontinuierlichen Effekt
-        container.scrollTo({
-            top: scrollTargetY,
-            behavior: 'smooth'
-        });
-    }, [currentTime, currentLyricIndex, autoScrollEnabled, manualScrollDetected, lyrics]);
+    }, [stableCurrentIndex, autoScrollEnabled, manualScrollDetected, currentTime]);
 
     return (
         <div
@@ -266,7 +350,8 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                     fontSize: '12px'
                 }}>
                     <div>Current Time: {currentTime.toFixed(2)}s</div>
-                    <div>Current Lyric Index: {currentLyricIndex}</div>
+                    <div>External Lyric Index: {currentLyricIndex}</div>
+                    <div>Stable Lyric Index: {stableCurrentIndex}</div>
                     <div>Auto-Scroll: {autoScrollEnabled ? 'Aktiv' : 'Deaktiviert'}</div>
                     <div>Manueller Scroll: {manualScrollDetected ? 'Erkannt' : 'Nein'}</div>
                 </div>
@@ -327,8 +412,9 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
 
             <div className="visible-lyrics">
                 {visibleLyrics.map((lyric) => {
-                    const isActive = lyric.actualIndex === currentLyricIndex;
-                    const isPast = lyric.actualIndex < currentLyricIndex;
+                    // Verwende stableCurrentIndex anstelle von currentLyricIndex
+                    const isActive = lyric.actualIndex === stableCurrentIndex;
+                    const isPast = lyric.actualIndex < stableCurrentIndex;
                     const isTimeRelevant = currentTime >= lyric.startTime &&
                         (lyric.endTime ? currentTime < lyric.endTime : true);
                     const progress = calculateProgress(lyric, lyric.actualIndex);
@@ -421,7 +507,7 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                     border-radius: 0.5rem;
                     color: var(--text-muted);
                     font-size: 1.125rem;
-                    transition: all 0.3s;
+                    transition: all 0.3s ease-in-out;
                     background-color: rgba(36, 38, 52, 0.9);
                     position: relative;
                     overflow: hidden;
@@ -429,7 +515,7 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                     border-left: 4px solid transparent;
                 }
                 
-                /* Aktiver Lyric */
+                /* Aktiver Lyric - sanftere Transition hinzugefügt */
                 .lyric-line.active {
                     background-color: rgba(44, 46, 59, 0.7) !important;
                     border-left: 4px solid #8b5cf6 !important;
@@ -438,15 +524,22 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                     padding-left: 16px !important;
                     transform: scale(1.03);
                     box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+                    /* Sanftere Transition für bessere Animation */
+                    transition: transform 0.3s ease-out, 
+                                background-color 0.5s ease, 
+                                border-left 0.5s ease,
+                                padding-left 0.5s ease;
                 }
                 
-                /* Vergangene Lyrics */
+                /* Vergangene Lyrics - sanftere Transition */
                 .lyric-line.past {
                     color: var(--text-dimmed);
                     opacity: 0.65;
                     transform: scale(0.95);
                     transform-origin: center left;
-                    transition: all 0.3s ease;
+                    transition: transform 0.5s ease, 
+                                opacity 0.5s ease,
+                                color 0.5s ease;
                 }
                 
                 /* Intensiver Glow-Effekt für aktiven Lyric-Text */
