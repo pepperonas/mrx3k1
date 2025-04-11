@@ -1,10 +1,11 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
 import '../App.css';
 import '../Player.css';
 import '../Debug.css';
 import LyricsDisplay from './LyricsDisplay';
-
+import PitchVisualizer from './PitchVisualizer'; // PitchVisualizer korrekt importieren
+a
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
     const [audioFile, setAudioFile] = useState(null);
@@ -28,6 +29,9 @@ const KaraokePlayer = () => {
     const lyricsDisplayRef = useRef(null);
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
+
+    const [visiblePitchData, setVisiblePitchData] = useState([]);
+    const [pitchRange, setPitchRange] = useState({min: 40, max: 90});
 
     const updateDomTime = (time) => {
         const currentTimeElement = document.querySelector('.time-current');
@@ -108,6 +112,25 @@ const KaraokePlayer = () => {
         }
         return -1;
     };
+
+    const processPitchData = useCallback(() => {
+        if (!songData || !songData.pitchData || songData.pitchData.length === 0) return;
+
+        // Berechne den Bereich der Pitch-Daten für die Visualisierung
+        const pitches = songData.pitchData.map(p => p.pitch);
+        const minPitch = Math.min(...pitches);
+        const maxPitch = Math.max(...pitches);
+
+        // Setze den Pitch-Bereich mit etwas Padding
+        setPitchRange({
+            min: Math.max(minPitch - 5, 0),
+            max: maxPitch + 5
+        });
+
+        if (debugMode) {
+            console.log(`Pitch-Bereich berechnet: ${minPitch} bis ${maxPitch}`);
+        }
+    }, [songData, debugMode]);
 
     // Debug-Funktion, um Probleme zu diagnostizieren
     const debugState = () => {
@@ -282,11 +305,17 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {});
-                audioElement.removeEventListener('error', () => {});
+                audioElement.removeEventListener('play', () => {
+                });
+                audioElement.removeEventListener('error', () => {
+                });
             };
         }
     }, [audioUrl, songData, currentLyricIndex]);
+
+    useEffect(() => {
+        processPitchData();
+    }, [songData, processPitchData]);
 
     // Neue Funktion: Finde den nächstgelegenen Pitch-Datenpunkt für die aktuelle Zeit
     const findMatchingPitchData = (time) => {
@@ -799,66 +828,43 @@ const KaraokePlayer = () => {
 
                             <section className="card pitch-card">
                                 <h2 className="card-title">
-                                    <span className="card-number">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" strokeWidth="2"
-                                             strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M9 18V5l12-2v13"></path>
-                                            <circle cx="6" cy="18" r="3"></circle>
-                                            <circle cx="18" cy="16" r="3"></circle>
-                                        </svg>
-                                    </span>
-                                    Pitch
+    <span className="card-number">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" strokeWidth="2"
+           strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
+    </span>
+                                    Pitch Visualisierung
                                 </h2>
 
+                                {/* Neue PitchVisualizer-Komponente */}
+                                <PitchVisualizer
+                                    songData={songData}
+                                    currentTime={currentTime}
+                                    currentPitch={currentPitch}
+                                    targetPitch={targetPitch}
+                                    pitchHistory={pitchHistory}
+                                    debugMode={debugMode}
+                                />
+
+                                {/* Bestehende Pitch-Statistiken */}
                                 <div className="pitch-display">
-                                    <div className="pitch-meter-container">
-                                        <div className="pitch-labels">
-                                            {Array.from({length: 5}, (_, i) => {
-                                                const note = ((targetPitch || 60) - 12) + (i * 6);
-                                                return (
-                                                    <div key={i} className="pitch-label">
-                                                        {note}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="pitch-meter">
-                                            {/* Target pitch indicator */}
-                                            {targetPitch && (
-                                                <div
-                                                    className="target-pitch"
-                                                    style={{bottom: `${((targetPitch - ((targetPitch || 60) - 12)) / 24) * 100}%`}}
-                                                ></div>
-                                            )}
-
-                                            {/* Current pitch indicator */}
-                                            {currentPitch && (
-                                                <div
-                                                    className="current-pitch"
-                                                    style={{
-                                                        bottom: `${((currentPitch - ((targetPitch || 60) - 12)) / 24) * 100}%`,
-                                                        backgroundColor: getAccuracyColor()
-                                                    }}
-                                                ></div>
-                                            )}
-                                        </div>
-                                    </div>
-
                                     <div className="pitch-stats">
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Dein Pitch:</span>
                                             <span className="pitch-stat-value"
                                                   style={{color: getAccuracyColor()}}>
-                                                {currentPitch || '-'}
-                                            </span>
+          {currentPitch || '-'}
+        </span>
                                         </div>
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Ziel Pitch:</span>
                                             <span className="pitch-stat-value">
-                                                {targetPitch || '-'}
-                                            </span>
+          {targetPitch || '-'}
+        </span>
                                         </div>
                                         <div className="pitch-accuracy"
                                              style={{backgroundColor: getAccuracyColor()}}>
@@ -871,19 +877,24 @@ const KaraokePlayer = () => {
                                     </div>
                                 </div>
 
-                                <div className="pitch-history">
-                                    {pitchHistory.map((data, index) => (
-                                        <div
-                                            key={index}
-                                            className="pitch-history-bar"
-                                            style={{
-                                                height: `${Math.min(data.pitch / 100 * 100, 100)}%`,
-                                                left: `${(index / pitchHistory.length) * 100}%`,
-                                                backgroundColor: `hsl(${200 + (data.pitch % 30) * 5}, 70%, 60%)`
-                                            }}
-                                        ></div>
-                                    ))}
-                                </div>
+                                {/* Debug-Informationen wenn im Debug-Modus */}
+                                {debugMode && (
+                                    <div className="debug-container" style={{
+                                        marginTop: '1rem',
+                                        padding: '0.5rem',
+                                        backgroundColor: 'var(--inner-bg)',
+                                        borderRadius: '0.375rem',
+                                        fontSize: '0.75rem'
+                                    }}>
+                                        <div>Pitch
+                                            Bereich: {pitchRange.min} bis {pitchRange.max}</div>
+                                        <div>Datenpunkte
+                                            gesamt: {songData?.pitchData?.length || 0}</div>
+                                        <div>Aktuelle Zeit: {currentTime.toFixed(2)}s</div>
+                                        <div>Target Pitch
+                                            Daten: {JSON.stringify(currentTargetPitchData)}</div>
+                                    </div>
+                                )}
                             </section>
                         </div>
                     </>

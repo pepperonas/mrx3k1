@@ -22,6 +22,3 @@ einem integrierten Player abzuspielen. Die Anwendung besteht aus zwei Hauptkompo
 - Echtzeit-Tonhöhenauswertung und Punkteberechnung
 - Visuelle Darstellung der Tonhöhengenauigkeit
 
-## Installation
-
-Das Projekt wurde mit [Create React App](https://github.com
