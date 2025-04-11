@@ -294,14 +294,18 @@ const KaraokeJsonGenerator = () => {
                     const effectiveLyricIndex = checkingLyricIndexRef.current ? currentLyricIndex :
                         (currentLyricIndex >= 0 ? currentLyricIndex : lastValidLyricIndexRef.current);
 
+                    // Aktuelle Audio-Zeit direkt vom Audio-Element holen
+                    const actualCurrentTime = audioRef.current ? audioRef.current.currentTime : currentTime;
+
                     console.log(`Max Freq: ${maxValue.toFixed(1)}, Pitch: ${pitch || 'keiner'}, ` +
-                        `Lyric Index: ${currentLyricIndex}, Effektiver Index: ${effectiveLyricIndex}`);
+                        `Lyric Index: ${currentLyricIndex}, Effektiver Index: ${effectiveLyricIndex}, ` +
+                        `Zeit: ${actualCurrentTime.toFixed(2)}s`);
 
                     if (pitch) {
                         // PitchData für Visualisierung aktualisieren
                         const newPitchData = [...pitchData];
                         newPitchData.push({
-                            time: currentTime,
+                            time: actualCurrentTime,
                             pitch: pitch
                         });
                         setPitchData(newPitchData);
@@ -310,12 +314,12 @@ const KaraokeJsonGenerator = () => {
                         setGlobalPitchData(prev => [
                             ...prev,
                             {
-                                time: currentTime,
+                                time: actualCurrentTime,
                                 pitch: pitch
                             }
                         ]);
 
-                        console.log(`Pitch ${pitch} bei Zeit ${currentTime.toFixed(2)}s aufgezeichnet`);
+                        console.log(`Pitch ${pitch} bei Zeit ${actualCurrentTime.toFixed(2)}s aufgezeichnet`);
 
                         // Zusätzlich ausgeben, wenn ein Lyric aktiv ist (nur für Benutzer-Feedback)
                         if (effectiveLyricIndex >= 0 && effectiveLyricIndex < lyrics.length) {
