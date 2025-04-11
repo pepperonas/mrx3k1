@@ -55,55 +55,51 @@ const KaraokePlayer = () => {
             console.log(`Finding lyric index for time: ${time.toFixed(2)}`);
         }
 
+        // Durchsuche alle Lyrics und finde den passenden für die aktuelle Zeit
         for (let i = 0; i < songData.lyrics.length; i++) {
             const lyric = songData.lyrics[i];
 
-            // Prüfe zuerst, ob endTime im Lyric definiert ist
-            if (lyric.hasOwnProperty('endTime')) {
-                // Verwende die explizite endTime für die Prüfung
+            // Prüfe, ob die aktuelle Zeit im Bereich des Lyrics liegt (zwischen startTime und endTime)
+            if (lyric.hasOwnProperty('startTime') && lyric.hasOwnProperty('endTime')) {
                 if (time >= lyric.startTime && time < lyric.endTime) {
                     if (debugMode) {
-                        console.log(`Found lyric index ${i} (${lyric.text}) using endTime: ${lyric.startTime} to ${lyric.endTime}`);
-                    }
-                    return i;
-                }
-            } else {
-                // Fallback auf die alte Methode (implizites Ende)
-                const nextLyric = songData.lyrics[i + 1];
-                if (nextLyric) {
-                    if (time >= lyric.startTime && time < nextLyric.startTime) {
-                        if (debugMode) {
-                            console.log(`Found lyric index ${i} (${lyric.text}) using next lyric: ${lyric.startTime} to ${nextLyric.startTime}`);
-                        }
-                        return i;
-                    }
-                } else if (time >= lyric.startTime) {
-                    // Letzter Lyric
-                    if (debugMode) {
-                        console.log(`Found last lyric index ${i} (${lyric.text}) starting at ${lyric.startTime}`);
+                        console.log(`Found lyric index ${i} (${lyric.text}) using time range: ${lyric.startTime} to ${lyric.endTime}`);
                     }
                     return i;
                 }
             }
         }
 
-        // Falls keine passende Lyric gefunden wurde, aber die Zeit > 0 ist:
-        // Versuche den letzten vergangenen Lyric zu finden
-        if (time > 0) {
-            let lastPossibleIndex = -1;
-            for (let i = 0; i < songData.lyrics.length; i++) {
-                if (time >= songData.lyrics[i].startTime) {
-                    lastPossibleIndex = i;
-                } else {
-                    break; // Keine weiteren Lyrics prüfen, wenn wir schon einen zukünftigen gefunden haben
-                }
-            }
+        // Wenn kein aktiver Lyric gefunden wurde, versuche einen Fallback-Wert zu ermitteln
 
-            if (lastPossibleIndex >= 0) {
+        // Wenn die Zeit vor dem ersten Lyric liegt
+        if (songData.lyrics[0] && time < songData.lyrics[0].startTime) {
+            if (debugMode) {
+                console.log(`Time ${time.toFixed(2)} is before the first lyric`);
+            }
+            return -1;
+        }
+
+        // Wenn die Zeit nach dem letzten Lyric liegt
+        const lastLyric = songData.lyrics[songData.lyrics.length - 1];
+        if (lastLyric && time >= lastLyric.endTime) {
+            if (debugMode) {
+                console.log(`Time ${time.toFixed(2)} is after the last lyric`);
+            }
+            return -1;
+        }
+
+        // Wenn die Zeit zwischen zwei Lyrics liegt, gib -1 zurück
+        // da in diesem Fall kein Lyric aktiv sein sollte
+        for (let i = 0; i < songData.lyrics.length - 1; i++) {
+            const currentLyric = songData.lyrics[i];
+            const nextLyric = songData.lyrics[i + 1];
+
+            if (time >= currentLyric.endTime && time < nextLyric.startTime) {
                 if (debugMode) {
-                    console.log(`Using last possible lyric index ${lastPossibleIndex} for time ${time.toFixed(2)}`);
+                    console.log(`Time ${time.toFixed(2)} is between lyrics ${i} and ${i+1}`);
                 }
-                return lastPossibleIndex;
+                return -1;
             }
         }
 
@@ -255,36 +251,26 @@ const KaraokePlayer = () => {
 
             // Aktualisiere Zeit bei jedem Zeitupdate
             const handleTimeUpdate = () => {
-                const newTime = audioElement.currentTime;
+                if (!audioRef.current || !songData || !songData.lyrics) return;
+
+                const newTime = audioRef.current.currentTime;
                 setCurrentTime(newTime);
                 updateDomTime(newTime);
 
                 // Finde den aktuellen Lyric basierend auf der Zeit
                 const foundIndex = findCurrentLyricIndex(newTime);
 
-                // Setze den aktuellen Lyric-Index
-                if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
+                // Nur aktualisieren, wenn sich der Index tatsächlich geändert hat
+                if (foundIndex !== currentLyricIndex) {
+                    if (debugMode) {
+                        console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex} (Zeit: ${newTime.toFixed(2)}s)`);
+                    }
                     setCurrentLyricIndex(foundIndex);
-                    updateTargetPitch(foundIndex, newTime);
-                }
 
-                // Finde passende Pitch-Daten für die aktuelle Zeit
-                if (songData && songData.pitchData) {
-                    findMatchingPitchData(newTime);
-                }
-
-                // Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
-                const shouldHaveActiveLyric = songData && songData.lyrics && songData.lyrics.some(lyric =>
-                    newTime >= lyric.startTime &&
-                    (lyric.endTime ? newTime < lyric.endTime : true)
-                );
-
-                // Wenn wir einen Lyric haben sollten, aber keinen aktiven index (-1)
-                if (shouldHaveActiveLyric && currentLyricIndex === -1) {
-                    // Erzwinge ein Update mit dem gefundenen Index
-                    console.log(`Zeit ${newTime.toFixed(2)}: Forciere Update von -1 zu ${foundIndex}`);
-                    setCurrentLyricIndex(foundIndex);
-                    updateTargetPitch(foundIndex, newTime);
+                    // Optional: Aktualisiere den targetPitch, falls vorhanden
+                    if (typeof updateTargetPitch === 'function') {
+                        updateTargetPitch(foundIndex, newTime);
+                    }
                 }
             };
 

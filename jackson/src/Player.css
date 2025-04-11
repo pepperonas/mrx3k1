@@ -205,7 +205,7 @@
     scrollbar-width: thin;
     scrollbar-color: var(--primary) var(--inner-bg);
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .lyrics-display::-webkit-scrollbar {

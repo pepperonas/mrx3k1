@@ -210,7 +210,8 @@ body {
 .app-container, .app-main {
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden; /* Verhindert horizontales Scrollen durch Überläufe */
+    overflow-x: hidden; /* Nur horizontales Scrollen verhindern */
+    overflow-y: visible; /* Vertikales Scrollen erlauben */
 }
 
 .card {
