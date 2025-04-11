@@ -4,7 +4,7 @@ import '../App.css';
 import '../Player.css';
 import '../Debug.css';
 import LyricsDisplay from './LyricsDisplay';
-import PitchVisualizer from './PitchVisualizer'; // PitchVisualizer korrekt importieren
+import PitchVisualizer from './PitchVisualizer';
 
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
@@ -29,6 +29,9 @@ const KaraokePlayer = () => {
     const lyricsDisplayRef = useRef(null);
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
+    // Neue Refs für die Optimierung
+    const currentLyricIndexRef = useRef(-1);
+    const timeUpdateCounterRef = useRef(0);
 
     const [visiblePitchData, setVisiblePitchData] = useState([]);
     const [pitchRange, setPitchRange] = useState({min: 40, max: 90});
@@ -59,11 +62,15 @@ const KaraokePlayer = () => {
         for (let i = 0; i < songData.lyrics.length; i++) {
             const lyric = songData.lyrics[i];
 
+            // Stellen wir sicher, dass startTime und endTime numerisch sind
+            const startTime = parseFloat(lyric.startTime);
+            const endTime = parseFloat(lyric.endTime);
+
             // Prüfe, ob die aktuelle Zeit im Bereich des Lyrics liegt (zwischen startTime und endTime)
-            if (lyric.hasOwnProperty('startTime') && lyric.hasOwnProperty('endTime')) {
-                if (time >= lyric.startTime && time < lyric.endTime) {
+            if (!isNaN(startTime) && !isNaN(endTime)) {
+                if (time >= startTime && time < endTime) {
                     if (debugMode) {
-                        console.log(`Found lyric index ${i} (${lyric.text}) using time range: ${lyric.startTime} to ${lyric.endTime}`);
+                        console.log(`Found lyric index ${i} (${lyric.text}) using time range: ${startTime} to ${endTime}`);
                     }
                     return i;
                 }
@@ -73,20 +80,26 @@ const KaraokePlayer = () => {
         // Wenn kein aktiver Lyric gefunden wurde, versuche einen Fallback-Wert zu ermitteln
 
         // Wenn die Zeit vor dem ersten Lyric liegt
-        if (songData.lyrics[0] && time < songData.lyrics[0].startTime) {
-            if (debugMode) {
-                console.log(`Time ${time.toFixed(2)} is before the first lyric`);
+        if (songData.lyrics[0]) {
+            const firstStartTime = parseFloat(songData.lyrics[0].startTime);
+            if (!isNaN(firstStartTime) && time < firstStartTime) {
+                if (debugMode) {
+                    console.log(`Time ${time.toFixed(2)} is before the first lyric`);
+                }
+                return -1;
             }
-            return -1;
         }
 
         // Wenn die Zeit nach dem letzten Lyric liegt
         const lastLyric = songData.lyrics[songData.lyrics.length - 1];
-        if (lastLyric && time >= lastLyric.endTime) {
-            if (debugMode) {
-                console.log(`Time ${time.toFixed(2)} is after the last lyric`);
+        if (lastLyric) {
+            const lastEndTime = parseFloat(lastLyric.endTime);
+            if (!isNaN(lastEndTime) && time >= lastEndTime) {
+                if (debugMode) {
+                    console.log(`Time ${time.toFixed(2)} is after the last lyric`);
+                }
+                return -1;
             }
-            return -1;
         }
 
         // Wenn die Zeit zwischen zwei Lyrics liegt, gib -1 zurück
@@ -95,7 +108,11 @@ const KaraokePlayer = () => {
             const currentLyric = songData.lyrics[i];
             const nextLyric = songData.lyrics[i + 1];
 
-            if (time >= currentLyric.endTime && time < nextLyric.startTime) {
+            const currentEndTime = parseFloat(currentLyric.endTime);
+            const nextStartTime = parseFloat(nextLyric.startTime);
+
+            if (!isNaN(currentEndTime) && !isNaN(nextStartTime) &&
+                time >= currentEndTime && time < nextStartTime) {
                 if (debugMode) {
                     console.log(`Time ${time.toFixed(2)} is between lyrics ${i} and ${i+1}`);
                 }
@@ -128,6 +145,29 @@ const KaraokePlayer = () => {
         }
     }, [songData, debugMode]);
 
+    // Separates Effect für die Aktualisierung des currentLyricIndex
+    // basierend auf currentTime
+    useEffect(() => {
+        if (!songData || !songData.lyrics || !audioRef.current) return;
+
+        // Aktualisiere den Index basierend auf der aktuellen Zeit
+        const foundIndex = findCurrentLyricIndex(currentTime);
+
+        // Nur aktualisieren, wenn sich der Index tatsächlich geändert hat
+        if (foundIndex !== currentLyricIndexRef.current) {
+            if (debugMode) {
+                console.log(`Lyric Index geändert: ${currentLyricIndexRef.current} -> ${foundIndex} (Zeit: ${currentTime.toFixed(2)}s)`);
+            }
+
+            // Aktualisiere sowohl den State als auch die Ref
+            setCurrentLyricIndex(foundIndex);
+            currentLyricIndexRef.current = foundIndex;
+
+            // Aktualisiere den targetPitch
+            updateTargetPitch(foundIndex, currentTime);
+        }
+    }, [currentTime, songData]); // Entscheidend: Kein currentLyricIndex in den Abhängigkeiten!
+
     // Debug-Funktion, um Probleme zu diagnostizieren
     const debugState = () => {
         console.group("KaraokePlayer Debug Info");
@@ -138,20 +178,23 @@ const KaraokePlayer = () => {
         console.log("Audio URL exists:", !!audioUrl);
         console.log("Song Data:", songData);
         console.log("Current Lyric Index:", currentLyricIndex);
+        console.log("Current Lyric Index Ref:", currentLyricIndexRef.current);
 
         if (songData && songData.lyrics) {
             console.log("Lyrics count:", songData.lyrics.length);
             console.log("Current time check:");
 
             songData.lyrics.forEach((lyric, idx) => {
-                const isCurrentByTime = lyric.hasOwnProperty('endTime')
-                    ? (currentTime >= lyric.startTime && currentTime < lyric.endTime)
+                const startTime = parseFloat(lyric.startTime);
+                const endTime = parseFloat(lyric.endTime);
+                const isCurrentByTime = !isNaN(startTime) && !isNaN(endTime)
+                    ? (currentTime >= startTime && currentTime < endTime)
                     : false;
 
                 console.log(
                     `Lyric ${idx}: "${lyric.text.substring(0, 15)}..." - ` +
-                    `startTime: ${lyric.startTime} - ` +
-                    `endTime: ${lyric.endTime} - ` +
+                    `startTime: ${startTime} - ` +
+                    `endTime: ${endTime} - ` +
                     `is current: ${isCurrentByTime} - ` +
                     `matches currentLyricIndex: ${idx === currentLyricIndex}`
                 );
@@ -204,6 +247,19 @@ const KaraokePlayer = () => {
                         return;
                     }
 
+                    // Stelle sicher, dass alle Zeitwerte numerisch sind
+                    jsonData.lyrics.forEach(lyric => {
+                        if (lyric.startTime !== undefined && typeof lyric.startTime === 'string') {
+                            lyric.startTime = parseFloat(lyric.startTime);
+                        }
+                        if (lyric.endTime !== undefined && typeof lyric.endTime === 'string') {
+                            lyric.endTime = parseFloat(lyric.endTime);
+                        }
+                    });
+
+                    // Sortiere Lyrics nach startTime
+                    jsonData.lyrics.sort((a, b) => a.startTime - b.startTime);
+
                     setSongData(jsonData);
                 } catch (error) {
                     console.error("Error parsing JSON file:", error);
@@ -229,6 +285,7 @@ const KaraokePlayer = () => {
             setScore(0);
             setPitchHistory([]);
             setCurrentLyricIndex(-1);
+            currentLyricIndexRef.current = -1;
         }
     };
 
@@ -257,20 +314,11 @@ const KaraokePlayer = () => {
                 setCurrentTime(newTime);
                 updateDomTime(newTime);
 
-                // Finde den aktuellen Lyric basierend auf der Zeit
-                const foundIndex = findCurrentLyricIndex(newTime);
+                // Erhöhe den Counter für Debug-Zwecke
+                timeUpdateCounterRef.current++;
 
-                // Nur aktualisieren, wenn sich der Index tatsächlich geändert hat
-                if (foundIndex !== currentLyricIndex) {
-                    if (debugMode) {
-                        console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex} (Zeit: ${newTime.toFixed(2)}s)`);
-                    }
-                    setCurrentLyricIndex(foundIndex);
-
-                    // Optional: Aktualisiere den targetPitch, falls vorhanden
-                    if (typeof updateTargetPitch === 'function') {
-                        updateTargetPitch(foundIndex, newTime);
-                    }
+                if (debugMode && timeUpdateCounterRef.current % 10 === 0) {
+                    console.log(`Time update event #${timeUpdateCounterRef.current}, time: ${newTime.toFixed(2)}s`);
                 }
             };
 
@@ -291,13 +339,11 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {
-                });
-                audioElement.removeEventListener('error', () => {
-                });
+                audioElement.removeEventListener('play', () => {});
+                audioElement.removeEventListener('error', () => {});
             };
         }
-    }, [audioUrl, songData, currentLyricIndex]);
+    }, [audioUrl, songData]); // Entfernt: currentLyricIndex aus der Abhängigkeitsliste
 
     useEffect(() => {
         processPitchData();
@@ -587,6 +633,7 @@ const KaraokePlayer = () => {
         setScore(0);
         setPitchHistory([]);
         setCurrentLyricIndex(-1);
+        currentLyricIndexRef.current = -1;
         stopPitchAnalysis();
     };
 
@@ -603,6 +650,15 @@ const KaraokePlayer = () => {
             setCurrentTime(newTime);
 
             console.log(`Seek to time: ${newTime.toFixed(2)}`);
+        }
+    };
+
+    // Manuelles Testen des currentLyricIndex
+    const testSetLyricIndex = (index) => {
+        if (debugMode) {
+            setCurrentLyricIndex(index);
+            currentLyricIndexRef.current = index;
+            console.log(`Manuell gesetzter Lyric-Index: ${index}`);
         }
     };
 
@@ -780,6 +836,33 @@ const KaraokePlayer = () => {
                                     style={{left: `${(currentTime / Math.max(duration, 0.01)) * 100}%`}}
                                 />
                             </div>
+
+                            {/* DEBUG: Manuelles Testen von Lyric-Indizes */}
+                            {debugMode && (
+                                <div className="debug-container" style={{marginTop: '1rem'}}>
+                                    <div>Current Lyric Index: {currentLyricIndex}</div>
+                                    <div style={{display: 'flex', gap: '0.5rem', marginTop: '0.5rem'}}>
+                                        <button
+                                            onClick={() => testSetLyricIndex(0)}
+                                            className="btn btn-small btn-outline"
+                                        >
+                                            Index 0
+                                        </button>
+                                        <button
+                                            onClick={() => testSetLyricIndex(1)}
+                                            className="btn btn-small btn-outline"
+                                        >
+                                            Index 1
+                                        </button>
+                                        <button
+                                            onClick={() => testSetLyricIndex(2)}
+                                            className="btn btn-small btn-outline"
+                                        >
+                                            Index 2
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </section>
 
                         {/* Lyrics and Pitch Display */}
@@ -877,6 +960,7 @@ const KaraokePlayer = () => {
                                         <div>Datenpunkte
                                             gesamt: {songData?.pitchData?.length || 0}</div>
                                         <div>Aktuelle Zeit: {currentTime.toFixed(2)}s</div>
+                                        <div>Current Lyric Index: {currentLyricIndex} (Ref: {currentLyricIndexRef.current})</div>
                                         <div>Target Pitch
                                             Daten: {JSON.stringify(currentTargetPitchData)}</div>
                                     </div>

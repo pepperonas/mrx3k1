@@ -10,6 +10,7 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
 
     const [visibleLyrics, setVisibleLyrics] = useState([]);
     const [showPastIndicator, setShowPastIndicator] = useState(false);
+    // Auto-Scroll standardmäßig aktiviert - WICHTIGER FIX
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
     const [manualScrollDetected, setManualScrollDetected] = useState(false);
 
@@ -17,6 +18,10 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
     const internalLyricsContainerRef = useRef(null);
     const userScrollTimerRef = useRef(null);
     const lastScrollTimeRef = useRef(0);
+    // Neue Ref für das letzte angezeigte Lyric
+    const lastShownLyricIndexRef = useRef(-1);
+    // Neue Ref für die letzte Scroll-Position
+    const lastScrollPositionRef = useRef(0);
 
     // Log-Funktion für Debugging
     const logDebug = (message, data) => {
@@ -54,18 +59,27 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         return Math.min(Math.max((elapsed / total) * 100, 0), 100);
     };
 
-    // Handler für manuelles Scrollen durch den Nutzer
-    const handleUserScroll = () => {
+    // Verbesserte Funktion zur Erkennung von manuellem Scrollen
+    const handleUserScroll = (e) => {
+        // Aktuelle Scroll-Position erfassen
+        const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
+        if (!container) return;
+
+        const currentScrollPosition = container.scrollTop;
+
+        // Überprüfen, ob signifikante Änderung im Vergleich zur letzten Position
+        const scrollDifference = Math.abs(currentScrollPosition - lastScrollPositionRef.current);
+
         // Aktuellen Zeitstempel speichern
         const now = Date.now();
 
-        // Nur als manuellen Scroll erkennen, wenn ein bestimmter Zeitabstand vergangen ist
-        if (now - lastScrollTimeRef.current > 300) {
-            logDebug("Manuelles Scrollen erkannt");
+        // Nur als manuellen Scroll erkennen, wenn signifikante Änderung und bestimmter Zeitabstand
+        if (scrollDifference > 20 && now - lastScrollTimeRef.current > 300) {
+            logDebug(`Manuelles Scrollen erkannt: Differenz ${scrollDifference}px`);
             setManualScrollDetected(true);
             setAutoScrollEnabled(false);
 
-            // Timer zum Zurücksetzen des Auto-Scroll nach 3 Sekunden Inaktivität
+            // Timer zum Zurücksetzen des Auto-Scroll nach 5 Sekunden Inaktivität (erhöht von 3s)
             if (userScrollTimerRef.current) {
                 clearTimeout(userScrollTimerRef.current);
             }
@@ -74,10 +88,11 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
                 logDebug("Auto-Scroll nach Inaktivität wieder aktiviert");
                 setManualScrollDetected(false);
                 setAutoScrollEnabled(true);
-            }, 3000);
+            }, 5000); // Erhöht von 3000 auf 5000 ms
         }
 
         lastScrollTimeRef.current = now;
+        lastScrollPositionRef.current = currentScrollPosition;
     };
 
     // Für Cleanups
@@ -96,11 +111,13 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
 
         if (lyricsContainer) {
             // Event-Listener für Scroll-Events hinzufügen
-            lyricsContainer.addEventListener('wheel', handleUserScroll);
-            lyricsContainer.addEventListener('touchmove', handleUserScroll);
+            lyricsContainer.addEventListener('scroll', handleUserScroll, { passive: true });
+            lyricsContainer.addEventListener('wheel', handleUserScroll, { passive: true });
+            lyricsContainer.addEventListener('touchmove', handleUserScroll, { passive: true });
 
             // Bereinigen beim Unmount
             return () => {
+                lyricsContainer.removeEventListener('scroll', handleUserScroll);
                 lyricsContainer.removeEventListener('wheel', handleUserScroll);
                 lyricsContainer.removeEventListener('touchmove', handleUserScroll);
             };
@@ -122,7 +139,7 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
             return;
         }
 
-        // Bereich der sichtbaren Lyrics berechnen
+        // Bereich der sichtbaren Lyrics berechnen - mehr vergangene Lyrics anzeigen
         let startIndex = Math.max(0, currentLyricIndex - VISIBLE_RANGE.past);
         let endIndex = Math.min(lyrics.length, currentLyricIndex + VISIBLE_RANGE.future + 1);
 
@@ -137,12 +154,18 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         // Past-Indikator anzeigen, wenn es vergangene Lyrics gibt, die nicht angezeigt werden
         setShowPastIndicator(startIndex > 0);
 
+        // Aktualisiere die Referenz auf den letzten angezeigten Lyric-Index
+        lastShownLyricIndexRef.current = currentLyricIndex;
+
     }, [lyrics, currentLyricIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past]);
 
-    // Effekt zum Scrollen zu aktivem Lyric
+    // VERBESSERTER Effekt zum Scrollen zum aktiven Lyric
     useEffect(() => {
-        // Nur scrollen, wenn auto-scroll aktiviert ist und nicht manuell gescrollt wurde
-        if (!autoScrollEnabled || manualScrollDetected) return;
+        // Wenn kein aktiver Lyric vorhanden ist oder manuell gescrollt wurde, abbrechen
+        if (currentLyricIndex < 0 || !autoScrollEnabled || manualScrollDetected) return;
+
+        // Prüfen, ob sich der Lyric-Index tatsächlich geändert hat
+        const hasLyricChanged = currentLyricIndex !== lastShownLyricIndexRef.current;
 
         // Verwende entweder die externe Ref oder die interne Ref
         const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
@@ -152,33 +175,53 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         const activeLyric = container.querySelector('.lyric-line.active');
         if (!activeLyric) return;
 
-        // Position des aktiven Lyrics berechnen
-        const containerRect = container.getBoundingClientRect();
-        const lyricRect = activeLyric.getBoundingClientRect();
+        // Verzögerung nur einfügen, wenn der Lyric gewechselt hat
+        const scrollWithDelay = (delay = 0) => {
+            setTimeout(() => {
+                // Position des aktiven Lyrics berechnen
+                const containerRect = container.getBoundingClientRect();
+                const lyricRect = activeLyric.getBoundingClientRect();
 
-        // Zielposition berechnen - wir wollen das aktive Lyric mittig im Container
-        const scrollTargetY = activeLyric.offsetTop - (container.clientHeight / 2) + (activeLyric.clientHeight / 2);
+                // Optimierte Zielposition berechnen - 35% vom oberen Rand entfernt, nicht mittig
+                // Dies gibt mehr Kontext für kommende Lyrics
+                const scrollTargetY = activeLyric.offsetTop - (container.clientHeight * 0.35);
 
-        // Prüfe, ob wir scrollen müssen (wenn das Lyric nicht schon im sichtbaren Bereich ist)
-        const isVisible = (
-            lyricRect.top >= containerRect.top &&
-            lyricRect.bottom <= containerRect.bottom
-        );
+                // Prüfe, ob wir scrollen müssen
+                const isVisible = (
+                    lyricRect.top >= containerRect.top &&
+                    lyricRect.bottom <= containerRect.bottom
+                );
 
-        if (!isVisible) {
-            logDebug(`Scrolling zu aktivem Lyric: ${activeLyric.textContent.trim()}`);
+                if (!isVisible || hasLyricChanged) {
+                    logDebug(`Scrolling zu aktivem Lyric ${currentLyricIndex}: ${activeLyric.textContent.trim()}`);
 
-            // Direkt zur berechneten Position scrollen
-            container.scrollTo({
-                top: scrollTargetY,
-                behavior: 'smooth'
-            });
+                    // Sanftes Scrollen mit erhöhter Geschwindigkeit
+                    container.scrollTo({
+                        top: scrollTargetY,
+                        behavior: 'smooth'
+                    });
+
+                    // Aktualisiere die Referenz
+                    lastShownLyricIndexRef.current = currentLyricIndex;
+                }
+            }, delay);
+        };
+
+        // Scrooll mit leichter Verzögerung, wenn der Lyric gewechselt hat
+        // Dies gibt dem DOM Zeit zum Aktualisieren
+        if (hasLyricChanged) {
+            scrollWithDelay(50);
+        } else {
+            // Kontinuierliches Update ohne Verzögerung bei Fortschritt desselben Lyrics
+            scrollWithDelay(0);
         }
-    }, [currentLyricIndex, autoScrollEnabled, manualScrollDetected]);
+
+    }, [currentLyricIndex, autoScrollEnabled, manualScrollDetected, currentTime]);
 
     // Zusätzlicher Scroll-Effekt für kontinuierliches Scrollen basierend auf der Zeit
+    // Effekt etwas verändert für sanftere Bewegung
     useEffect(() => {
-        // Nur scrollen, wenn Auto-Scroll aktiv ist
+        // Nur scrollen, wenn Auto-Scroll aktiv ist und ein Lyric aktiv ist
         if (!autoScrollEnabled || manualScrollDetected || currentLyricIndex < 0) return;
 
         const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
@@ -190,13 +233,14 @@ const LyricsDisplay = ({lyrics, currentLyricIndex, currentTime, debugMode, lyric
         // Berechne den Fortschritt innerhalb des aktuellen Lyrics
         const progress = calculateProgress(lyrics[currentLyricIndex], currentLyricIndex);
 
-        // Berechne die Zielposition basierend auf dem Fortschritt
-        // Am Anfang des Lyrics etwas höher platzieren, dann nach unten bewegen
-        const scrollTargetY = activeLyric.offsetTop - (container.clientHeight / 2) +
-            (activeLyric.clientHeight / 2) +
-            (progress / 100) * (activeLyric.clientHeight / 2);
+        // Berechne die optimierte Zielposition basierend auf dem Fortschritt
+        // Lyric beginnt weiter oben (30%), bewegt sich dann minimal während der Wiedergabe
+        const baseOffset = container.clientHeight * 0.3;
+        const dynamicOffset = (progress / 100) * (activeLyric.clientHeight * 0.5);
 
-        // Sanftes Scrollen zur berechneten Position
+        const scrollTargetY = activeLyric.offsetTop - baseOffset + dynamicOffset;
+
+        // Sanfteres Scrollen mit reduzierter Geschwindigkeit für kontinuierlichen Effekt
         container.scrollTo({
             top: scrollTargetY,
             behavior: 'smooth'
