@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef }) => {
+const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyricsDisplayRef }) => {
     // Anzahl der Zeilen die im Viewport sichtbar sein sollen
     const VISIBLE_RANGE = {
         past: 2,     // Anzahl der vergangenen Lyrics
@@ -31,6 +31,52 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef 
         if (debugMode) {
             console.log(`%c[LyricsDisplay] ${message}`, 'background: #334155; color: #a78bfa; padding: 2px 6px; border-radius: 4px;', data || '');
         }
+    };
+
+    // DEBUGGING: Direktes Logging der aktuellen Zeit
+    useEffect(() => {
+        if (debugMode) {
+            console.log(`Current Time: ${currentTime}, Current Index: ${currentLyricIndex}`);
+
+            if (lyrics && lyrics.length > 0) {
+                lyrics.forEach((lyric, index) => {
+                    const isRelevant = currentTime >= lyric.startTime &&
+                        (lyric.endTime ? currentTime < lyric.endTime : true);
+                    if (isRelevant) {
+                        console.log(`Relevant Lyric [${index}]: "${lyric.text}" - Progress: ${calculateProgress(lyric, index).toFixed(1)}%`);
+                    }
+                });
+            }
+        }
+    }, [currentTime, lyrics, debugMode, currentLyricIndex]);
+
+    // Berechne den Fortschritt des aktuellen Lyrics in Prozent
+    const calculateProgress = (lyric, index) => {
+        if (!currentTime || !lyric) return 0;
+
+        // Prüfe, ob endTime definiert ist
+        if (lyric.hasOwnProperty('endTime')) {
+            const total = lyric.endTime - lyric.startTime;
+            if (total <= 0) return 0; // Verhindere Division durch 0
+
+            const elapsed = currentTime - lyric.startTime;
+            return Math.min(Math.max((elapsed / total) * 100, 0), 100);
+        }
+
+        // Fallback für alte JSON-Daten ohne endTime
+        const nextLyric = lyrics[index + 1];
+        if (nextLyric) {
+            const total = nextLyric.startTime - lyric.startTime;
+            if (total <= 0) return 0; // Verhindere Division durch 0
+
+            const elapsed = currentTime - lyric.startTime;
+            return Math.min(Math.max((elapsed / total) * 100, 0), 100);
+        }
+
+        // Fallback für letzten Lyric
+        const total = 5; // Annahme: 5 Sekunden für den letzten Lyric
+        const elapsed = currentTime - lyric.startTime;
+        return Math.min(Math.max((elapsed / total) * 100, 0), 100);
     };
 
     useEffect(() => {
@@ -132,7 +178,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef 
         // Past-Indikator anzeigen, wenn es vergangene Lyrics gibt, die nicht angezeigt werden
         setShowPastIndicator(startIndex > 0);
 
-    }, [lyrics, currentLyricIndex, prevLyricIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past, debugMode]);
+    }, [lyrics, currentLyricIndex, prevLyricIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past, debugMode, currentTime]);
 
     useEffect(() => {
         // Zum aktiven Lyric scrollen
@@ -158,59 +204,22 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef 
         )
         .sort((a, b) => a.actualIndex - b.actualIndex);
 
-    // Debug: Überprüfe styles und CSS
-    useEffect(() => {
-        if (debugMode) {
-            // Gib einen Hinweis aus, wenn wir animierte Elemente haben
-            if (removingLyrics.length > 0) {
-                console.log('%c[Style Check] Lyrics mit removing-Klasse:', 'background: #334155; color: #ef4444; padding: 2px 6px; border-radius: 4px;',
-                    removingLyrics.map(l => l.text)
-                );
-
-                // Prüfe, ob die CSS-Animation-Klasse existiert
-                const styleSheets = document.styleSheets;
-                let animationFound = false;
-
-                for (let i = 0; i < styleSheets.length; i++) {
-                    try {
-                        const rules = styleSheets[i].cssRules || styleSheets[i].rules;
-                        for (let j = 0; j < rules.length; j++) {
-                            if (rules[j].type === CSSRule.KEYFRAMES_RULE && rules[j].name === 'slideOutUp') {
-                                animationFound = true;
-                                console.log('%c[Style Check] Animation slideOutUp gefunden!', 'background: #334155; color: #10b981; padding: 2px 6px; border-radius: 4px;');
-                                break;
-                            }
-                        }
-                        if (animationFound) break;
-                    } catch (e) {
-                        // Sicherheitsregeln können Zugriff auf einige externe Stylesheets verhindern
-                    }
-                }
-
-                if (!animationFound) {
-                    console.warn('%c[Style Check] Animation slideOutUp wurde NICHT gefunden! CSS-Datei möglicherweise nicht geladen.',
-                        'background: #334155; color: #f59e0b; padding: 2px 6px; border-radius: 4px;'
-                    );
-                }
-
-                // Füge temporär eine Inline-Animation hinzu, falls die CSS fehlt
-                const removeEl = document.querySelector('.lyric-line.removing');
-                if (removeEl && !animationFound) {
-                    removeEl.style.animation = 'none'; // Deaktiviere potenzielle fehlerhafte Animation
-                    removeEl.style.transition = 'all 0.5s ease';
-                    removeEl.style.opacity = '0';
-                    removeEl.style.transform = 'translateY(-20px)';
-                    removeEl.style.maxHeight = '0';
-                    removeEl.style.overflow = 'hidden';
-                    removeEl.style.marginBottom = '0';
-                    removeEl.style.padding = '0 1rem';
-                }
-            }
-        }
-    }, [removingLyrics, debugMode]);
-
     return (
         <div className="lyrics-display" ref={lyricsDisplayRef}>
+            {debugMode && (
+                <div style={{
+                    backgroundColor: '#333',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    marginBottom: '10px',
+                    color: '#fff',
+                    fontSize: '12px'
+                }}>
+                    <div>Current Time: {currentTime.toFixed(2)}s</div>
+                    <div>Current Lyric Index: {currentLyricIndex}</div>
+                </div>
+            )}
+
             {showPastIndicator && (
                 <div className="past-indicator">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -225,6 +234,9 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef 
                 {uniqueDisplayedLyrics.map((lyric) => {
                     const isActive = lyric.actualIndex === currentLyricIndex;
                     const isPast = lyric.actualIndex < currentLyricIndex;
+                    const isTimeRelevant = currentTime >= lyric.startTime &&
+                        (lyric.endTime ? currentTime < lyric.endTime : true);
+                    const progress = calculateProgress(lyric, lyric.actualIndex);
 
                     // Bestimme die CSS-Klassen
                     const classes = [
@@ -236,26 +248,72 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, debugMode, lyricsDisplayRef 
                         lyric.removing ? 'removing' : ''
                     ].filter(Boolean).join(' ');
 
-                    // Inline-Styles für den Notfall, falls CSS nicht funktioniert
-                    const inlineStyles = lyric.removing && !debugMode ? {
-                        animation: 'slideOutUp 0.5s forwards'
-                    } : {};
+                    // Text für das Fortschritts-Label
+                    const progressLabel = `${Math.floor(progress)}%`;
 
                     return (
                         <div
                             key={`lyric-${lyric.actualIndex}-${lyric.removing ? 'removing' : 'normal'}`}
                             className={classes}
-                            style={inlineStyles}
                             data-index={lyric.actualIndex}
                             data-status={lyric.removing ? 'removing' : (lyric.animation || 'normal')}
+                            style={{
+                                position: 'relative',
+                                overflow: 'hidden',
+                                borderWidth: isTimeRelevant ? '1px' : '0',
+                                borderStyle: 'solid',
+                                borderColor: isTimeRelevant ? 'red' : 'transparent'
+                            }}
                         >
+                            {/* Lyric Text */}
                             {lyric.text}
+
+                            {/* IMMER einen Fortschrittsbalken zeigen, für Testzwecke */}
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    height: '15px',
+                                    width: isTimeRelevant ? `${progress}%` : '0%',
+                                    backgroundColor: 'red',
+                                    transition: 'width 0.2s linear',
+                                    zIndex: 9999,
+                                    borderRight: '2px solid white'
+                                }}
+                            />
+
+                            {/* Prozent-Anzeige immer sichtbar machen */}
+                            <div style={{
+                                position: 'absolute',
+                                right: '10px',
+                                bottom: '5px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                background: 'black',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                zIndex: 10000
+                            }}>
+                                {progressLabel}
+                            </div>
+
+                            {/* Debug-Informationen */}
                             {debugMode && (
-                                <div className="debug-info">
-                                    Zeit: {lyric.startTime.toFixed(2)}s |
-                                    Index: {lyric.actualIndex} |
-                                    Aktiv: {isActive ? 'Ja' : 'Nein'} |
-                                    Status: {lyric.removing ? 'Wird entfernt' : (lyric.animation || 'Normal')}
+                                <div style={{
+                                    marginTop: '8px',
+                                    fontSize: '10px',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                                    padding: '4px',
+                                    borderRadius: '4px'
+                                }}>
+                                    Zeit: {lyric.startTime.toFixed(2)}s -
+                                    {lyric.endTime ? lyric.endTime.toFixed(2) : 'N/A'}s |
+                                    Zeit relevant: {isTimeRelevant ? 'JA' : 'NEIN'} |
+                                    Fortschritt: {progress.toFixed(0)}% |
+                                    Aktiv: {isActive ? 'JA' : 'NEIN'}
                                 </div>
                             )}
                         </div>

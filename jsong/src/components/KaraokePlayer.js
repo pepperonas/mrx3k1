@@ -19,7 +19,7 @@ const KaraokePlayer = () => {
     const [score, setScore] = useState(0);
     const [pitchHistory, setPitchHistory] = useState([]);
     const [showUpload, setShowUpload] = useState(true);
-    const [debugMode, setDebugMode] = useState(false);
+    const [debugMode, setDebugMode] = useState(true);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
@@ -45,20 +45,66 @@ const KaraokePlayer = () => {
     const findCurrentLyricIndex = (time) => {
         if (!songData || !songData.lyrics || songData.lyrics.length === 0) return -1;
 
+        // Direktes Debug-Logging der Zeitwerte
+        if (debugMode) {
+            console.log(`Finding lyric index for time: ${time.toFixed(2)}`);
+        }
+
         for (let i = 0; i < songData.lyrics.length; i++) {
             const lyric = songData.lyrics[i];
-            const nextLyric = songData.lyrics[i + 1];
 
-            if (nextLyric) {
-                if (time >= lyric.startTime && time < nextLyric.startTime) {
+            // Prüfe zuerst, ob endTime im Lyric definiert ist
+            if (lyric.hasOwnProperty('endTime')) {
+                // Verwende die explizite endTime für die Prüfung
+                if (time >= lyric.startTime && time < lyric.endTime) {
+                    if (debugMode) {
+                        console.log(`Found lyric index ${i} (${lyric.text}) using endTime: ${lyric.startTime} to ${lyric.endTime}`);
+                    }
                     return i;
                 }
-            } else if (time >= lyric.startTime) {
-                // Letzter Lyric
-                return i;
+            } else {
+                // Fallback auf die alte Methode (implizites Ende)
+                const nextLyric = songData.lyrics[i + 1];
+                if (nextLyric) {
+                    if (time >= lyric.startTime && time < nextLyric.startTime) {
+                        if (debugMode) {
+                            console.log(`Found lyric index ${i} (${lyric.text}) using next lyric: ${lyric.startTime} to ${nextLyric.startTime}`);
+                        }
+                        return i;
+                    }
+                } else if (time >= lyric.startTime) {
+                    // Letzter Lyric
+                    if (debugMode) {
+                        console.log(`Found last lyric index ${i} (${lyric.text}) starting at ${lyric.startTime}`);
+                    }
+                    return i;
+                }
             }
         }
 
+        // Falls keine passende Lyric gefunden wurde, aber die Zeit > 0 ist:
+        // Versuche den letzten vergangenen Lyric zu finden
+        if (time > 0) {
+            let lastPossibleIndex = -1;
+            for (let i = 0; i < songData.lyrics.length; i++) {
+                if (time >= songData.lyrics[i].startTime) {
+                    lastPossibleIndex = i;
+                } else {
+                    break; // Keine weiteren Lyrics prüfen, wenn wir schon einen zukünftigen gefunden haben
+                }
+            }
+
+            if (lastPossibleIndex >= 0) {
+                if (debugMode) {
+                    console.log(`Using last possible lyric index ${lastPossibleIndex} for time ${time.toFixed(2)}`);
+                }
+                return lastPossibleIndex;
+            }
+        }
+
+        if (debugMode) {
+            console.log(`No matching lyric found for time ${time.toFixed(2)}`);
+        }
         return -1;
     };
 
@@ -163,32 +209,21 @@ const KaraokePlayer = () => {
             };
 
             // Aktualisiere Zeit bei jedem Zeitupdate
-            const handleTimeUpdate = () => {
-                const newTime = audioElement.currentTime;
+            const foundIndex = findCurrentLyricIndex(newTime);
 
-                // Direkte DOM-Manipulation für die Zeitanzeige
-                updateDomTime(newTime);
+// Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
+            const shouldHaveActiveLyric = songData.lyrics.some(lyric =>
+                newTime >= lyric.startTime &&
+                (lyric.endTime ? newTime < lyric.endTime : true)
+            );
 
-                // State-Update für React
-                setCurrentTime(newTime);
-
-                // Finde den aktuellen Lyric-Index basierend auf der Zeit
-                if (songData && songData.lyrics && songData.lyrics.length > 0) {
-                    const foundIndex = findCurrentLyricIndex(newTime);
-
-                    if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
-                        if (debugMode) {
-                            console.log(`Zeit ${newTime.toFixed(2)}: Ändere Lyric-Index von ${currentLyricIndex} zu ${foundIndex}`);
-                        }
-
-                        // State-Update für React - dies triggert useEffect für updateDomLyrics
-                        setCurrentLyricIndex(foundIndex);
-
-                        // Update target pitch
-                        updateTargetPitch(foundIndex, newTime);
-                    }
-                }
-            };
+// Wenn wir einen Lyric haben sollten, aber keinen aktiven index (-1)
+            if (shouldHaveActiveLyric && currentLyricIndex === -1) {
+                // Erzwinge ein Update mit dem gefundenen Index
+                console.log(`Zeit ${newTime.toFixed(2)}: Forciere Update von -1 zu ${foundIndex}`);
+                setCurrentLyricIndex(foundIndex);
+                updateTargetPitch(foundIndex, newTime);
+            }
 
             // Höre auf Events
             audioElement.addEventListener('loadedmetadata', handleMetadata);
@@ -207,11 +242,50 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {});
-                audioElement.removeEventListener('error', () => {});
+                audioElement.removeEventListener('play', () => {
+                });
+                audioElement.removeEventListener('error', () => {
+                });
             };
         }
     }, [audioUrl, songData]);
+
+    const generateJson = () => {
+        // Sortiere Lyrics nach startTime für korrekte endTime-Berechnung
+        const sortedLyrics = [...lyrics].sort((a, b) => a.startTime - b.startTime);
+
+        // Berechne endTime für jeden Lyric
+        const processedLyrics = sortedLyrics.map((lyric, index) => {
+            // Basisinformationen
+            const processedLyric = {
+                text: lyric.text,
+                startTime: parseFloat(lyric.startTime.toFixed(2)),
+                pitchTargets: lyric.pitchTargets.map(target => ({
+                    time: parseFloat(target.time.toFixed(2)),
+                    pitch: parseFloat(target.pitch.toFixed(2))
+                }))
+            };
+
+            // endTime hinzufügen
+            if (index < sortedLyrics.length - 1) {
+                // Für alle Lyrics außer dem letzten: endTime ist startTime des nächsten Lyrics
+                processedLyric.endTime = parseFloat(sortedLyrics[index + 1].startTime.toFixed(2));
+            } else {
+                // Für den letzten Lyric: endTime ist entweder duration oder startTime + 5 Sekunden
+                processedLyric.endTime = parseFloat(Math.min(duration, lyric.startTime + 5).toFixed(2));
+            }
+
+            return processedLyric;
+        });
+
+        const output = {
+            songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
+            duration: duration,
+            lyrics: processedLyrics
+        };
+
+        setJsonOutput(JSON.stringify(output, null, 2));
+    };
 
     // Separate Funktion für Pitch-Target-Updates
     const updateTargetPitch = (lyricIndex, time) => {
@@ -635,6 +709,7 @@ const KaraokePlayer = () => {
                                 onTimeUpdate={(e) => {
                                     const time = e.target.currentTime;
                                     updateDomTime(time);
+                                    setCurrentTime(e.target.currentTime);
                                     console.log("Time update direct:", time);
                                 }}
                                 onDurationChange={(e) => {
@@ -687,6 +762,7 @@ const KaraokePlayer = () => {
                                     <LyricsDisplay
                                         lyrics={songData.lyrics}
                                         currentLyricIndex={currentLyricIndex}
+                                        currentTime={currentTime} // Neue Prop hinzugefügt
                                         debugMode={debugMode}
                                         lyricsDisplayRef={lyricsDisplayRef}
                                     />
