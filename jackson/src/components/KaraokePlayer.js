@@ -5,7 +5,7 @@ import '../Player.css';
 import '../Debug.css';
 import LyricsDisplay from './LyricsDisplay';
 import PitchVisualizer from './PitchVisualizer'; // PitchVisualizer korrekt importieren
-a
+
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
     const [audioFile, setAudioFile] = useState(null);
