@@ -15,6 +15,12 @@ const KaraokeJsonGenerator = () => {
     const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+    // Tab-Navigation und Batch-Input
+    const [activeTab, setActiveTab] = useState('einzeln');
+    const [batchLyricsText, setBatchLyricsText] = useState('');
+    const [parsedLyrics, setParsedLyrics] = useState([]);
+    const [nextLyricIndex, setNextLyricIndex] = useState(0);
+
     // Konfigurationsoptionen
     const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
     const [markerOffset, setMarkerOffset] = useState(-2);
@@ -425,6 +431,51 @@ const KaraokeJsonGenerator = () => {
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    // Funktionen für die Massenverarbeitung von Lyrics
+    const processBatchLyrics = () => {
+        if (!batchLyricsText.trim()) return;
+
+        // Text nach Zeilen aufteilen und leere Zeilen entfernen
+        const lines = batchLyricsText
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        setParsedLyrics(lines);
+        setNextLyricIndex(0);
+    };
+
+    const addLyricFromQueue = (text, index) => {
+        if (!audioRef.current) return;
+
+        // Berechne die Startzeit mit dem Offset
+        const offsetStartTime = currentTime + markerOffset;
+        // Stelle sicher, dass startTime nicht negativ wird und runde auf eine Dezimalstelle
+        const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
+
+        const calculatedEndTime = startTime + defaultEndTimeDuration;
+        // Ensure endTime doesn't exceed the duration of the song and round to one decimal place
+        const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
+
+        // Lyric erstellen
+        const lyricId = Date.now();
+        const newLyric = {
+            id: lyricId,
+            text: text,
+            startTime: startTime,
+            endTime: endTime
+        };
+
+        // Lyric hinzufügen
+        const updatedLyrics = [...lyrics, newLyric];
+        setLyrics(updatedLyrics);
+
+        console.log(`Neuer Lyric aus Queue hinzugefügt: "${text}", startTime=${startTime}s, endTime=${endTime}s`);
+
+        // Nächsten Lyric in der Queue markieren
+        setNextLyricIndex(index + 1);
+    };
+
     return (
         <div className="app-container">
             <main className="app-main">
@@ -676,7 +727,7 @@ const KaraokeJsonGenerator = () => {
                             )}
                         </section>
 
-                        {/* Lyrics editor */}
+                        {/* Lyrics editor mit Tab-View */}
                         <section className="card">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
@@ -698,151 +749,379 @@ const KaraokeJsonGenerator = () => {
                                 </button>
                             </div>
 
-                            <div className="lyrics-container">
-                                {lyrics.map((lyric, index) => (
-                                    <div
-                                        key={lyric.id}
-                                        className={`lyric-item ${index === currentLyricIndex ? 'active' : ''}`}
-                                    >
-                                        <div className="lyric-meta">
-                                            <span
-                                                className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}
-                                                style={{display: 'flex', alignItems: 'center'}}>
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                     viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{
-                                                         minWidth: '1rem',
-                                                         marginRight: '0.25rem'
-                                                     }}>
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                                </svg>
-                                                Start:
-                                                <div className="lyric-input-container" style={{
-                                                    width: '80px',
-                                                    display: 'inline-block',
-                                                    marginLeft: '8px'
-                                                }}>
-                                                    <input
-                                                        type="number"
-                                                        value={lyric.startTime.toFixed(1)}
-                                                        min="0"
-                                                        max={duration}
-                                                        step="0.1"
-                                                        onChange={(e) => updateLyricStartTime(lyric.id, e.target.value)}
-                                                        className="lyric-input"
-                                                        style={{
-                                                            padding: '0.4rem',
-                                                            textAlign: 'center'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <span style={{
-                                                    marginLeft: '8px',
-                                                    color: 'var(--text-dimmed)',
-                                                    fontSize: '0.8rem'
-                                                }}>
-                                                    ({formatTime(lyric.startTime)})
+                            {/* Tab Navigation */}
+                            <div className="tab-navigation" style={{
+                                display: 'flex',
+                                borderBottom: '1px solid var(--border-light)',
+                                marginBottom: '1rem'
+                            }}>
+                                <button
+                                    className={`tab-button ${activeTab === 'einzeln' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('einzeln')}
+                                    style={{
+                                        padding: '0.75rem 1.25rem',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        borderBottom: activeTab === 'einzeln' ? '2px solid var(--primary)' : '2px solid transparent',
+                                        color: activeTab === 'einzeln' ? 'var(--primary-light)' : 'var(--text-muted)',
+                                        fontWeight: activeTab === 'einzeln' ? '600' : '400',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        marginRight: '1rem'
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                         style={{ width: '1rem', height: '1rem', marginRight: '0.5rem', display: 'inline' }}>
+                                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                    </svg>
+                                    Einzeleingabe
+                                </button>
+                                <button
+                                    className={`tab-button ${activeTab === 'masse' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('masse')}
+                                    style={{
+                                        padding: '0.75rem 1.25rem',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        borderBottom: activeTab === 'masse' ? '2px solid var(--primary)' : '2px solid transparent',
+                                        color: activeTab === 'masse' ? 'var(--primary-light)' : 'var(--text-muted)',
+                                        fontWeight: activeTab === 'masse' ? '600' : '400',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                         style={{ width: '1rem', height: '1rem', marginRight: '0.5rem', display: 'inline' }}>
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    Masseneingabe
+                                </button>
+                            </div>
+
+                            {/* Einzeleingabe Tab */}
+                            {activeTab === 'einzeln' && (
+                                <div className="lyrics-container">
+                                    {lyrics.map((lyric, index) => (
+                                        <div
+                                            key={lyric.id}
+                                            className={`lyric-item ${index === currentLyricIndex ? 'active' : ''}`}
+                                        >
+                                            <div className="lyric-meta">
+                                                <span
+                                                    className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}
+                                                    style={{display: 'flex', alignItems: 'center'}}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         viewBox="0 0 24 24" fill="none"
+                                                         stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round"
+                                                         style={{
+                                                             minWidth: '1rem',
+                                                             marginRight: '0.25rem'
+                                                         }}>
+                                                        <circle cx="12" cy="12" r="10"></circle>
+                                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                                    </svg>
+                                                    Start:
+                                                    <div className="lyric-input-container" style={{
+                                                        width: '80px',
+                                                        display: 'inline-block',
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        <input
+                                                            type="number"
+                                                            value={lyric.startTime.toFixed(1)}
+                                                            min="0"
+                                                            max={duration}
+                                                            step="0.1"
+                                                            onChange={(e) => updateLyricStartTime(lyric.id, e.target.value)}
+                                                            className="lyric-input"
+                                                            style={{
+                                                                padding: '0.4rem',
+                                                                textAlign: 'center'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span style={{
+                                                        marginLeft: '8px',
+                                                        color: 'var(--text-dimmed)',
+                                                        fontSize: '0.8rem'
+                                                    }}>
+                                                        ({formatTime(lyric.startTime)})
+                                                    </span>
                                                 </span>
-                                            </span>
-                                            <span className="lyric-pitch">
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                     viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M9 18V5l12-2v13"></path>
-                                                    <circle cx="6" cy="18" r="3"></circle>
-                                                </svg>
-                                                {index === currentLyricIndex ? "(Aktiv)" : ""}
-                                            </span>
-                                        </div>
-                                        <div className="lyric-input-container">
-                                            <input
-                                                type="text"
-                                                value={lyric.text}
-                                                onChange={(e) => updateLyricText(lyric.id, e.target.value)}
-                                                className="lyric-input"
-                                                placeholder="Lyric text eingeben..."
-                                            />
-                                            <div className="lyric-edit-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                     viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M12 20h9"></path>
-                                                    <path
-                                                        d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                                </svg>
+                                                <span className="lyric-pitch">
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         viewBox="0 0 24 24" fill="none"
+                                                         stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M9 18V5l12-2v13"></path>
+                                                        <circle cx="6" cy="18" r="3"></circle>
+                                                    </svg>
+                                                    {index === currentLyricIndex ? "(Aktiv)" : ""}
+                                                </span>
+                                            </div>
+                                            <div className="lyric-input-container">
+                                                <input
+                                                    type="text"
+                                                    value={lyric.text}
+                                                    onChange={(e) => updateLyricText(lyric.id, e.target.value)}
+                                                    className="lyric-input"
+                                                    placeholder="Lyric text eingeben..."
+                                                />
+                                                <div className="lyric-edit-icon">
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         viewBox="0 0 24 24" fill="none"
+                                                         stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M12 20h9"></path>
+                                                        <path
+                                                            d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            {/* End Time Input */}
+                                            <div className="lyric-meta" style={{marginTop: '0.5rem'}}>
+                                                <span className="lyric-time"
+                                                      style={{display: 'flex', alignItems: 'center'}}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         viewBox="0 0 24 24" fill="none"
+                                                         stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round"
+                                                         style={{
+                                                             minWidth: '1rem',
+                                                             marginRight: '0.25rem'
+                                                         }}>
+                                                        <circle cx="12" cy="12" r="10"></circle>
+                                                        <line x1="12" y1="6" x2="12" y2="12"></line>
+                                                        <line x1="12" y1="12" x2="16" y2="16"></line>
+                                                    </svg>
+                                                    Ende:
+                                                    <div className="lyric-input-container" style={{
+                                                        width: '80px',
+                                                        display: 'inline-block',
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        <input
+                                                            type="number"
+                                                            value={lyric.endTime.toFixed(1)}
+                                                            min={lyric.startTime + 0.1}
+                                                            max={duration}
+                                                            step="0.1"
+                                                            onChange={(e) => updateLyricEndTime(lyric.id, e.target.value)}
+                                                            className="lyric-input"
+                                                            style={{
+                                                                padding: '0.4rem',
+                                                                textAlign: 'center'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span style={{
+                                                        marginLeft: '8px',
+                                                        color: 'var(--text-dimmed)',
+                                                        fontSize: '0.8rem'
+                                                    }}>
+                                                        ({formatTime(lyric.endTime)})
+                                                    </span>
+                                                </span>
                                             </div>
                                         </div>
+                                    ))}
 
-                                        {/* End Time Input */}
-                                        <div className="lyric-meta" style={{marginTop: '0.5rem'}}>
-                                            <span className="lyric-time"
-                                                  style={{display: 'flex', alignItems: 'center'}}>
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                     viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{
-                                                         minWidth: '1rem',
-                                                         marginRight: '0.25rem'
-                                                     }}>
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <line x1="12" y1="6" x2="12" y2="12"></line>
-                                                    <line x1="12" y1="12" x2="16" y2="16"></line>
-                                                </svg>
-                                                Ende:
-                                                <div className="lyric-input-container" style={{
-                                                    width: '80px',
-                                                    display: 'inline-block',
-                                                    marginLeft: '8px'
-                                                }}>
-                                                    <input
-                                                        type="number"
-                                                        value={lyric.endTime.toFixed(1)}
-                                                        min={lyric.startTime + 0.1}
-                                                        max={duration}
-                                                        step="0.1"
-                                                        onChange={(e) => updateLyricEndTime(lyric.id, e.target.value)}
-                                                        className="lyric-input"
-                                                        style={{
-                                                            padding: '0.4rem',
-                                                            textAlign: 'center'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <span style={{
-                                                    marginLeft: '8px',
-                                                    color: 'var(--text-dimmed)',
-                                                    fontSize: '0.8rem'
-                                                }}>
-                                                    ({formatTime(lyric.endTime)})
+                                    {lyrics.length === 0 && (
+                                        <div className="empty-lyrics">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <path
+                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                <polyline points="10 9 9 9 8 9"></polyline>
+                                            </svg>
+                                            <p>Klicke auf "+ Zeile" während der Wiedergabe,<br/>um
+                                                Lyrics zu erfassen</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Masseneingabe Tab */}
+                            {activeTab === 'masse' && (
+                                <div className="batch-lyrics-container">
+                                    <div className="batch-input-container" style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '1rem',
+                                        marginBottom: '1rem'
+                                    }}>
+                                        <textarea
+                                            className="lyric-input"
+                                            value={batchLyricsText}
+                                            onChange={(e) => setBatchLyricsText(e.target.value)}
+                                            placeholder="Füge hier mehrere Zeilen von Lyrics ein (eine Zeile pro Lyric)..."
+                                            style={{
+                                                minHeight: '150px',
+                                                resize: 'vertical',
+                                                padding: '1rem',
+                                                fontSize: '1rem',
+                                                lineHeight: '1.5',
+                                                backgroundColor: 'var(--input-bg)',
+                                                color: 'var(--text-light)',
+                                                border: '1px solid var(--border-light)',
+                                                borderRadius: '0.5rem'
+                                            }}
+                                        />
+
+                                        <div style={{display: 'flex', gap: '1rem', justifyContent: 'space-between'}}>
+                                            <div>
+                                                <span style={{color: 'var(--text-muted)', fontSize: '0.875rem'}}>
+                                                    Zeilen: {parsedLyrics.length}
                                                 </span>
-                                            </span>
+                                            </div>
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={processBatchLyrics}
+                                                disabled={!batchLyricsText.trim()}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{width: '1.25rem', height: '1.25rem', marginRight: '0.5rem'}}>
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <polyline points="19 12 12 19 5 12"></polyline>
+                                                </svg>
+                                                Zeilen verarbeiten
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
 
-                                {lyrics.length === 0 && (
-                                    <div className="empty-lyrics">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" strokeWidth="2"
-                                             strokeLinecap="round" strokeLinejoin="round">
-                                            <path
-                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                            <polyline points="14 2 14 8 20 8"></polyline>
-                                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                                            <polyline points="10 9 9 9 8 9"></polyline>
-                                        </svg>
-                                        <p>Klicke auf "+ Zeile" während der Wiedergabe,<br/>um
-                                            Lyrics zu erfassen</p>
+                                    {/* Scroll-Container für die Lyric-Buttons */}
+                                    <div className="lyrics-queue" style={{
+                                        maxHeight: '300px',
+                                        overflowY: 'auto',
+                                        padding: '0.5rem',
+                                        backgroundColor: 'var(--inner-bg)',
+                                        borderRadius: '0.5rem',
+                                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                                    }}>
+                                        {parsedLyrics.length > 0 ? (
+                                            parsedLyrics.map((lyric, index) => (
+                                                <button
+                                                    key={index}
+                                                    className={`lyric-queue-btn ${nextLyricIndex === index ? 'next-lyric' : ''}`}
+                                                    onClick={() => addLyricFromQueue(lyric, index)}
+                                                    style={{
+                                                        display: 'block',
+                                                        width: '100%',
+                                                        textAlign: 'left',
+                                                        padding: '1rem',
+                                                        marginBottom: '0.5rem',
+                                                        backgroundColor: nextLyricIndex === index ? 'rgba(139, 92, 246, 0.2)' : 'var(--card-bg)',
+                                                        color: 'var(--text-light)',
+                                                        border: '1px solid',
+                                                        borderColor: nextLyricIndex === index ? 'var(--primary)' : 'var(--border-light)',
+                                                        borderRadius: '0.5rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s ease',
+                                                        position: 'relative',
+                                                        overflow: 'hidden',
+                                                        boxShadow: nextLyricIndex === index ? '0 0 10px rgba(139, 92, 246, 0.3)' : 'none'
+                                                    }}
+                                                >
+                                                    {lyric}
+                                                    {nextLyricIndex === index && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: '0.25rem',
+                                                            right: '0.5rem',
+                                                            backgroundColor: 'var(--primary)',
+                                                            color: 'white',
+                                                            padding: '0.25rem 0.5rem',
+                                                            borderRadius: '0.25rem',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 'bold'
+                                                        }}>
+                                                            NÄCHSTE
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="empty-queue" style={{
+                                                textAlign: 'center',
+                                                padding: '2rem',
+                                                color: 'var(--text-muted)'
+                                            }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{
+                                                         width: '3rem',
+                                                         height: '3rem',
+                                                         margin: '0 auto 1rem auto',
+                                                         color: 'var(--text-dimmed)'
+                                                     }}>
+                                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                                </svg>
+                                                <p>Füge Lyrics im Textfeld oben ein und klicke auf "Zeilen verarbeiten"</p>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+
+                                    {/* Anleitung */}
+                                    <div style={{
+                                        marginTop: '1rem',
+                                        padding: '1rem',
+                                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                        borderRadius: '0.5rem',
+                                        borderLeft: '4px solid var(--accent)',
+                                    }}>
+                                        <h3 style={{
+                                            marginTop: 0,
+                                            marginBottom: '0.5rem',
+                                            fontSize: '1rem',
+                                            color: 'var(--accent-light)',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round"
+                                                 style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                            Anleitung
+                                        </h3>
+                                        <ol style={{margin: 0, paddingLeft: '1.25rem', color: 'var(--text-muted)'}}>
+                                            <li>Füge alle Liedzeilen oben ein</li>
+                                            <li>Klicke auf "Zeilen verarbeiten"</li>
+                                            <li>Spiele das Lied ab</li>
+                                            <li>Klicke auf den nächsten Lyric-Button, wenn die Stelle im Song erreicht ist</li>
+                                            <li>Wiederhole für alle Lyrics, bis die Liste leer ist</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            )}
                         </section>
 
                         {/* JSON output */}
