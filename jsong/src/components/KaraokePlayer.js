@@ -1,7 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
-// import '../App.css';
-// import '../Player.css';
+import '../App.css';
+import '../Player.css';
+import '../Debug.css';
+import LyricsDisplay from './LyricsDisplay';
 
 const KaraokePlayer = () => {
     const [songData, setSongData] = useState(null);
@@ -26,94 +28,6 @@ const KaraokePlayer = () => {
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
 
-    // Füge einen eigenen Stylesheet für den Neon-Effekt hinzu
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes neon-glow {
-                0% {
-                    color: #fff;
-                    text-shadow: 0 0 10px #fff, 
-                                0 0 20px #fff, 
-                                0 0 30px #8b5cf6,
-                                0 0 40px #8b5cf6, 
-                                0 0 70px #8b5cf6, 
-                                0 0 80px #8b5cf6;
-                    transform: scale(1.05);
-                }
-                50% {
-                    color: #fff;
-                    text-shadow: 0 0 5px #fff, 
-                                0 0 10px #fff, 
-                                0 0 15px #a78bfa,
-                                0 0 30px #a78bfa, 
-                                0 0 40px #a78bfa, 
-                                0 0 50px #a78bfa;
-                    transform: scale(1.1);
-                }
-                100% {
-                    color: #fff;
-                    text-shadow: 0 0 10px #fff, 
-                                0 0 20px #fff, 
-                                0 0 30px #8b5cf6,
-                                0 0 40px #8b5cf6, 
-                                0 0 70px #8b5cf6, 
-                                0 0 80px #8b5cf6;
-                    transform: scale(1.05);
-                }
-            }
-            
-            @keyframes neon-border {
-                0% {
-                    box-shadow: 0 0 15px 5px rgba(139, 92, 246, 0.7);
-                }
-                100% {
-                    box-shadow: 0 0 25px 8px rgba(139, 92, 246, 0.9);
-                }
-            }
-            
-            .lyric-line.active {
-                animation: neon-glow 1.2s infinite;
-                color: #fff;
-                font-weight: 700;
-                letter-spacing: 0.05em;
-                z-index: 10;
-                background-color: rgba(139, 92, 246, 0.2);
-                border-left: 5px solid #8b5cf6;
-                backdrop-filter: brightness(1.2);
-                transform-origin: center;
-                position: relative;
-            }
-            
-            .lyric-line.active::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                border-radius: 0.5rem;
-                box-shadow: 0 0 15px 5px rgba(139, 92, 246, 0.7);
-                z-index: -1;
-                animation: neon-border 1.2s infinite alternate;
-            }
-        `;
-        document.head.appendChild(style);
-
-        return () => {
-            document.head.removeChild(style);
-        };
-    }, []);
-
-    // Aktualisierung des currentLyricIndex Effect
-    useEffect(() => {
-        // Nur wenn wir einen gültigen Index haben, DOM aktualisieren
-        if (currentLyricIndex >= 0 && lyricsDisplayRef.current) {
-            console.log(`Effect ausgelöst durch currentLyricIndex Änderung: ${currentLyricIndex}`);
-            updateDomLyrics(currentLyricIndex);
-        }
-    }, [currentLyricIndex]);
-
     const updateDomTime = (time) => {
         const currentTimeElement = document.querySelector('.time-current');
         const totalTimeElement = document.querySelector('.time-total');
@@ -124,69 +38,6 @@ const KaraokePlayer = () => {
 
         if (totalTimeElement && audioRef.current) {
             totalTimeElement.textContent = formatTime(audioRef.current.duration || 0);
-        }
-    };
-
-    const updateDomLyrics = (index) => {
-        if (!songData || !songData.lyrics || index < 0) return;
-
-        const lyricsContainer = lyricsDisplayRef.current;
-        if (!lyricsContainer) {
-            console.log("Kein Lyrics-Container gefunden!");
-            return;
-        }
-
-        if (debugMode) {
-            console.log(`updateDomLyrics aufgerufen mit Index: ${index}`);
-        }
-
-        // Entferne bestehende Klassen
-        const allLyrics = lyricsContainer.querySelectorAll('.lyric-line');
-
-        if (debugMode) {
-            console.log(`Gefundene Lyric-Elemente: ${allLyrics.length}`);
-        }
-
-        allLyrics.forEach((line, idx) => {
-            // Klassen zurücksetzen
-            line.classList.remove('active', 'past');
-
-            // Wichtig: Alle alten Elemente entfernen
-            const existingOverlay = line.querySelector('.glow-overlay');
-            if (existingOverlay) {
-                line.removeChild(existingOverlay);
-            }
-
-            // Setze Klassen basierend auf Index
-            if (idx === index) {
-                if (debugMode) {
-                    console.log(`Aktiviere Element ${idx}`);
-                }
-                line.classList.add('active');
-
-                // Schaffe einen benutzerdefinierten Overlay für den Glüheffekt
-                const glowOverlay = document.createElement('div');
-                glowOverlay.className = 'glow-overlay';
-                glowOverlay.style.position = 'absolute';
-                glowOverlay.style.inset = '0';
-                glowOverlay.style.pointerEvents = 'none';
-                glowOverlay.style.zIndex = '-1';
-                glowOverlay.style.borderRadius = '0.5rem';
-                glowOverlay.style.opacity = '0.8';
-                line.style.position = 'relative';
-                line.appendChild(glowOverlay);
-            } else if (idx < index) {
-                line.classList.add('past');
-            }
-        });
-
-        // Scrolle zum aktiven Lyric
-        const activeLyric = lyricsContainer.querySelector('.active');
-        if (activeLyric) {
-            activeLyric.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
         }
     };
 
@@ -701,17 +552,12 @@ const KaraokePlayer = () => {
                             </button>
                         </div>
 
-                        <div style={{marginTop: '20px', textAlign: 'center'}}>
-                            <label style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                        <div className="debug-container">
+                            <label className="debug-checkbox">
                                 <input
                                     type="checkbox"
                                     checked={debugMode}
                                     onChange={() => setDebugMode(!debugMode)}
-                                    style={{marginRight: '8px'}}
                                 />
                                 Debug-Modus
                             </label>
@@ -748,8 +594,7 @@ const KaraokePlayer = () => {
                                     {debugMode && (
                                         <button
                                             onClick={debugState}
-                                            className="btn btn-small btn-outline"
-                                            style={{backgroundColor: 'rgba(239, 68, 68, 0.2)'}}
+                                            className="btn btn-small btn-outline debug-button"
                                         >
                                             Debug
                                         </button>
@@ -838,31 +683,14 @@ const KaraokePlayer = () => {
                                     Lyrics
                                 </h2>
 
-                                <div className="lyrics-display" ref={lyricsDisplayRef}>
-                                    {songData && songData.lyrics && songData.lyrics.map((lyric, index) => (
-                                        <div
-                                            key={index}
-                                            className={`lyric-line ${index === currentLyricIndex ? 'active' : ''} ${index < currentLyricIndex ? 'past' : ''}`}
-                                            style={debugMode ? {
-                                                border: '1px dashed #333',
-                                                padding: '8px'
-                                            } : null}
-                                        >
-                                            {lyric.text}
-                                            {debugMode && (
-                                                <div style={{
-                                                    fontSize: '10px',
-                                                    color: '#999',
-                                                    marginTop: '4px'
-                                                }}>
-                                                    Zeit: {lyric.startTime.toFixed(2)}s |
-                                                    Index: {index} |
-                                                    Aktiv: {index === currentLyricIndex ? 'Ja' : 'Nein'}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                {songData && songData.lyrics && (
+                                    <LyricsDisplay
+                                        lyrics={songData.lyrics}
+                                        currentLyricIndex={currentLyricIndex}
+                                        debugMode={debugMode}
+                                        lyricsDisplayRef={lyricsDisplayRef}
+                                    />
+                                )}
                             </section>
 
                             <section className="card pitch-card">

@@ -1,0 +1,30 @@
+/* Debug-Styles für den Karaoke-Player */
+.debug-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.debug-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.debug-checkbox input {
+    margin-right: 8px;
+}
+
+.debug-button {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.debug-line {
+    border: 1px dashed #333;
+    padding: 8px;
+}
+
+.debug-info {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+}
