@@ -20,6 +20,8 @@ const KaraokePlayer = () => {
     const [pitchHistory, setPitchHistory] = useState([]);
     const [showUpload, setShowUpload] = useState(true);
     const [debugMode, setDebugMode] = useState(false);
+    const [isDefaultLoaded, setIsDefaultLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
@@ -27,6 +29,46 @@ const KaraokePlayer = () => {
     const lyricsDisplayRef = useRef(null);
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
+
+    // Default-Assets laden
+    // Direktes Laden der Demo mit vordefinierten Daten
+    const loadDemoAndStart = () => {
+        try {
+            setIsLoading(true);
+
+            // Definiere die Pfade
+            const jsonPath = '/jsong/assets/json/ohne_benzin.json';
+            const audioPath = '/jsong/assets/songs/ohne_benzin.mp3';
+
+            // Lade die JSON-Datei synchron mit XMLHttpRequest
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', jsonPath, false); // false = synchron
+            xhr.send(null);
+
+            if (xhr.status === 200) {
+                // Parse JSON
+                const jsonData = JSON.parse(xhr.responseText);
+                console.log("JSON erfolgreich geladen", jsonData);
+
+                // Setze die Daten direkt
+                setSongData(jsonData);
+                setAudioUrl(audioPath);
+                setIsDefaultLoaded(true);
+
+                // Starte das Spiel nach kurzer Verzögerung
+                setTimeout(() => {
+                    setIsLoading(false);
+                    startGame();
+                }, 500);
+            } else {
+                throw new Error(`Fehler beim Laden der JSON: ${xhr.status}`);
+            }
+        } catch (error) {
+            console.error("Fehler beim Laden der Demo:", error);
+            setIsLoading(false);
+            alert("Fehler beim Laden der Demo: " + error.message);
+        }
+    };
 
     const updateDomTime = (time) => {
         const currentTimeElement = document.querySelector('.time-current');
@@ -164,6 +206,7 @@ const KaraokePlayer = () => {
                     const jsonData = JSON.parse(event.target.result);
                     console.log("Parsed JSON data:", jsonData);
                     setSongData(jsonData);
+                    setIsDefaultLoaded(false);
                 } catch (error) {
                     console.error("Error parsing JSON file:", error);
                     alert("Fehler beim Parsen der JSON-Datei");
@@ -181,6 +224,7 @@ const KaraokePlayer = () => {
             const url = URL.createObjectURL(file);
             console.log("Created audio URL:", url);
             setAudioUrl(url);
+            setIsDefaultLoaded(false);
 
             // Reset states
             setIsPlaying(false);
@@ -255,8 +299,10 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {});
-                audioElement.removeEventListener('error', () => {});
+                audioElement.removeEventListener('play', () => {
+                });
+                audioElement.removeEventListener('error', () => {
+                });
             };
         }
     }, [audioUrl, songData, currentLyricIndex]);
@@ -532,59 +578,58 @@ const KaraokePlayer = () => {
                     <section className="card">
                         <h2 className="card-title">
                             <span className="card-number">1</span>
-                            Dateien hochladen
+                            Dateien hochladen oder Demo nutzen
                         </h2>
 
                         <div className="upload-container">
-                            {/*<div className="upload-card">*/}
-                            {/*    <h3 className="upload-title">JSON Datei</h3>*/}
-                                <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path
-                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                    </svg>
-                                    <p className="file-upload-text">{songData ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
-                                    <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
-                                    <input
-                                        type="file"
-                                        accept="application/json"
-                                        onChange={handleJsonUpload}
-                                    />
-                                </label>
-                            {/*</div>*/}
+                            <label className="file-upload">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round">
+                                    <path
+                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <p className="file-upload-text">{songData && !isDefaultLoaded ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
+                                <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
+                                <input
+                                    type="file"
+                                    accept="application/json"
+                                    onChange={handleJsonUpload}
+                                />
+                            </label>
 
-                            {/*<div className="upload-card">*/}
-                            {/*    <h3 className="upload-title">MP3 Datei</h3>*/}
-                                <label className="file-upload">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M9 18V5l12-2v13"></path>
-                                        <circle cx="6" cy="18" r="3"></circle>
-                                        <circle cx="18" cy="16" r="3"></circle>
-                                    </svg>
-                                    <p className="file-upload-text">{audioFile ? audioFile.name : 'MP3 Datei auswählen'}</p>
-                                    <p className="file-upload-hint">{!audioFile && '(Passend zur JSON Datei)'}</p>
-                                    <input
-                                        type="file"
-                                        accept="audio/*"
-                                        onChange={handleAudioUpload}
-                                    />
-                                </label>
-                            {/*</div>*/}
+                            <label className="file-upload">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                                <p className="file-upload-text">{audioFile && !isDefaultLoaded ? audioFile.name : 'MP3 Datei auswählen'}</p>
+                                <p className="file-upload-hint">{!audioFile && '(Passend zur JSON Datei)'}</p>
+                                <input
+                                    type="file"
+                                    accept="audio/*"
+                                    onChange={handleAudioUpload}
+                                />
+                            </label>
                         </div>
 
-                        <div className="start-container">
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '1rem',
+                            marginTop: '1.5rem'
+                        }}>
                             <button
                                 onClick={startGame}
-                                className={`btn ${songData && audioUrl ? 'btn-success' : 'btn-disabled'}`}
-                                disabled={!songData || !audioUrl}
+                                className={`btn ${songData && audioUrl && !isLoading ? 'btn-success' : 'btn-disabled'}`}
+                                disabled={!songData || !audioUrl || isLoading}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                      fill="none" stroke="currentColor" strokeWidth="2"
@@ -592,6 +637,27 @@ const KaraokePlayer = () => {
                                     <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                 </svg>
                                 Spiel starten
+                            </button>
+
+                            <button
+                                onClick={loadDemoAndStart}
+                                className={`btn btn-primary ${isLoading ? 'btn-disabled' : ''}`}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <span>Wird geladen...</span>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path
+                                                d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                        </svg>
+                                        Demo laden
+                                    </>
+                                )}
                             </button>
                         </div>
 
