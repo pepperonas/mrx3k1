@@ -209,21 +209,34 @@ const KaraokePlayer = () => {
             };
 
             // Aktualisiere Zeit bei jedem Zeitupdate
-            const foundIndex = findCurrentLyricIndex(newTime);
+            const handleTimeUpdate = () => {
+                const newTime = audioElement.currentTime;
+                setCurrentTime(newTime);
+                updateDomTime(newTime);
 
-// Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
-            const shouldHaveActiveLyric = songData.lyrics.some(lyric =>
-                newTime >= lyric.startTime &&
-                (lyric.endTime ? newTime < lyric.endTime : true)
-            );
+                // Finde den aktuellen Lyric basierend auf der Zeit
+                const foundIndex = findCurrentLyricIndex(newTime);
 
-// Wenn wir einen Lyric haben sollten, aber keinen aktiven index (-1)
-            if (shouldHaveActiveLyric && currentLyricIndex === -1) {
-                // Erzwinge ein Update mit dem gefundenen Index
-                console.log(`Zeit ${newTime.toFixed(2)}: Forciere Update von -1 zu ${foundIndex}`);
-                setCurrentLyricIndex(foundIndex);
-                updateTargetPitch(foundIndex, newTime);
-            }
+                // Setze den aktuellen Lyric-Index
+                if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
+                    setCurrentLyricIndex(foundIndex);
+                    updateTargetPitch(foundIndex, newTime);
+                }
+
+                // Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
+                const shouldHaveActiveLyric = songData && songData.lyrics && songData.lyrics.some(lyric =>
+                    newTime >= lyric.startTime &&
+                    (lyric.endTime ? newTime < lyric.endTime : true)
+                );
+
+                // Wenn wir einen Lyric haben sollten, aber keinen aktiven index (-1)
+                if (shouldHaveActiveLyric && currentLyricIndex === -1) {
+                    // Erzwinge ein Update mit dem gefundenen Index
+                    console.log(`Zeit ${newTime.toFixed(2)}: Forciere Update von -1 zu ${foundIndex}`);
+                    setCurrentLyricIndex(foundIndex);
+                    updateTargetPitch(foundIndex, newTime);
+                }
+            };
 
             // Höre auf Events
             audioElement.addEventListener('loadedmetadata', handleMetadata);
@@ -242,50 +255,11 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {
-                });
-                audioElement.removeEventListener('error', () => {
-                });
+                audioElement.removeEventListener('play', () => {});
+                audioElement.removeEventListener('error', () => {});
             };
         }
-    }, [audioUrl, songData]);
-
-    const generateJson = () => {
-        // Sortiere Lyrics nach startTime für korrekte endTime-Berechnung
-        const sortedLyrics = [...lyrics].sort((a, b) => a.startTime - b.startTime);
-
-        // Berechne endTime für jeden Lyric
-        const processedLyrics = sortedLyrics.map((lyric, index) => {
-            // Basisinformationen
-            const processedLyric = {
-                text: lyric.text,
-                startTime: parseFloat(lyric.startTime.toFixed(2)),
-                pitchTargets: lyric.pitchTargets.map(target => ({
-                    time: parseFloat(target.time.toFixed(2)),
-                    pitch: parseFloat(target.pitch.toFixed(2))
-                }))
-            };
-
-            // endTime hinzufügen
-            if (index < sortedLyrics.length - 1) {
-                // Für alle Lyrics außer dem letzten: endTime ist startTime des nächsten Lyrics
-                processedLyric.endTime = parseFloat(sortedLyrics[index + 1].startTime.toFixed(2));
-            } else {
-                // Für den letzten Lyric: endTime ist entweder duration oder startTime + 5 Sekunden
-                processedLyric.endTime = parseFloat(Math.min(duration, lyric.startTime + 5).toFixed(2));
-            }
-
-            return processedLyric;
-        });
-
-        const output = {
-            songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
-            duration: duration,
-            lyrics: processedLyrics
-        };
-
-        setJsonOutput(JSON.stringify(output, null, 2));
-    };
+    }, [audioUrl, songData, currentLyricIndex]);
 
     // Separate Funktion für Pitch-Target-Updates
     const updateTargetPitch = (lyricIndex, time) => {
@@ -553,11 +527,6 @@ const KaraokePlayer = () => {
 
     return (
         <div className="app-container">
-            <header className="app-header">
-                <h1 className="app-title">jsong Player</h1>
-                <p className="app-subtitle">Karaoke Spiel</p>
-            </header>
-
             <main className="app-main">
                 {showUpload ? (
                     <section className="card">
@@ -567,8 +536,8 @@ const KaraokePlayer = () => {
                         </h2>
 
                         <div className="upload-container">
-                            <div className="upload-card">
-                                <h3 className="upload-title">JSON Datei</h3>
+                            {/*<div className="upload-card">*/}
+                            {/*    <h3 className="upload-title">JSON Datei</h3>*/}
                                 <label className="file-upload">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                          fill="none" stroke="currentColor" strokeWidth="2"
@@ -588,10 +557,10 @@ const KaraokePlayer = () => {
                                         onChange={handleJsonUpload}
                                     />
                                 </label>
-                            </div>
+                            {/*</div>*/}
 
-                            <div className="upload-card">
-                                <h3 className="upload-title">MP3 Datei</h3>
+                            {/*<div className="upload-card">*/}
+                            {/*    <h3 className="upload-title">MP3 Datei</h3>*/}
                                 <label className="file-upload">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                          fill="none" stroke="currentColor" strokeWidth="2"
@@ -608,7 +577,7 @@ const KaraokePlayer = () => {
                                         onChange={handleAudioUpload}
                                     />
                                 </label>
-                            </div>
+                            {/*</div>*/}
                         </div>
 
                         <div className="start-container">

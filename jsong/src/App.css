@@ -176,6 +176,47 @@ body {
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-sizing: border-box; /* Wichtig: Stellt sicher, dass Padding nach innen berechnet wird */
+    margin: 0 auto; /* Zentriert den Container horizontal */
+    max-width: 100%; /* Verhindert Überläufe */
+}
+
+@media (max-width: 768px) {
+    .file-upload {
+        padding: 1.25rem;
+    }
+}
+
+/* Fix für Upload-Container */
+.upload-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%; /* Wichtig: Stellt sicher, dass der Container die volle Breite nutzt */
+    box-sizing: border-box;
+    padding: 0; /* Entfernt mögliches überschüssiges Padding */
+}
+
+.upload-card {
+    flex: 1;
+    background-color: rgba(42, 44, 58, 0.3);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    box-sizing: border-box; /* Stellt sicher, dass alle Padding-Werte nach innen berechnet werden */
+}
+
+/* Allgemeiner Fix für die App-Container */
+.app-container, .app-main {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden; /* Verhindert horizontales Scrollen durch Überläufe */
+}
+
+.card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
 }
 
 .file-upload:hover {

@@ -318,11 +318,6 @@ const KaraokeJsonGenerator = () => {
 
     return (
         <div className="app-container">
-            <header className="app-header">
-                <h1 className="app-title">jsong</h1>
-                <p className="app-subtitle">Karaoke JSON Generator</p>
-            </header>
-
             <main className="app-main">
                 {/* Audio upload section */}
                 <section className="card">
@@ -410,7 +405,8 @@ const KaraokeJsonGenerator = () => {
                                          fill="none" stroke="currentColor" strokeWidth="2"
                                          strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="12" cy="12" r="3"></circle>
-                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                                     </svg>
                                     {showAdvancedOptions ? "Einfache Optionen" : "Erweiterte Optionen"}
                                 </button>
@@ -429,7 +425,8 @@ const KaraokeJsonGenerator = () => {
                                     className="lyric-input"
                                 />
                                 <p className="file-upload-hint mt-2">
-                                    Diese Zeitspanne wird verwendet, um die endTime für neue Lyrics zu berechnen (startTime + Dauer)
+                                    Diese Zeitspanne wird verwendet, um die endTime für neue Lyrics
+                                    zu berechnen (startTime + Dauer)
                                 </p>
                             </div>
 
@@ -447,8 +444,10 @@ const KaraokeJsonGenerator = () => {
                                     className="lyric-input"
                                 />
                                 <p className="file-upload-hint mt-2">
-                                    Dieser Offset wird beim Setzen des Markers angewendet (z.B. -2 = 2 Sekunden früher).
-                                    Eine Markierung bei Sekunde 12 mit Offset -2 erstellt einen Lyric bei Sekunde 10.
+                                    Dieser Offset wird beim Setzen des Markers angewendet (z.B. -2 =
+                                    2 Sekunden früher).
+                                    Eine Markierung bei Sekunde 12 mit Offset -2 erstellt einen
+                                    Lyric bei Sekunde 10.
                                 </p>
                             </div>
 
@@ -462,7 +461,8 @@ const KaraokeJsonGenerator = () => {
                                             onChange={() => setAutoSortLyrics(!autoSortLyrics)}
                                             className="mr-2"
                                         />
-                                        <label htmlFor="autoSortLyrics" className="text-primary-light">
+                                        <label htmlFor="autoSortLyrics"
+                                               className="text-primary-light">
                                             Lyrics automatisch nach startTime sortieren
                                         </label>
                                     </div>
@@ -475,7 +475,8 @@ const KaraokeJsonGenerator = () => {
                                             onChange={() => setGenerateEmptyPitchTargets(!generateEmptyPitchTargets)}
                                             className="mr-2"
                                         />
-                                        <label htmlFor="generateEmptyPitchTargets" className="text-primary-light">
+                                        <label htmlFor="generateEmptyPitchTargets"
+                                               className="text-primary-light">
                                             Leere pitchTargets für Lyrics ohne Pitch-Daten erzeugen
                                         </label>
                                     </div>
@@ -500,7 +501,8 @@ const KaraokeJsonGenerator = () => {
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
-                                    Zeile bei {formatTime(Math.max(currentTime + markerOffset, 0))} ({(Math.max(currentTime + markerOffset, 0)).toFixed(1)}s)
+                                    Zeile
+                                    bei {formatTime(Math.max(currentTime + markerOffset, 0))} ({(Math.max(currentTime + markerOffset, 0)).toFixed(1)}s)
                                 </button>
                             </div>
 
@@ -518,12 +520,19 @@ const KaraokeJsonGenerator = () => {
                                                      viewBox="0 0 24 24" fill="none"
                                                      stroke="currentColor" strokeWidth="2"
                                                      strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{minWidth: '1rem', marginRight: '0.25rem'}}>
+                                                     style={{
+                                                         minWidth: '1rem',
+                                                         marginRight: '0.25rem'
+                                                     }}>
                                                     <circle cx="12" cy="12" r="10"></circle>
                                                     <polyline points="12 6 12 12 16 14"></polyline>
                                                 </svg>
                                                 Start:
-                                                <div className="lyric-input-container" style={{width: '80px', display: 'inline-block', marginLeft: '8px'}}>
+                                                <div className="lyric-input-container" style={{
+                                                    width: '80px',
+                                                    display: 'inline-block',
+                                                    marginLeft: '8px'
+                                                }}>
                                                     <input
                                                         type="number"
                                                         value={lyric.startTime.toFixed(1)}
@@ -532,10 +541,17 @@ const KaraokeJsonGenerator = () => {
                                                         step="0.1"
                                                         onChange={(e) => updateLyricStartTime(lyric.id, e.target.value)}
                                                         className="lyric-input"
-                                                        style={{padding: '0.4rem', textAlign: 'center'}}
+                                                        style={{
+                                                            padding: '0.4rem',
+                                                            textAlign: 'center'
+                                                        }}
                                                     />
                                                 </div>
-                                                <span style={{marginLeft: '8px', color: 'var(--text-dimmed)', fontSize: '0.8rem'}}>
+                                                <span style={{
+                                                    marginLeft: '8px',
+                                                    color: 'var(--text-dimmed)',
+                                                    fontSize: '0.8rem'
+                                                }}>
                                                     ({formatTime(lyric.startTime)})
                                                 </span>
                                             </span>
@@ -572,18 +588,26 @@ const KaraokeJsonGenerator = () => {
 
                                         {/* End Time Input */}
                                         <div className="lyric-meta" style={{marginTop: '0.5rem'}}>
-                                            <span className="lyric-time" style={{display: 'flex', alignItems: 'center'}}>
+                                            <span className="lyric-time"
+                                                  style={{display: 'flex', alignItems: 'center'}}>
                                                 <svg xmlns="http://www.w3.org/2000/svg"
                                                      viewBox="0 0 24 24" fill="none"
                                                      stroke="currentColor" strokeWidth="2"
                                                      strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{minWidth: '1rem', marginRight: '0.25rem'}}>
+                                                     style={{
+                                                         minWidth: '1rem',
+                                                         marginRight: '0.25rem'
+                                                     }}>
                                                     <circle cx="12" cy="12" r="10"></circle>
                                                     <line x1="12" y1="6" x2="12" y2="12"></line>
                                                     <line x1="12" y1="12" x2="16" y2="16"></line>
                                                 </svg>
                                                 Ende:
-                                                <div className="lyric-input-container" style={{width: '80px', display: 'inline-block', marginLeft: '8px'}}>
+                                                <div className="lyric-input-container" style={{
+                                                    width: '80px',
+                                                    display: 'inline-block',
+                                                    marginLeft: '8px'
+                                                }}>
                                                     <input
                                                         type="number"
                                                         value={lyric.endTime.toFixed(1)}
@@ -592,10 +616,17 @@ const KaraokeJsonGenerator = () => {
                                                         step="0.1"
                                                         onChange={(e) => updateLyricEndTime(lyric.id, e.target.value)}
                                                         className="lyric-input"
-                                                        style={{padding: '0.4rem', textAlign: 'center'}}
+                                                        style={{
+                                                            padding: '0.4rem',
+                                                            textAlign: 'center'
+                                                        }}
                                                     />
                                                 </div>
-                                                <span style={{marginLeft: '8px', color: 'var(--text-dimmed)', fontSize: '0.8rem'}}>
+                                                <span style={{
+                                                    marginLeft: '8px',
+                                                    color: 'var(--text-dimmed)',
+                                                    fontSize: '0.8rem'
+                                                }}>
                                                     ({formatTime(lyric.endTime)})
                                                 </span>
                                             </span>
