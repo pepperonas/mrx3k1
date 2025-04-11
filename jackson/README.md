@@ -1,6 +1,6 @@
-# jsong - Karaoke Generator und Player
+# jackson - Karaoke Generator und Player
 
-jsong ist eine React-Anwendung, die es ermöglicht, Karaoke-JSON-Dateien zu erstellen und diese mit
+jackson ist eine React-Anwendung, die es ermöglicht, Karaoke-JSON-Dateien zu erstellen und diese mit
 einem integrierten Player abzuspielen. Die Anwendung besteht aus zwei Hauptkomponenten:
 
 1. **Karaoke JSON Generator**: Erstellt JSON-Dateien mit Songtexten und Tonhöheninformationen

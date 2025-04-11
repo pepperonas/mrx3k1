@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders jsong navigation', () => {
+test('renders jackson navigation', () => {
   render(<App />);
-  const logoElement = screen.getByText(/jsong/i);
+  const logoElement = screen.getByText(/jackson/i);
   expect(logoElement).toBeInTheDocument();
 });

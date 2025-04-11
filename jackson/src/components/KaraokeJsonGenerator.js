@@ -25,12 +25,8 @@ const KaraokeJsonGenerator = () => {
     const analyser = useRef(null);
     const microphone = useRef(null);
 
-    // Neue Refs für stabilere Datenhaltung
     const lastValidLyricIndexRef = useRef(-1);
     const checkingLyricIndexRef = useRef(false);
-    const pitchTargetsRef = useRef({});  // Speichert Pitch-Targets für jeden Lyric
-    const lyricTextInputsRef = useRef({}); // Speichert Texteingaben temporär
-    const uiRefreshBlockerRef = useRef(false); // Verhindert zu häufige UI-Updates
 
     // Handle file upload
     const handleFileUpload = (e) => {
@@ -58,54 +54,59 @@ const KaraokeJsonGenerator = () => {
         }
     }, [audioUrl]);
 
-    // Update current time when audio is playing - VERBESSERT
+    // Update current time when audio is playing
     useEffect(() => {
         if (audioRef.current) {
             const updateTime = () => {
-                // Aktualisiere Zeit ohne UI-Refresh zu triggern
-                const newTime = audioRef.current.currentTime;
+                // Setze Flag, dass wir gerade prüfen
+                checkingLyricIndexRef.current = true;
 
-                // Nur Zeit-Update, kein Lyric-Index-Update
+                const newTime = audioRef.current.currentTime;
                 setCurrentTime(newTime);
 
-                // Finde aktuellen Lyric nur alle 500ms (reduziert UI-Updates)
-                if (!uiRefreshBlockerRef.current) {
-                    uiRefreshBlockerRef.current = true;
+                // Finde aktuellen Lyric basierend auf Zeitstempel
+                if (lyrics.length > 0) {
+                    let foundIndex = -1;
 
-                    // Finde aktuellen Lyric
-                    if (lyrics.length > 0) {
-                        let foundIndex = -1;
+                    // Durchlaufe alle Lyrics und finde den passenden
+                    for (let i = 0; i < lyrics.length; i++) {
+                        const lyric = lyrics[i];
+                        const nextLyric = lyrics[i + 1];
 
-                        for (let i = 0; i < lyrics.length; i++) {
-                            const lyric = lyrics[i];
-                            const nextLyric = lyrics[i + 1];
-
-                            if (newTime >= lyric.startTime) {
-                                if (nextLyric) {
-                                    if (newTime < nextLyric.startTime) {
-                                        foundIndex = i;
-                                        break;
-                                    }
-                                } else {
+                        // Wenn wir zwischen Start und Ende sind (mit oder ohne nächsten Lyric)
+                        if (newTime >= lyric.startTime) {
+                            if (nextLyric) {
+                                if (newTime < nextLyric.startTime) {
                                     foundIndex = i;
                                     break;
                                 }
+                            } else {
+                                // Letzter Lyric
+                                foundIndex = i;
+                                break;
                             }
-                        }
-
-                        // Setze den Index, aber nur wenn er sich ändert
-                        if (foundIndex !== currentLyricIndex) {
-                            console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex}`);
-                            setCurrentLyricIndex(foundIndex);
-                            lastValidLyricIndexRef.current = foundIndex >= 0 ? foundIndex : lastValidLyricIndexRef.current;
                         }
                     }
 
-                    // Erlaube Updates erst nach 500ms wieder
-                    setTimeout(() => {
-                        uiRefreshBlockerRef.current = false;
-                    }, 500);
+                    console.log(`Zeit: ${newTime.toFixed(2)}s, Gefundener Index: ${foundIndex}`);
+
+                    // Wenn wir einen gültigen Index gefunden haben, speichern wir ihn
+                    if (foundIndex >= 0) {
+                        lastValidLyricIndexRef.current = foundIndex;
+                        console.log(`Letzter gültiger Index aktualisiert: ${foundIndex}`);
+                    }
+
+                    // Wenn der gefundene Index sich vom aktuellen unterscheidet
+                    if (foundIndex !== currentLyricIndex) {
+                        console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex}`);
+
+                        // Verwende ausdrücklich den gefundenen Index
+                        setCurrentLyricIndex(foundIndex);
+                    }
                 }
+
+                // Unser Check ist abgeschlossen
+                checkingLyricIndexRef.current = false;
             };
 
             const timeUpdateInterval = setInterval(updateTime, 100);
@@ -125,12 +126,16 @@ const KaraokeJsonGenerator = () => {
         }
     };
 
-    // Add new lyric line with default endTime - VERBESSERT
+    // Add new lyric line with default endTime
     const addLyricLine = () => {
         // Berechne die Startzeit mit dem Offset
         const offsetStartTime = currentTime + markerOffset;
+        // Stelle sicher, dass startTime nicht negativ wird und runde auf eine Dezimalstelle
         const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
+
         const calculatedEndTime = startTime + defaultEndTimeDuration;
+
+        // Ensure endTime doesn't exceed the duration of the song and round to one decimal place
         const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
 
         const newLyric = {
@@ -141,14 +146,14 @@ const KaraokeJsonGenerator = () => {
             pitchTargets: []
         };
 
-        // Aktualisiere lokalen State
         const updatedLyrics = [...lyrics, newLyric];
         setLyrics(updatedLyrics);
 
         console.log(`Neuer Lyric hinzugefügt: startTime=${startTime}s, endTime=${endTime}s`);
         console.log(`Aktuelle Lyrics-Array Länge: ${updatedLyrics.length}`);
 
-        // Finde passenden Index, aber ohne sofortiges UI-Update
+        // Finde den passenden Index für die aktuelle Zeit
+        // und setze ihn als letzten gültigen Index
         const newIndex = updatedLyrics.findIndex((lyric, idx) => {
             const nextLyric = updatedLyrics[idx + 1];
             if (nextLyric) {
@@ -158,38 +163,20 @@ const KaraokeJsonGenerator = () => {
         });
 
         if (newIndex >= 0) {
+            // Wichtig: Speichere den Index sowohl im State als auch in der Ref
+            setCurrentLyricIndex(newIndex);
             lastValidLyricIndexRef.current = newIndex;
-
-            // Verzögere das Index-Update um UI-Flickering zu verhindern
-            setTimeout(() => {
-                setCurrentLyricIndex(newIndex);
-                console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (gespeichert)`);
-            }, 100);
+            console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (gespeichert)`);
+        } else {
+            console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (nicht gültig)`);
         }
     };
-
-    // Update lyric text - VERBESSERT
+    
+    // Update lyric text
     const updateLyricText = (id, text) => {
-        // Speichere Text in Ref für schnelles Zugreifen ohne UI-Update
-        lyricTextInputsRef.current[id] = text;
-
-        // Throttle das Update des Lyrics-Arrays (weniger UI-Updates)
-        if (!uiRefreshBlockerRef.current) {
-            uiRefreshBlockerRef.current = true;
-
-            setTimeout(() => {
-                // Sammle alle Textänderungen und wende sie auf einmal an
-                const updatedLyrics = lyrics.map(lyric => {
-                    if (lyricTextInputsRef.current[lyric.id] !== undefined) {
-                        return {...lyric, text: lyricTextInputsRef.current[lyric.id]};
-                    }
-                    return lyric;
-                });
-
-                setLyrics(updatedLyrics);
-                uiRefreshBlockerRef.current = false;
-            }, 500); // Verzögerung für Updates
-        }
+        setLyrics(lyrics.map(lyric =>
+            lyric.id === id ? {...lyric, text} : lyric
+        ));
     };
 
     // Update lyric startTime
@@ -226,68 +213,36 @@ const KaraokeJsonGenerator = () => {
         }
     };
 
-    // Detect pitch from frequency data - VERBESSERT
+    // Detect pitch from frequency data
     const detectPitch = (frequencyData) => {
-        // Finde den höchsten Wert und seinen Index
+        // Simple implementation - find the dominant frequency
         let maxIndex = 0;
-        let maxValue = -Infinity; // Starte bei minus unendlich um sicherzustellen, dass negative Werte auch erfasst werden
-
-        // Ausgabe der ersten 10 Werte für Debugging
-        console.log("FFT Samples:", Array.from(frequencyData).slice(0, 10));
+        let maxValue = 0;
 
         for (let i = 0; i < frequencyData.length; i++) {
-            // Konvertiere zu number falls es ein TypedArray ist
-            const value = Number(frequencyData[i]);
-            if (value > maxValue) {
-                maxValue = value;
+            if (frequencyData[i] > maxValue) {
+                maxValue = frequencyData[i];
                 maxIndex = i;
             }
         }
 
-        // Debug-Ausgabe zum Status
-        console.log(`FFT Max Value: ${maxValue} at index ${maxIndex}`);
+        // Convert FFT bin index to frequency
+        const nyquist = 22050; // Half the sample rate
+        const frequency = maxIndex * nyquist / frequencyData.length;
 
-        // Wir ignorieren den negativen Wert und arbeiten nur mit dem absoluten Betrag
-        const absValue = Math.abs(maxValue);
-
-        // Deutlich reduzierter Schwellenwert (von 100 auf 20)
-        if (absValue > 20) {
-            // Convert FFT bin index to frequency
-            const nyquist = 22050; // Half the sample rate
-            const frequency = maxIndex * nyquist / frequencyData.length;
-
-            // Konvertiere zu MIDI Notennummer
+        // Niedrigerer Schwellenwert (50 statt 100), um mehr Pitches zu erkennen
+        if (maxValue > 50) {
+            // Convert frequency to MIDI note number
+            // f = 440 * 2^((n-69)/12)
+            // n = 12 * log2(f/440) + 69
             const noteNumber = 12 * Math.log2(frequency / 440) + 69;
-            const roundedNote = Math.round(noteNumber);
-
-            console.log(`Erkannte Frequenz: ${frequency.toFixed(1)} Hz, MIDI Note: ${roundedNote}`);
-            return roundedNote;
-        } else {
-            console.log(`Schwellenwert nicht erreicht: ${absValue} < 20`);
+            return Math.round(noteNumber);
         }
 
         return null;
     };
 
-    // NEUE FUNKTION: Synchronisiere Pitch-Targets mit Lyrics
-    const syncPitchTargetsToLyrics = () => {
-        // Kopiere aktuelle Lyrics
-        const updatedLyrics = [...lyrics];
-
-        // Füge die gesammelten Pitch-Targets hinzu
-        Object.keys(pitchTargetsRef.current).forEach(index => {
-            const numIndex = parseInt(index);
-            if (updatedLyrics[numIndex]) {
-                updatedLyrics[numIndex].pitchTargets = [...pitchTargetsRef.current[numIndex]];
-            }
-        });
-
-        // Aktualisiere den State (löst Rerendering aus)
-        setLyrics(updatedLyrics);
-        console.log("Pitch-Targets mit Lyrics synchronisiert");
-    };
-
-    // Analyze pitch for microphone input - KOMPLETT ÜBERARBEITET
+    // Analyze pitch for microphone input
     const startPitchAnalysis = async () => {
         setIsAnalyzing(true);
 
@@ -303,49 +258,45 @@ const KaraokeJsonGenerator = () => {
             microphone.current.connect(analyser.current);
             console.log("Analyzer mit Mikrofon verbunden");
 
-            // Füge eine Force-Recording-Variable hinzu
-            let forceRecording = false;
-            // Button zum Umschalten hinzufügen
-            const forceRecordingButton = document.createElement('button');
-            forceRecordingButton.innerHTML = "Force Recording: OFF";
-            forceRecordingButton.style.padding = "8px";
-            forceRecordingButton.style.background = "#333";
-            forceRecordingButton.style.color = "white";
-            forceRecordingButton.style.border = "1px solid #666";
-            forceRecordingButton.style.borderRadius = "4px";
-            forceRecordingButton.style.marginLeft = "10px";
-
-            // Füge den Button neben dem Analyse-Button ein
-            const analysisControls = document.querySelector('.analysis-controls');
-            if (analysisControls) {
-                analysisControls.appendChild(forceRecordingButton);
-            }
-
-            forceRecordingButton.addEventListener('click', () => {
-                forceRecording = !forceRecording;
-                forceRecordingButton.innerHTML = `Force Recording: ${forceRecording ? 'ON' : 'OFF'}`;
-                forceRecordingButton.style.background = forceRecording ? "#8b5cf6" : "#333";
-                console.log(`Force Recording: ${forceRecording ? 'ON' : 'OFF'}`);
-            });
-
             const analyzeInterval = setInterval(() => {
                 if (analyser.current) {
                     const frequencyData = analyser.current.getValue();
-                    // Pitch erkennen mit verbesserter Funktion
-                    const pitch = detectPitch(frequencyData);
 
-                    // Ob wir einen Pitch haben oder nicht, wir erfassen immer den Max-Wert
-                    const maxVal = Array.from(frequencyData).reduce((max, val) => Math.max(max, val), -Infinity);
-                    console.log(`Max Freq: ${maxVal.toFixed(1)}, Pitch: ${pitch || 'keiner'}, Lyric Index: ${currentLyricIndex}`);
+                    // Finde den maximalen Wert (auch negative)
+                    let maxValue = -Infinity;
+                    let maxIndex = 0;
 
-                    // WICHTIG: Verwende den effektiven Index
-                    const effectiveLyricIndex = currentLyricIndex >= 0 ?
-                        currentLyricIndex :
-                        lastValidLyricIndexRef.current;
+                    for (let i = 0; i < frequencyData.length; i++) {
+                        if (frequencyData[i] > maxValue) {
+                            maxValue = frequencyData[i];
+                            maxIndex = i;
+                        }
+                    }
 
-                    // Entweder wir haben einen Pitch und einen gültigen Index, oder wir forcieren die Aufnahme
-                    if ((pitch && (effectiveLyricIndex >= 0 || forceRecording))) {
-                        // Pitch-Daten für die Visualisierung aktualisieren
+                    // Konvertiere zu absoluten Wert für Schwellenwert
+                    const absValue = Math.abs(maxValue);
+
+                    // Pitch erkennen, wenn Wert über Schwelle
+                    let pitch = null;
+                    if (absValue > 20) {
+                        // Convert FFT bin index to frequency
+                        const nyquist = 22050; // Half the sample rate
+                        const frequency = maxIndex * nyquist / frequencyData.length;
+
+                        // Konvertiere zu MIDI Notennummer
+                        const noteNumber = 12 * Math.log2(frequency / 440) + 69;
+                        pitch = Math.round(noteNumber);
+                    }
+
+                    // Wichtig: Verwende den letzten gültigen Index aus der Ref, wenn gerade kein Update läuft
+                    const effectiveLyricIndex = checkingLyricIndexRef.current ? currentLyricIndex :
+                        (currentLyricIndex >= 0 ? currentLyricIndex : lastValidLyricIndexRef.current);
+
+                    console.log(`Max Freq: ${maxValue.toFixed(1)}, Pitch: ${pitch || 'keiner'}, ` +
+                        `Lyric Index: ${currentLyricIndex}, Effektiver Index: ${effectiveLyricIndex}`);
+
+                    if (pitch && effectiveLyricIndex >= 0) {
+                        // PitchData für Visualisierung aktualisieren
                         const newPitchData = [...pitchData];
                         newPitchData.push({
                             time: currentTime,
@@ -353,39 +304,21 @@ const KaraokeJsonGenerator = () => {
                         });
                         setPitchData(newPitchData);
 
-                        // Nur wenn wir einen gültigen Index haben ODER im Force-Modus sind
-                        if (effectiveLyricIndex >= 0) {
-                            // WICHTIG: Speicher die Pitch-Targets in der Ref statt direkt in lyrics
-                            // Dies verhindert zu viele State-Updates und UI-Rerender
-                            if (!pitchTargetsRef.current[effectiveLyricIndex]) {
-                                pitchTargetsRef.current[effectiveLyricIndex] = [];
-                            }
-
-                            // Füge Pitch-Target zur Ref hinzu
-                            pitchTargetsRef.current[effectiveLyricIndex].push({
-                                time: currentTime - lyrics[effectiveLyricIndex].startTime,
+                        // Pitch-Target zum aktuellen Lyric hinzufügen
+                        const updatedLyrics = [...lyrics];
+                        if (updatedLyrics[effectiveLyricIndex]) {
+                            updatedLyrics[effectiveLyricIndex].pitchTargets.push({
+                                time: currentTime - updatedLyrics[effectiveLyricIndex].startTime,
                                 pitch: pitch
                             });
-
-                            const targetCount = pitchTargetsRef.current[effectiveLyricIndex].length;
-                            console.log(`Pitch ${pitch} hinzugefügt, jetzt ${targetCount} Targets für Lyric "${lyrics[effectiveLyricIndex].text || '(kein Text)'}" bei Index ${effectiveLyricIndex}`);
-
-                            // Nur alle 5 Targets den State aktualisieren
-                            if (targetCount % 5 === 0) {
-                                syncPitchTargetsToLyrics();
-                            }
-                        } else if (forceRecording) {
-                            console.log(`Force Recording aktiv: Pitch ${pitch} erfasst, aber kein Lyric ausgewählt.`);
+                            setLyrics(updatedLyrics);
+                            console.log(`Pitch ${pitch} hinzugefügt, jetzt ${updatedLyrics[effectiveLyricIndex].pitchTargets.length} Targets für Lyric "${updatedLyrics[effectiveLyricIndex].text}"`);
                         }
                     }
                 }
             }, 200);
 
             return () => {
-                if (forceRecordingButton.parentNode) {
-                    forceRecordingButton.parentNode.removeChild(forceRecordingButton);
-                }
-
                 clearInterval(analyzeInterval);
                 if (microphone.current) {
                     microphone.current.close();
@@ -406,20 +339,8 @@ const KaraokeJsonGenerator = () => {
         }
     };
 
-    // NEUE FUNKTION: Vorbereitung für JSON-Generierung
-    const prepareJsonGeneration = () => {
-        // Synchronisiere alle Pitch-Targets mit den Lyrics vor der JSON-Generierung
-        syncPitchTargetsToLyrics();
-
-        // Kleine Verzögerung, damit React Zeit hat, den State zu aktualisieren
-        return new Promise(resolve => setTimeout(resolve, 200));
-    };
-
-    // Generate JSON output with endTime for each lyric - VERBESSERT
-    const generateJson = async () => {
-        // Stelle sicher, dass alle Pitch-Targets im lyrics-Array sind
-        await prepareJsonGeneration();
-
+    // Generate JSON output with endTime for each lyric
+    const generateJson = () => {
         // Sortiere Lyrics nach startTime für korrekte endTime-Berechnung, wenn Option aktiviert
         let processedLyrics = [...lyrics];
 
@@ -994,7 +915,7 @@ const KaraokeJsonGenerator = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jsong Karaoke JSON Generator | Made with ❤️ by Martin Pfeffer
+                jackson Karaoke JSON Generator | Made with ❤️ by Martin Pfeffer
             </footer>
         </div>
     );
