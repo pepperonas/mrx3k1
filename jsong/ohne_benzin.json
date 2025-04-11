@@ -3,33 +3,27 @@
   "duration": 170.997551,
   "lyrics": [
     {
-      "text": "Ich mach' auf Replay, ok?!",
-      "startTime": 6.78,
-      "endTime": 16.05,
+      "text": "Ich mach auf Replay, ok?!",
+      "startTime": 10.8,
+      "endTime": 12,
       "pitchTargets": []
     },
     {
       "text": "Er nimmt keine E's",
-      "startTime": 16.05,
-      "endTime": 17.07,
+      "startTime": 14.6,
+      "endTime": 15.6,
       "pitchTargets": []
     },
     {
       "text": "Er ist hot ohne Benzin",
-      "startTime": 17.07,
-      "endTime": 18.50,
+      "startTime": 16.5,
+      "endTime": 17.5,
       "pitchTargets": []
     },
     {
-      "text": "Chille in seinem Auto",
-      "startTime": 18.50,
-      "endTime": 19.06,
-      "pitchTargets": []
-    },
-    {
-      "text": "wie in einer Limousine",
-      "startTime": 19.06,
-      "endTime": 24.06,
+      "text": "Chille in seinem Auto wie in einer Limousine",
+      "startTime": 18.2,
+      "endTime": 19.8,
       "pitchTargets": []
     }
   ]

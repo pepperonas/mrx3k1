@@ -14,6 +14,13 @@ const KaraokeJsonGenerator = () => {
     const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+    // Neue Konfigurationsoptionen
+    const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
+    const [markerOffset, setMarkerOffset] = useState(-2);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [generateEmptyPitchTargets, setGenerateEmptyPitchTargets] = useState(true);
+    const [autoSortLyrics, setAutoSortLyrics] = useState(true);
+
     const audioRef = useRef(null);
     const analyser = useRef(null);
     const microphone = useRef(null);
@@ -82,12 +89,23 @@ const KaraokeJsonGenerator = () => {
         }
     };
 
-    // Add new lyric line
+    // Add new lyric line with default endTime
     const addLyricLine = () => {
+        // Berechne die Startzeit mit dem Offset
+        const offsetStartTime = currentTime + markerOffset;
+        // Stelle sicher, dass startTime nicht negativ wird und runde auf eine Dezimalstelle
+        const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
+
+        const calculatedEndTime = startTime + defaultEndTimeDuration;
+
+        // Ensure endTime doesn't exceed the duration of the song and round to one decimal place
+        const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
+
         const newLyric = {
             id: Date.now(),
             text: '',
-            startTime: currentTime,
+            startTime: startTime,
+            endTime: endTime,
             pitchTargets: []
         };
 
@@ -99,6 +117,40 @@ const KaraokeJsonGenerator = () => {
         setLyrics(lyrics.map(lyric =>
             lyric.id === id ? {...lyric, text} : lyric
         ));
+    };
+
+    // Update lyric startTime
+    const updateLyricStartTime = (id, startTime) => {
+        const numStartTime = parseFloat(startTime);
+        if (!isNaN(numStartTime)) {
+            // Runde auf eine Dezimalstelle
+            const roundedStartTime = Math.round(numStartTime * 10) / 10;
+            setLyrics(lyrics.map(lyric => {
+                if (lyric.id === id) {
+                    // Passe die endTime an, falls die startTime größer wird
+                    const endTime = Math.max(lyric.endTime, roundedStartTime + 0.1);
+                    return {...lyric, startTime: roundedStartTime, endTime};
+                }
+                return lyric;
+            }));
+        }
+    };
+
+    // Update lyric endTime
+    const updateLyricEndTime = (id, endTime) => {
+        const numEndTime = parseFloat(endTime);
+        if (!isNaN(numEndTime)) {
+            // Runde auf eine Dezimalstelle
+            const roundedEndTime = Math.round(numEndTime * 10) / 10;
+            setLyrics(lyrics.map(lyric => {
+                if (lyric.id === id) {
+                    // Stelle sicher, dass endTime größer als startTime ist
+                    const validEndTime = Math.max(roundedEndTime, lyric.startTime + 0.1);
+                    return {...lyric, endTime: validEndTime};
+                }
+                return lyric;
+            }));
+        }
     };
 
     // Detect pitch from frequency data
@@ -191,19 +243,52 @@ const KaraokeJsonGenerator = () => {
         }
     };
 
-    // Generate JSON output
+    // Generate JSON output with endTime for each lyric
     const generateJson = () => {
-        const output = {
-            songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
-            duration: duration,
-            lyrics: lyrics.map(lyric => ({
+        // Sortiere Lyrics nach startTime für korrekte endTime-Berechnung, wenn Option aktiviert
+        let processedLyrics = [...lyrics];
+
+        if (autoSortLyrics) {
+            processedLyrics.sort((a, b) => a.startTime - b.startTime);
+        }
+
+        // Verarbeite die Lyrics, um die endTime zu inkludieren oder zu korrigieren
+        processedLyrics = processedLyrics.map((lyric, index) => {
+            // Basisinformationen
+            const processedLyric = {
                 text: lyric.text,
                 startTime: parseFloat(lyric.startTime.toFixed(2)),
-                pitchTargets: lyric.pitchTargets.map(target => ({
+                endTime: parseFloat(lyric.endTime.toFixed(2))
+            };
+
+            // Wenn es das letzte Lyric ist und die endTime über der Dauer liegt, korrigieren
+            if (index === processedLyrics.length - 1 && processedLyric.endTime > duration) {
+                processedLyric.endTime = parseFloat(duration.toFixed(2));
+            }
+
+            // Bei auto sort, stelle sicher, dass endTime nicht die startTime des nächsten Lyrics überschreitet
+            if (autoSortLyrics && index < processedLyrics.length - 1) {
+                const nextStartTime = processedLyrics[index + 1].startTime;
+                if (processedLyric.endTime > nextStartTime) {
+                    processedLyric.endTime = parseFloat(nextStartTime.toFixed(2));
+                }
+            }
+
+            // PitchTargets einschließen, falls vorhanden oder wenn leere Arrays erzwungen werden
+            if (lyric.pitchTargets.length > 0 || generateEmptyPitchTargets) {
+                processedLyric.pitchTargets = lyric.pitchTargets.map(target => ({
                     time: parseFloat(target.time.toFixed(2)),
                     pitch: parseFloat(target.pitch.toFixed(2))
-                }))
-            }))
+                }));
+            }
+
+            return processedLyric;
+        });
+
+        const output = {
+            songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
+            duration: parseFloat(duration.toFixed(6)),
+            lyrics: processedLyrics
         };
 
         setJsonOutput(JSON.stringify(output, null, 2));
@@ -310,11 +395,99 @@ const KaraokeJsonGenerator = () => {
                             </div>
                         </section>
 
-                        {/* Lyrics editor */}
+                        {/* JSON Configuration */}
                         <section className="card">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
                                     <span className="card-number">3</span>
+                                    JSON Konfiguration
+                                </h2>
+                                <button
+                                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                                    className="btn btn-primary"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    </svg>
+                                    {showAdvancedOptions ? "Einfache Optionen" : "Erweiterte Optionen"}
+                                </button>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-primary-light mb-2">
+                                    Standard Dauer für Lyric (Sekunden):
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0.5"
+                                    step="0.5"
+                                    value={defaultEndTimeDuration}
+                                    onChange={(e) => setDefaultEndTimeDuration(parseFloat(e.target.value))}
+                                    className="lyric-input"
+                                />
+                                <p className="file-upload-hint mt-2">
+                                    Diese Zeitspanne wird verwendet, um die endTime für neue Lyrics zu berechnen (startTime + Dauer)
+                                </p>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-primary-light mb-2">
+                                    Zeitverschiebung (Offset) beim Hinzufügen (Sekunden):
+                                </label>
+                                <input
+                                    type="number"
+                                    min="-10"
+                                    max="10"
+                                    step="0.5"
+                                    value={markerOffset}
+                                    onChange={(e) => setMarkerOffset(parseFloat(e.target.value))}
+                                    className="lyric-input"
+                                />
+                                <p className="file-upload-hint mt-2">
+                                    Dieser Offset wird beim Setzen des Markers angewendet (z.B. -2 = 2 Sekunden früher).
+                                    Eine Markierung bei Sekunde 12 mit Offset -2 erstellt einen Lyric bei Sekunde 10.
+                                </p>
+                            </div>
+
+                            {showAdvancedOptions && (
+                                <div className="flex flex-col space-y-4">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="autoSortLyrics"
+                                            checked={autoSortLyrics}
+                                            onChange={() => setAutoSortLyrics(!autoSortLyrics)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="autoSortLyrics" className="text-primary-light">
+                                            Lyrics automatisch nach startTime sortieren
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="generateEmptyPitchTargets"
+                                            checked={generateEmptyPitchTargets}
+                                            onChange={() => setGenerateEmptyPitchTargets(!generateEmptyPitchTargets)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="generateEmptyPitchTargets" className="text-primary-light">
+                                            Leere pitchTargets für Lyrics ohne Pitch-Daten erzeugen
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Lyrics editor */}
+                        <section className="card">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="card-title">
+                                    <span className="card-number">4</span>
                                     Lyrics hinzufügen
                                 </h2>
                                 <button
@@ -327,7 +500,7 @@ const KaraokeJsonGenerator = () => {
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
-                                    Zeile bei {formatTime(currentTime)}
+                                    Zeile bei {formatTime(Math.max(currentTime + markerOffset, 0))} ({(Math.max(currentTime + markerOffset, 0)).toFixed(1)}s)
                                 </button>
                             </div>
 
@@ -339,15 +512,32 @@ const KaraokeJsonGenerator = () => {
                                     >
                                         <div className="lyric-meta">
                                             <span
-                                                className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}>
+                                                className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}
+                                                style={{display: 'flex', alignItems: 'center'}}>
                                                 <svg xmlns="http://www.w3.org/2000/svg"
                                                      viewBox="0 0 24 24" fill="none"
                                                      stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round">
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{minWidth: '1rem', marginRight: '0.25rem'}}>
                                                     <circle cx="12" cy="12" r="10"></circle>
                                                     <polyline points="12 6 12 12 16 14"></polyline>
                                                 </svg>
-                                                Start: {formatTime(lyric.startTime)}
+                                                Start:
+                                                <div className="lyric-input-container" style={{width: '80px', display: 'inline-block', marginLeft: '8px'}}>
+                                                    <input
+                                                        type="number"
+                                                        value={lyric.startTime.toFixed(1)}
+                                                        min="0"
+                                                        max={duration}
+                                                        step="0.1"
+                                                        onChange={(e) => updateLyricStartTime(lyric.id, e.target.value)}
+                                                        className="lyric-input"
+                                                        style={{padding: '0.4rem', textAlign: 'center'}}
+                                                    />
+                                                </div>
+                                                <span style={{marginLeft: '8px', color: 'var(--text-dimmed)', fontSize: '0.8rem'}}>
+                                                    ({formatTime(lyric.startTime)})
+                                                </span>
                                             </span>
                                             <span className="lyric-pitch">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -379,6 +569,37 @@ const KaraokeJsonGenerator = () => {
                                                 </svg>
                                             </div>
                                         </div>
+
+                                        {/* End Time Input */}
+                                        <div className="lyric-meta" style={{marginTop: '0.5rem'}}>
+                                            <span className="lyric-time" style={{display: 'flex', alignItems: 'center'}}>
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{minWidth: '1rem', marginRight: '0.25rem'}}>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="12" y1="6" x2="12" y2="12"></line>
+                                                    <line x1="12" y1="12" x2="16" y2="16"></line>
+                                                </svg>
+                                                Ende:
+                                                <div className="lyric-input-container" style={{width: '80px', display: 'inline-block', marginLeft: '8px'}}>
+                                                    <input
+                                                        type="number"
+                                                        value={lyric.endTime.toFixed(1)}
+                                                        min={lyric.startTime + 0.1}
+                                                        max={duration}
+                                                        step="0.1"
+                                                        onChange={(e) => updateLyricEndTime(lyric.id, e.target.value)}
+                                                        className="lyric-input"
+                                                        style={{padding: '0.4rem', textAlign: 'center'}}
+                                                    />
+                                                </div>
+                                                <span style={{marginLeft: '8px', color: 'var(--text-dimmed)', fontSize: '0.8rem'}}>
+                                                    ({formatTime(lyric.endTime)})
+                                                </span>
+                                            </span>
+                                        </div>
                                     </div>
                                 ))}
 
@@ -404,7 +625,7 @@ const KaraokeJsonGenerator = () => {
                         {/* Pitch analysis */}
                         <section className="card">
                             <h2 className="card-title">
-                                <span className="card-number">4</span>
+                                <span className="card-number">5</span>
                                 Pitch analysieren
                             </h2>
                             <div className="analysis-controls">
@@ -492,7 +713,7 @@ const KaraokeJsonGenerator = () => {
                         <section className="card">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
-                                    <span className="card-number">5</span>
+                                    <span className="card-number">6</span>
                                     JSON generieren
                                 </h2>
                                 <div className="flex space-x-4">
