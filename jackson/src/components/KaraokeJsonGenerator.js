@@ -11,14 +11,14 @@ const KaraokeJsonGenerator = () => {
     const [lyrics, setLyrics] = useState([]);
     const [jsonOutput, setJsonOutput] = useState('');
     const [pitchData, setPitchData] = useState([]);
+    const [globalPitchData, setGlobalPitchData] = useState([]);
     const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    // Neue Konfigurationsoptionen
+    // Konfigurationsoptionen
     const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
     const [markerOffset, setMarkerOffset] = useState(-2);
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-    const [generateEmptyPitchTargets, setGenerateEmptyPitchTargets] = useState(true);
     const [autoSortLyrics, setAutoSortLyrics] = useState(true);
 
     const audioRef = useRef(null);
@@ -39,6 +39,7 @@ const KaraokeJsonGenerator = () => {
             // Reset states
             setLyrics([]);
             setPitchData([]);
+            setGlobalPitchData([]);
             setIsPlaying(false);
             setCurrentTime(0);
             setJsonOutput('');
@@ -138,12 +139,13 @@ const KaraokeJsonGenerator = () => {
         // Ensure endTime doesn't exceed the duration of the song and round to one decimal place
         const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
 
+        // Einfache Lyric-Struktur ohne Pitch-Informationen
+        const lyricId = Date.now();
         const newLyric = {
-            id: Date.now(),
+            id: lyricId,
             text: '',
             startTime: startTime,
-            endTime: endTime,
-            pitchTargets: []
+            endTime: endTime
         };
 
         const updatedLyrics = [...lyrics, newLyric];
@@ -171,7 +173,7 @@ const KaraokeJsonGenerator = () => {
             console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (nicht gültig)`);
         }
     };
-    
+
     // Update lyric text
     const updateLyricText = (id, text) => {
         setLyrics(lyrics.map(lyric =>
@@ -295,7 +297,7 @@ const KaraokeJsonGenerator = () => {
                     console.log(`Max Freq: ${maxValue.toFixed(1)}, Pitch: ${pitch || 'keiner'}, ` +
                         `Lyric Index: ${currentLyricIndex}, Effektiver Index: ${effectiveLyricIndex}`);
 
-                    if (pitch && effectiveLyricIndex >= 0) {
+                    if (pitch) {
                         // PitchData für Visualisierung aktualisieren
                         const newPitchData = [...pitchData];
                         newPitchData.push({
@@ -304,15 +306,20 @@ const KaraokeJsonGenerator = () => {
                         });
                         setPitchData(newPitchData);
 
-                        // Pitch-Target zum aktuellen Lyric hinzufügen
-                        const updatedLyrics = [...lyrics];
-                        if (updatedLyrics[effectiveLyricIndex]) {
-                            updatedLyrics[effectiveLyricIndex].pitchTargets.push({
-                                time: currentTime - updatedLyrics[effectiveLyricIndex].startTime,
+                        // Globale PitchData unabhängig vom aktuellen Lyric speichern
+                        setGlobalPitchData(prev => [
+                            ...prev,
+                            {
+                                time: currentTime,
                                 pitch: pitch
-                            });
-                            setLyrics(updatedLyrics);
-                            console.log(`Pitch ${pitch} hinzugefügt, jetzt ${updatedLyrics[effectiveLyricIndex].pitchTargets.length} Targets für Lyric "${updatedLyrics[effectiveLyricIndex].text}"`);
+                            }
+                        ]);
+
+                        console.log(`Pitch ${pitch} bei Zeit ${currentTime.toFixed(2)}s aufgezeichnet`);
+
+                        // Zusätzlich ausgeben, wenn ein Lyric aktiv ist (nur für Benutzer-Feedback)
+                        if (effectiveLyricIndex >= 0 && effectiveLyricIndex < lyrics.length) {
+                            console.log(`Aktueller Lyric: "${lyrics[effectiveLyricIndex].text}"`);
                         }
                     }
                 }
@@ -370,21 +377,23 @@ const KaraokeJsonGenerator = () => {
                 }
             }
 
-            // PitchTargets einschließen, falls vorhanden oder wenn leere Arrays erzwungen werden
-            if (lyric.pitchTargets.length > 0 || generateEmptyPitchTargets) {
-                processedLyric.pitchTargets = lyric.pitchTargets.map(target => ({
-                    time: parseFloat(target.time.toFixed(2)),
-                    pitch: parseFloat(target.pitch.toFixed(2))
-                }));
-            }
-
             return processedLyric;
         });
+
+        // Sortiere Pitch-Daten nach Zeit
+        const sortedPitchData = [...globalPitchData].sort((a, b) => a.time - b.time);
+
+        // Formatiere Pitch-Daten
+        const processedPitchData = sortedPitchData.map(point => ({
+            time: parseFloat(point.time.toFixed(2)),
+            pitch: parseFloat(point.pitch.toFixed(2))
+        }));
 
         const output = {
             songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
             duration: parseFloat(duration.toFixed(6)),
-            lyrics: processedLyrics
+            lyrics: processedLyrics,
+            pitchData: processedPitchData
         };
 
         setJsonOutput(JSON.stringify(output, null, 2));
@@ -564,17 +573,13 @@ const KaraokeJsonGenerator = () => {
                                     </div>
 
                                     <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="generateEmptyPitchTargets"
-                                            checked={generateEmptyPitchTargets}
-                                            onChange={() => setGenerateEmptyPitchTargets(!generateEmptyPitchTargets)}
-                                            className="mr-2"
-                                        />
-                                        <label htmlFor="generateEmptyPitchTargets"
-                                               className="text-primary-light">
-                                            Leere pitchTargets für Lyrics ohne Pitch-Daten erzeugen
-                                        </label>
+                                        <button
+                                            onClick={() => setGlobalPitchData([])}
+                                            className="btn btn-error btn-small"
+                                            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                                        >
+                                            Alle Pitch-Daten zurücksetzen
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -659,7 +664,7 @@ const KaraokeJsonGenerator = () => {
                                                     <path d="M9 18V5l12-2v13"></path>
                                                     <circle cx="6" cy="18" r="3"></circle>
                                                 </svg>
-                                                {lyric.pitchTargets.length} Pitch-Punkte
+                                                {index === currentLyricIndex ? "(Aktiv)" : ""}
                                             </span>
                                         </div>
                                         <div className="lyric-input-container">
@@ -753,7 +758,7 @@ const KaraokeJsonGenerator = () => {
                         <section className="card">
                             <h2 className="card-title">
                                 <span className="card-number">5</span>
-                                Pitch analysieren
+                                Pitch aufnehmen ({globalPitchData.length} Datenpunkte)
                             </h2>
                             <div className="analysis-controls">
                                 <button
@@ -795,7 +800,7 @@ const KaraokeJsonGenerator = () => {
                                         <line x1="12" y1="19" x2="12" y2="23"></line>
                                         <line x1="8" y1="23" x2="16" y2="23"></line>
                                     </svg>
-                                    <span>{isAnalyzing ? 'Singe mit, um Pitch-Daten zu erfassen' : 'Mikrofon erforderlich'}</span>
+                                    <span>{isAnalyzing ? 'Singe, um Pitch-Daten zu erfassen' : 'Mikrofon erforderlich'}</span>
                                 </div>
                             </div>
 
@@ -831,7 +836,7 @@ const KaraokeJsonGenerator = () => {
                                         <path
                                             d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                     </svg>
-                                    <p>Starte die Analyse und singe, um Pitch-Daten zu sammeln</p>
+                                    <p>Starte die Analyse und singe, um Pitch-Daten aufzunehmen - unabhängig von den Lyrics</p>
                                 </div>
                             )}
                         </section>
