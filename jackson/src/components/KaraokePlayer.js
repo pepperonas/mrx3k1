@@ -114,7 +114,7 @@ const KaraokePlayer = () => {
             if (!isNaN(currentEndTime) && !isNaN(nextStartTime) &&
                 time >= currentEndTime && time < nextStartTime) {
                 if (debugMode) {
-                    console.log(`Time ${time.toFixed(2)} is between lyrics ${i} and ${i+1}`);
+                    console.log(`Time ${time.toFixed(2)} is between lyrics ${i} and ${i + 1}`);
                 }
                 return -1;
             }
@@ -339,8 +339,10 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {});
-                audioElement.removeEventListener('error', () => {});
+                audioElement.removeEventListener('play', () => {
+                });
+                audioElement.removeEventListener('error', () => {
+                });
             };
         }
     }, [audioUrl, songData]); // Entfernt: currentLyricIndex aus der Abhängigkeitsliste
@@ -841,7 +843,11 @@ const KaraokePlayer = () => {
                             {debugMode && (
                                 <div className="debug-container" style={{marginTop: '1rem'}}>
                                     <div>Current Lyric Index: {currentLyricIndex}</div>
-                                    <div style={{display: 'flex', gap: '0.5rem', marginTop: '0.5rem'}}>
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '0.5rem',
+                                        marginTop: '0.5rem'
+                                    }}>
                                         <button
                                             onClick={() => testSetLyricIndex(0)}
                                             className="btn btn-small btn-outline"
@@ -960,7 +966,9 @@ const KaraokePlayer = () => {
                                         <div>Datenpunkte
                                             gesamt: {songData?.pitchData?.length || 0}</div>
                                         <div>Aktuelle Zeit: {currentTime.toFixed(2)}s</div>
-                                        <div>Current Lyric Index: {currentLyricIndex} (Ref: {currentLyricIndexRef.current})</div>
+                                        <div>Current Lyric
+                                            Index: {currentLyricIndex} (Ref: {currentLyricIndexRef.current})
+                                        </div>
                                         <div>Target Pitch
                                             Daten: {JSON.stringify(currentTargetPitchData)}</div>
                                     </div>
@@ -971,7 +979,7 @@ const KaraokePlayer = () => {
                 )}
             </main>
             <footer className="app-footer">
-                jsong Karaoke Player | Made with ❤️ by Martin Pfeffer
+                Jackson Karaoke Player | Made with ❤️ by Martin Pfeffer
             </footer>
         </div>
     );

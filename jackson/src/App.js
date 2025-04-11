@@ -11,7 +11,7 @@ function App() {
         <div className="app-container">
             <nav className="app-nav">
                 <div className="nav-logo">
-                    jackson {activePage === 'generator' ? 'Generator' : 'Player'}
+                    Jackson {activePage === 'generator' ? 'Generator' : 'Player'}
                 </div>
                 <div className="nav-links">
                     <button
