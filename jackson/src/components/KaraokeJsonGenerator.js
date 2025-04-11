@@ -20,6 +20,8 @@ const KaraokeJsonGenerator = () => {
     const [batchLyricsText, setBatchLyricsText] = useState('');
     const [parsedLyrics, setParsedLyrics] = useState([]);
     const [nextLyricIndex, setNextLyricIndex] = useState(0);
+    // Neuer State für verwendete Lyrics
+    const [usedLyrics, setUsedLyrics] = useState([]);
 
     // Konfigurationsoptionen
     const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
@@ -443,6 +445,8 @@ const KaraokeJsonGenerator = () => {
 
         setParsedLyrics(lines);
         setNextLyricIndex(0);
+        // Beim Verarbeiten neuer Zeilen setzen wir die verwendeten Lyrics zurück
+        setUsedLyrics([]);
     };
 
     const addLyricFromQueue = (text, index) => {
@@ -471,6 +475,9 @@ const KaraokeJsonGenerator = () => {
         setLyrics(updatedLyrics);
 
         console.log(`Neuer Lyric aus Queue hinzugefügt: "${text}", startTime=${startTime}s, endTime=${endTime}s`);
+
+        // Markiere dieses Lyric als verwendet
+        setUsedLyrics(prev => [...prev, {text, index}]);
 
         // Nächsten Lyric in der Queue markieren
         setNextLyricIndex(index + 1);
@@ -1048,7 +1055,57 @@ const KaraokeJsonGenerator = () => {
                                         </div>
                                     </div>
 
-                                    {/* Scroll-Container für die Lyric-Buttons */}
+                                    {/* Neu: Bereich für bereits verwendete Lyrics */}
+                                    {usedLyrics.length > 0 && (
+                                        <div className="used-lyrics-container" style={{
+                                            marginBottom: '1rem',
+                                            padding: '0.75rem',
+                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            borderLeft: '4px solid var(--primary)'
+                                        }}>
+                                            <h3 style={{
+                                                margin: '0 0 0.75rem 0',
+                                                fontSize: '0.875rem',
+                                                color: 'var(--text-muted)',
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
+                                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                                </svg>
+                                                Verwendete Zeilen ({usedLyrics.length})
+                                            </h3>
+                                            <div style={{
+                                                maxHeight: '150px',
+                                                overflowY: 'auto',
+                                                paddingRight: '0.5rem'
+                                            }}>
+                                                {usedLyrics.map((lyric, idx) => (
+                                                    <div key={`used-${idx}`}
+                                                         style={{
+                                                             padding: '0.5rem 0.75rem',
+                                                             marginBottom: '0.5rem',
+                                                             backgroundColor: 'var(--inner-bg)',
+                                                             borderRadius: '0.25rem',
+                                                             fontSize: '0.875rem',
+                                                             color: 'var(--text-muted)',
+                                                             borderLeft: '3px solid var(--primary-light)',
+                                                             transition: 'all 0.3s ease',
+                                                             animation: 'slideInTop 0.5s',
+                                                         }}>
+                                                        {lyric.text}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Scroll-Container für die Lyric-Buttons - aktualisiert, um nur nicht verwendete anzuzeigen */}
                                     <div className="lyrics-queue" style={{
                                         maxHeight: '300px',
                                         overflowY: 'auto',
@@ -1058,47 +1115,55 @@ const KaraokeJsonGenerator = () => {
                                         boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
                                     }}>
                                         {parsedLyrics.length > 0 ? (
-                                            parsedLyrics.map((lyric, index) => (
-                                                <button
-                                                    key={index}
-                                                    className={`lyric-queue-btn ${nextLyricIndex === index ? 'next-lyric' : ''}`}
-                                                    onClick={() => addLyricFromQueue(lyric, index)}
-                                                    style={{
-                                                        display: 'block',
-                                                        width: '100%',
-                                                        textAlign: 'left',
-                                                        padding: '1rem',
-                                                        marginBottom: '0.5rem',
-                                                        backgroundColor: nextLyricIndex === index ? 'rgba(139, 92, 246, 0.2)' : 'var(--card-bg)',
-                                                        color: 'var(--text-light)',
-                                                        border: '1px solid',
-                                                        borderColor: nextLyricIndex === index ? 'var(--primary)' : 'var(--border-light)',
-                                                        borderRadius: '0.5rem',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s ease',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        boxShadow: nextLyricIndex === index ? '0 0 10px rgba(139, 92, 246, 0.3)' : 'none'
-                                                    }}
-                                                >
-                                                    {lyric}
-                                                    {nextLyricIndex === index && (
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            top: '0.25rem',
-                                                            right: '0.5rem',
-                                                            backgroundColor: 'var(--primary)',
-                                                            color: 'white',
-                                                            padding: '0.25rem 0.5rem',
-                                                            borderRadius: '0.25rem',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: 'bold'
-                                                        }}>
-                                                            NÄCHSTE
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            ))
+                                            parsedLyrics.map((lyric, index) => {
+                                                // Prüfe, ob dieser Lyric bereits verwendet wurde
+                                                const isUsed = usedLyrics.some(used => used.index === index);
+
+                                                // Wenn verwendet, nicht anzeigen
+                                                if (isUsed) return null;
+
+                                                return (
+                                                    <button
+                                                        key={index}
+                                                        className={`lyric-queue-btn ${nextLyricIndex === index ? 'next-lyric' : ''}`}
+                                                        onClick={() => addLyricFromQueue(lyric, index)}
+                                                        style={{
+                                                            display: 'block',
+                                                            width: '100%',
+                                                            textAlign: 'left',
+                                                            padding: '1rem',
+                                                            marginBottom: '0.5rem',
+                                                            backgroundColor: nextLyricIndex === index ? 'rgba(139, 92, 246, 0.2)' : 'var(--card-bg)',
+                                                            color: 'var(--text-light)',
+                                                            border: '1px solid',
+                                                            borderColor: nextLyricIndex === index ? 'var(--primary)' : 'var(--border-light)',
+                                                            borderRadius: '0.5rem',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease',
+                                                            position: 'relative',
+                                                            overflow: 'hidden',
+                                                            boxShadow: nextLyricIndex === index ? '0 0 10px rgba(139, 92, 246, 0.3)' : 'none'
+                                                        }}
+                                                    >
+                                                        {lyric}
+                                                        {nextLyricIndex === index && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '0.25rem',
+                                                                right: '0.5rem',
+                                                                backgroundColor: 'var(--primary)',
+                                                                color: 'white',
+                                                                padding: '0.25rem 0.5rem',
+                                                                borderRadius: '0.25rem',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 'bold'
+                                                            }}>
+                                                                NÄCHSTE
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })
                                         ) : (
                                             <div className="empty-queue" style={{
                                                 textAlign: 'center',
@@ -1129,7 +1194,7 @@ const KaraokeJsonGenerator = () => {
                                         )}
                                     </div>
 
-                                    {/* Anleitung */}
+                                    {/* Anleitung - aktualisiert */}
                                     <div style={{
                                         marginTop: '1rem',
                                         padding: '1rem',
@@ -1168,11 +1233,9 @@ const KaraokeJsonGenerator = () => {
                                             <li>Füge alle Liedzeilen oben ein</li>
                                             <li>Klicke auf "Zeilen verarbeiten"</li>
                                             <li>Spiele das Lied ab</li>
-                                            <li>Klicke auf den nächsten Lyric-Button, wenn die
-                                                Stelle im Song erreicht ist
-                                            </li>
-                                            <li>Wiederhole für alle Lyrics, bis die Liste leer ist
-                                            </li>
+                                            <li>Klicke auf den Zeilen-Button, wenn die Stelle im Song erreicht ist</li>
+                                            <li>Der Button verschwindet und die Zeile erscheint oben unter "Verwendete Zeilen"</li>
+                                            <li>Die nächste Zeile wird automatisch markiert</li>
                                         </ol>
                                     </div>
                                 </div>
