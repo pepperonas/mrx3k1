@@ -25,6 +25,9 @@ const KaraokeJsonGenerator = () => {
     const analyser = useRef(null);
     const microphone = useRef(null);
 
+    const lastValidLyricIndexRef = useRef(-1);
+    const checkingLyricIndexRef = useRef(false);
+
     // Handle file upload
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -55,27 +58,61 @@ const KaraokeJsonGenerator = () => {
     useEffect(() => {
         if (audioRef.current) {
             const updateTime = () => {
-                setCurrentTime(audioRef.current.currentTime);
+                // Setze Flag, dass wir gerade prüfen
+                checkingLyricIndexRef.current = true;
 
-                // Find current lyric based on timestamp
-                const index = lyrics.findIndex((lyric, idx) => {
-                    const nextLyric = lyrics[idx + 1];
-                    if (nextLyric) {
-                        return audioRef.current.currentTime >= lyric.startTime &&
-                            audioRef.current.currentTime < nextLyric.startTime;
+                const newTime = audioRef.current.currentTime;
+                setCurrentTime(newTime);
+
+                // Finde aktuellen Lyric basierend auf Zeitstempel
+                if (lyrics.length > 0) {
+                    let foundIndex = -1;
+
+                    // Durchlaufe alle Lyrics und finde den passenden
+                    for (let i = 0; i < lyrics.length; i++) {
+                        const lyric = lyrics[i];
+                        const nextLyric = lyrics[i + 1];
+
+                        // Wenn wir zwischen Start und Ende sind (mit oder ohne nächsten Lyric)
+                        if (newTime >= lyric.startTime) {
+                            if (nextLyric) {
+                                if (newTime < nextLyric.startTime) {
+                                    foundIndex = i;
+                                    break;
+                                }
+                            } else {
+                                // Letzter Lyric
+                                foundIndex = i;
+                                break;
+                            }
+                        }
                     }
-                    return audioRef.current.currentTime >= lyric.startTime;
-                });
 
-                if (index !== -1) {
-                    setCurrentLyricIndex(index);
+                    console.log(`Zeit: ${newTime.toFixed(2)}s, Gefundener Index: ${foundIndex}`);
+
+                    // Wenn wir einen gültigen Index gefunden haben, speichern wir ihn
+                    if (foundIndex >= 0) {
+                        lastValidLyricIndexRef.current = foundIndex;
+                        console.log(`Letzter gültiger Index aktualisiert: ${foundIndex}`);
+                    }
+
+                    // Wenn der gefundene Index sich vom aktuellen unterscheidet
+                    if (foundIndex !== currentLyricIndex) {
+                        console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex}`);
+
+                        // Verwende ausdrücklich den gefundenen Index
+                        setCurrentLyricIndex(foundIndex);
+                    }
                 }
+
+                // Unser Check ist abgeschlossen
+                checkingLyricIndexRef.current = false;
             };
 
             const timeUpdateInterval = setInterval(updateTime, 100);
             return () => clearInterval(timeUpdateInterval);
         }
-    }, [lyrics]);
+    }, [lyrics, currentLyricIndex]);
 
     // Play/pause audio
     const togglePlayback = () => {
@@ -109,9 +146,32 @@ const KaraokeJsonGenerator = () => {
             pitchTargets: []
         };
 
-        setLyrics([...lyrics, newLyric]);
-    };
+        const updatedLyrics = [...lyrics, newLyric];
+        setLyrics(updatedLyrics);
 
+        console.log(`Neuer Lyric hinzugefügt: startTime=${startTime}s, endTime=${endTime}s`);
+        console.log(`Aktuelle Lyrics-Array Länge: ${updatedLyrics.length}`);
+
+        // Finde den passenden Index für die aktuelle Zeit
+        // und setze ihn als letzten gültigen Index
+        const newIndex = updatedLyrics.findIndex((lyric, idx) => {
+            const nextLyric = updatedLyrics[idx + 1];
+            if (nextLyric) {
+                return currentTime >= lyric.startTime && currentTime < nextLyric.startTime;
+            }
+            return currentTime >= lyric.startTime;
+        });
+
+        if (newIndex >= 0) {
+            // Wichtig: Speichere den Index sowohl im State als auch in der Ref
+            setCurrentLyricIndex(newIndex);
+            lastValidLyricIndexRef.current = newIndex;
+            console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (gespeichert)`);
+        } else {
+            console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (nicht gültig)`);
+        }
+    };
+    
     // Update lyric text
     const updateLyricText = (id, text) => {
         setLyrics(lyrics.map(lyric =>
@@ -170,8 +230,8 @@ const KaraokeJsonGenerator = () => {
         const nyquist = 22050; // Half the sample rate
         const frequency = maxIndex * nyquist / frequencyData.length;
 
-        // Only return if we have a significant peak
-        if (maxValue > 100) {
+        // Niedrigerer Schwellenwert (50 statt 100), um mehr Pitches zu erkennen
+        if (maxValue > 50) {
             // Convert frequency to MIDI note number
             // f = 440 * 2^((n-69)/12)
             // n = 12 * log2(f/440) + 69
@@ -188,19 +248,55 @@ const KaraokeJsonGenerator = () => {
 
         try {
             await Tone.start();
+            console.log("Tone.js erfolgreich initialisiert");
 
             microphone.current = new Tone.UserMedia();
             await microphone.current.open();
+            console.log("Mikrofon erfolgreich geöffnet");
 
             analyser.current = new Tone.Analyser('fft', 1024);
             microphone.current.connect(analyser.current);
+            console.log("Analyzer mit Mikrofon verbunden");
 
             const analyzeInterval = setInterval(() => {
                 if (analyser.current) {
                     const frequencyData = analyser.current.getValue();
-                    const pitch = detectPitch(frequencyData);
 
-                    if (pitch && currentLyricIndex >= 0) {
+                    // Finde den maximalen Wert (auch negative)
+                    let maxValue = -Infinity;
+                    let maxIndex = 0;
+
+                    for (let i = 0; i < frequencyData.length; i++) {
+                        if (frequencyData[i] > maxValue) {
+                            maxValue = frequencyData[i];
+                            maxIndex = i;
+                        }
+                    }
+
+                    // Konvertiere zu absoluten Wert für Schwellenwert
+                    const absValue = Math.abs(maxValue);
+
+                    // Pitch erkennen, wenn Wert über Schwelle
+                    let pitch = null;
+                    if (absValue > 20) {
+                        // Convert FFT bin index to frequency
+                        const nyquist = 22050; // Half the sample rate
+                        const frequency = maxIndex * nyquist / frequencyData.length;
+
+                        // Konvertiere zu MIDI Notennummer
+                        const noteNumber = 12 * Math.log2(frequency / 440) + 69;
+                        pitch = Math.round(noteNumber);
+                    }
+
+                    // Wichtig: Verwende den letzten gültigen Index aus der Ref, wenn gerade kein Update läuft
+                    const effectiveLyricIndex = checkingLyricIndexRef.current ? currentLyricIndex :
+                        (currentLyricIndex >= 0 ? currentLyricIndex : lastValidLyricIndexRef.current);
+
+                    console.log(`Max Freq: ${maxValue.toFixed(1)}, Pitch: ${pitch || 'keiner'}, ` +
+                        `Lyric Index: ${currentLyricIndex}, Effektiver Index: ${effectiveLyricIndex}`);
+
+                    if (pitch && effectiveLyricIndex >= 0) {
+                        // PitchData für Visualisierung aktualisieren
                         const newPitchData = [...pitchData];
                         newPitchData.push({
                             time: currentTime,
@@ -208,16 +304,15 @@ const KaraokeJsonGenerator = () => {
                         });
                         setPitchData(newPitchData);
 
-                        // Add pitch target to current lyric if it's a significant note
-                        if (pitch > 30) {
-                            const updatedLyrics = [...lyrics];
-                            if (updatedLyrics[currentLyricIndex]) {
-                                updatedLyrics[currentLyricIndex].pitchTargets.push({
-                                    time: currentTime - updatedLyrics[currentLyricIndex].startTime,
-                                    pitch: pitch
-                                });
-                                setLyrics(updatedLyrics);
-                            }
+                        // Pitch-Target zum aktuellen Lyric hinzufügen
+                        const updatedLyrics = [...lyrics];
+                        if (updatedLyrics[effectiveLyricIndex]) {
+                            updatedLyrics[effectiveLyricIndex].pitchTargets.push({
+                                time: currentTime - updatedLyrics[effectiveLyricIndex].startTime,
+                                pitch: pitch
+                            });
+                            setLyrics(updatedLyrics);
+                            console.log(`Pitch ${pitch} hinzugefügt, jetzt ${updatedLyrics[effectiveLyricIndex].pitchTargets.length} Targets für Lyric "${updatedLyrics[effectiveLyricIndex].text}"`);
                         }
                     }
                 }
@@ -232,6 +327,7 @@ const KaraokeJsonGenerator = () => {
         } catch (err) {
             console.error("Error accessing microphone:", err);
             setIsAnalyzing(false);
+            alert("Fehler beim Zugriff auf das Mikrofon: " + err.message);
         }
     };
 

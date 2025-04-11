@@ -1,489 +1,392 @@
 import React, {useEffect, useRef, useState} from 'react';
 import * as Tone from 'tone';
 import '../App.css';
-import '../Player.css';
-import '../Debug.css';
-import LyricsDisplay from './LyricsDisplay';
 
-const KaraokePlayer = () => {
-    const [songData, setSongData] = useState(null);
+const KaraokeJsonGenerator = () => {
     const [audioFile, setAudioFile] = useState(null);
     const [audioUrl, setAudioUrl] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [lyrics, setLyrics] = useState([]);
+    const [jsonOutput, setJsonOutput] = useState('');
+    const [pitchData, setPitchData] = useState([]);
     const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [currentPitch, setCurrentPitch] = useState(null);
-    const [targetPitch, setTargetPitch] = useState(null);
-    const [score, setScore] = useState(0);
-    const [pitchHistory, setPitchHistory] = useState([]);
-    const [showUpload, setShowUpload] = useState(true);
-    const [debugMode, setDebugMode] = useState(false);
-    const [isDefaultLoaded, setIsDefaultLoaded] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+
+    // Neue Konfigurationsoptionen
+    const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
+    const [markerOffset, setMarkerOffset] = useState(-2);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [generateEmptyPitchTargets, setGenerateEmptyPitchTargets] = useState(true);
+    const [autoSortLyrics, setAutoSortLyrics] = useState(true);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
     const microphone = useRef(null);
-    const lyricsDisplayRef = useRef(null);
-    const timeUpdateIntervalRef = useRef(null);
-    const firstPlayRef = useRef(true);
 
-    // Default-Assets laden
-    // Direktes Laden der Demo mit vordefinierten Daten
-    const loadDemoAndStart = () => {
-        try {
-            setIsLoading(true);
+    // Neue Refs für stabilere Datenhaltung
+    const lastValidLyricIndexRef = useRef(-1);
+    const checkingLyricIndexRef = useRef(false);
+    const pitchTargetsRef = useRef({});  // Speichert Pitch-Targets für jeden Lyric
+    const lyricTextInputsRef = useRef({}); // Speichert Texteingaben temporär
+    const uiRefreshBlockerRef = useRef(false); // Verhindert zu häufige UI-Updates
 
-            // Definiere die Pfade
-            const jsonPath = '/jsong/assets/json/ohne_benzin.json';
-            const audioPath = '/jsong/assets/songs/ohne_benzin.mp3';
-
-            // Lade die JSON-Datei synchron mit XMLHttpRequest
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', jsonPath, false); // false = synchron
-            xhr.send(null);
-
-            if (xhr.status === 200) {
-                // Parse JSON
-                const jsonData = JSON.parse(xhr.responseText);
-                console.log("JSON erfolgreich geladen", jsonData);
-
-                // Setze die Daten direkt
-                setSongData(jsonData);
-                setAudioUrl(audioPath);
-                setIsDefaultLoaded(true);
-
-                // Starte das Spiel nach kurzer Verzögerung
-                setTimeout(() => {
-                    setIsLoading(false);
-                    startGame();
-                }, 500);
-            } else {
-                throw new Error(`Fehler beim Laden der JSON: ${xhr.status}`);
-            }
-        } catch (error) {
-            console.error("Fehler beim Laden der Demo:", error);
-            setIsLoading(false);
-            alert("Fehler beim Laden der Demo: " + error.message);
-        }
-    };
-
-    const updateDomTime = (time) => {
-        const currentTimeElement = document.querySelector('.time-current');
-        const totalTimeElement = document.querySelector('.time-total');
-
-        if (currentTimeElement) {
-            currentTimeElement.textContent = formatTime(time);
-        }
-
-        if (totalTimeElement && audioRef.current) {
-            totalTimeElement.textContent = formatTime(audioRef.current.duration || 0);
-        }
-    };
-
-    // Finde den aktuellen Lyric-Index basierend auf der Zeit
-    const findCurrentLyricIndex = (time) => {
-        if (!songData || !songData.lyrics || songData.lyrics.length === 0) return -1;
-
-        // Direktes Debug-Logging der Zeitwerte
-        if (debugMode) {
-            console.log(`Finding lyric index for time: ${time.toFixed(2)}`);
-        }
-
-        for (let i = 0; i < songData.lyrics.length; i++) {
-            const lyric = songData.lyrics[i];
-
-            // Prüfe zuerst, ob endTime im Lyric definiert ist
-            if (lyric.hasOwnProperty('endTime')) {
-                // Verwende die explizite endTime für die Prüfung
-                if (time >= lyric.startTime && time < lyric.endTime) {
-                    if (debugMode) {
-                        console.log(`Found lyric index ${i} (${lyric.text}) using endTime: ${lyric.startTime} to ${lyric.endTime}`);
-                    }
-                    return i;
-                }
-            } else {
-                // Fallback auf die alte Methode (implizites Ende)
-                const nextLyric = songData.lyrics[i + 1];
-                if (nextLyric) {
-                    if (time >= lyric.startTime && time < nextLyric.startTime) {
-                        if (debugMode) {
-                            console.log(`Found lyric index ${i} (${lyric.text}) using next lyric: ${lyric.startTime} to ${nextLyric.startTime}`);
-                        }
-                        return i;
-                    }
-                } else if (time >= lyric.startTime) {
-                    // Letzter Lyric
-                    if (debugMode) {
-                        console.log(`Found last lyric index ${i} (${lyric.text}) starting at ${lyric.startTime}`);
-                    }
-                    return i;
-                }
-            }
-        }
-
-        // Falls keine passende Lyric gefunden wurde, aber die Zeit > 0 ist:
-        // Versuche den letzten vergangenen Lyric zu finden
-        if (time > 0) {
-            let lastPossibleIndex = -1;
-            for (let i = 0; i < songData.lyrics.length; i++) {
-                if (time >= songData.lyrics[i].startTime) {
-                    lastPossibleIndex = i;
-                } else {
-                    break; // Keine weiteren Lyrics prüfen, wenn wir schon einen zukünftigen gefunden haben
-                }
-            }
-
-            if (lastPossibleIndex >= 0) {
-                if (debugMode) {
-                    console.log(`Using last possible lyric index ${lastPossibleIndex} for time ${time.toFixed(2)}`);
-                }
-                return lastPossibleIndex;
-            }
-        }
-
-        if (debugMode) {
-            console.log(`No matching lyric found for time ${time.toFixed(2)}`);
-        }
-        return -1;
-    };
-
-    // Debug-Funktion, um Probleme zu diagnostizieren
-    const debugState = () => {
-        console.group("KaraokePlayer Debug Info");
-        console.log("Audio Element:", audioRef.current);
-        console.log("Current Time:", currentTime);
-        console.log("Duration:", duration);
-        console.log("Is Playing:", isPlaying);
-        console.log("Audio URL exists:", !!audioUrl);
-        console.log("Song Data:", songData);
-        console.log("Current Lyric Index:", currentLyricIndex);
-
-        if (songData && songData.lyrics) {
-            console.log("Lyrics count:", songData.lyrics.length);
-            console.log("Current time check:");
-
-            songData.lyrics.forEach((lyric, idx) => {
-                const nextLyric = songData.lyrics[idx + 1];
-                const isCurrentByTime = nextLyric
-                    ? (currentTime >= lyric.startTime && currentTime < nextLyric.startTime)
-                    : (currentTime >= lyric.startTime);
-
-                console.log(
-                    `Lyric ${idx}: "${lyric.text.substring(0, 15)}..." - ` +
-                    `startTime: ${lyric.startTime} - ` +
-                    `is current: ${isCurrentByTime} - ` +
-                    `matches currentLyricIndex: ${idx === currentLyricIndex}`
-                );
-            });
-        }
-
-        // DOM-Elemente überprüfen
-        if (lyricsDisplayRef.current) {
-            console.log("Lyrics Display Element:", lyricsDisplayRef.current);
-            console.log("Lyric lines:", lyricsDisplayRef.current.querySelectorAll('.lyric-line').length);
-
-            // Aktiven Lyric überprüfen
-            const activeLines = lyricsDisplayRef.current.querySelectorAll('.lyric-line.active');
-            console.log("Aktive Lyric-Zeilen:", activeLines.length);
-            if (activeLines.length > 0) {
-                console.log("Aktive Linie:", activeLines[0].textContent);
-            }
-        }
-
-        console.groupEnd();
-    };
-
-    // Handle JSON file upload
-    const handleJsonUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const jsonData = JSON.parse(event.target.result);
-                    console.log("Parsed JSON data:", jsonData);
-                    setSongData(jsonData);
-                    setIsDefaultLoaded(false);
-                } catch (error) {
-                    console.error("Error parsing JSON file:", error);
-                    alert("Fehler beim Parsen der JSON-Datei");
-                }
-            };
-            reader.readAsText(file);
-        }
-    };
-
-    // Handle audio file upload
-    const handleAudioUpload = (e) => {
+    // Handle file upload
+    const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
             setAudioFile(file);
             const url = URL.createObjectURL(file);
-            console.log("Created audio URL:", url);
             setAudioUrl(url);
-            setIsDefaultLoaded(false);
 
             // Reset states
+            setLyrics([]);
+            setPitchData([]);
             setIsPlaying(false);
             setCurrentTime(0);
-            setScore(0);
-            setPitchHistory([]);
-            setCurrentLyricIndex(-1);
+            setJsonOutput('');
         }
     };
 
     // Initialize audio element
     useEffect(() => {
         if (audioRef.current && audioUrl) {
-            console.log("Audio URL changed, setting up listeners");
-
-            // Wichtig: Speichere eine Referenz zum aktuellen Audio-Element
-            const audioElement = audioRef.current;
-
-            // Forciere das erneute Laden
-            audioElement.load();
-
-            // Metadaten-Listener
-            const handleMetadata = () => {
-                console.log("Metadata loaded, duration:", audioElement.duration);
-                setDuration(audioElement.duration);
+            audioRef.current.onloadedmetadata = () => {
+                setDuration(audioRef.current.duration);
             };
+        }
+    }, [audioUrl]);
 
-            // Aktualisiere Zeit bei jedem Zeitupdate
-            const handleTimeUpdate = () => {
-                const newTime = audioElement.currentTime;
+    // Update current time when audio is playing - VERBESSERT
+    useEffect(() => {
+        if (audioRef.current) {
+            const updateTime = () => {
+                // Aktualisiere Zeit ohne UI-Refresh zu triggern
+                const newTime = audioRef.current.currentTime;
+
+                // Nur Zeit-Update, kein Lyric-Index-Update
                 setCurrentTime(newTime);
-                updateDomTime(newTime);
 
-                // Finde den aktuellen Lyric basierend auf der Zeit
-                const foundIndex = findCurrentLyricIndex(newTime);
+                // Finde aktuellen Lyric nur alle 500ms (reduziert UI-Updates)
+                if (!uiRefreshBlockerRef.current) {
+                    uiRefreshBlockerRef.current = true;
 
-                // Setze den aktuellen Lyric-Index
-                if (foundIndex !== -1 && foundIndex !== currentLyricIndex) {
-                    setCurrentLyricIndex(foundIndex);
-                    updateTargetPitch(foundIndex, newTime);
-                }
+                    // Finde aktuellen Lyric
+                    if (lyrics.length > 0) {
+                        let foundIndex = -1;
 
-                // Direkt prüfen, ob die aktuelle Zeit einen gültigen Lyric treffen sollte
-                const shouldHaveActiveLyric = songData && songData.lyrics && songData.lyrics.some(lyric =>
-                    newTime >= lyric.startTime &&
-                    (lyric.endTime ? newTime < lyric.endTime : true)
-                );
+                        for (let i = 0; i < lyrics.length; i++) {
+                            const lyric = lyrics[i];
+                            const nextLyric = lyrics[i + 1];
 
-                // Wenn wir einen Lyric haben sollten, aber keinen aktiven index (-1)
-                if (shouldHaveActiveLyric && currentLyricIndex === -1) {
-                    // Erzwinge ein Update mit dem gefundenen Index
-                    console.log(`Zeit ${newTime.toFixed(2)}: Forciere Update von -1 zu ${foundIndex}`);
-                    setCurrentLyricIndex(foundIndex);
-                    updateTargetPitch(foundIndex, newTime);
+                            if (newTime >= lyric.startTime) {
+                                if (nextLyric) {
+                                    if (newTime < nextLyric.startTime) {
+                                        foundIndex = i;
+                                        break;
+                                    }
+                                } else {
+                                    foundIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Setze den Index, aber nur wenn er sich ändert
+                        if (foundIndex !== currentLyricIndex) {
+                            console.log(`Lyric Index geändert: ${currentLyricIndex} -> ${foundIndex}`);
+                            setCurrentLyricIndex(foundIndex);
+                            lastValidLyricIndexRef.current = foundIndex >= 0 ? foundIndex : lastValidLyricIndexRef.current;
+                        }
+                    }
+
+                    // Erlaube Updates erst nach 500ms wieder
+                    setTimeout(() => {
+                        uiRefreshBlockerRef.current = false;
+                    }, 500);
                 }
             };
 
-            // Höre auf Events
-            audioElement.addEventListener('loadedmetadata', handleMetadata);
-            audioElement.addEventListener('timeupdate', handleTimeUpdate);
-            audioElement.addEventListener('durationchange', handleMetadata);
-            audioElement.addEventListener('play', () => console.log("Audio play event"));
-            audioElement.addEventListener('error', (e) => console.error("Audio error:", e));
-
-            // Falls das Element bereits geladen ist
-            if (audioElement.readyState >= 1) {
-                setDuration(audioElement.duration);
-            }
-
-            // Cleanup
-            return () => {
-                audioElement.removeEventListener('loadedmetadata', handleMetadata);
-                audioElement.removeEventListener('timeupdate', handleTimeUpdate);
-                audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {
-                });
-                audioElement.removeEventListener('error', () => {
-                });
-            };
+            const timeUpdateInterval = setInterval(updateTime, 100);
+            return () => clearInterval(timeUpdateInterval);
         }
-    }, [audioUrl, songData, currentLyricIndex]);
-
-    // Separate Funktion für Pitch-Target-Updates
-    const updateTargetPitch = (lyricIndex, time) => {
-        if (!songData || !songData.lyrics || lyricIndex === -1) {
-            setTargetPitch(null);
-            return;
-        }
-
-        const currentLyric = songData.lyrics[lyricIndex];
-
-        // Get the pitch target closest to current time
-        if (currentLyric.pitchTargets && currentLyric.pitchTargets.length > 0) {
-            const relativeTime = time - currentLyric.startTime;
-            let closestTarget = currentLyric.pitchTargets[0];
-            let minDiff = Math.abs(relativeTime - closestTarget.time);
-
-            for (let i = 1; i < currentLyric.pitchTargets.length; i++) {
-                const target = currentLyric.pitchTargets[i];
-                const diff = Math.abs(relativeTime - target.time);
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    closestTarget = target;
-                }
-            }
-
-            // Only update if we're close enough to the target
-            if (minDiff < 0.5) {
-                setTargetPitch(closestTarget.pitch);
-            } else {
-                setTargetPitch(null);
-            }
-        } else {
-            setTargetPitch(null);
-        }
-    };
+    }, [lyrics, currentLyricIndex]);
 
     // Play/pause audio
-    const togglePlayback = async () => {
+    const togglePlayback = () => {
         if (audioRef.current) {
-            try {
-                if (debugMode) {
-                    debugState();
-                }
-
-                // Starte Tone.js nur beim ersten Klick
-                if (firstPlayRef.current) {
-                    await Tone.start();
-                    console.log('Tone.js context started successfully');
-                    firstPlayRef.current = false;
-                }
-
-                if (isPlaying) {
-                    console.log("Pausing audio");
-                    audioRef.current.pause();
-                } else {
-                    console.log("Starting audio playback");
-                    try {
-                        // WICHTIG: Setze currentTime auf einen kleinen Wert größer als 0,
-                        // falls die Zeit 0 ist, um timeupdate-Events zu triggern
-                        if (audioRef.current.currentTime === 0) {
-                            audioRef.current.currentTime = 0.01;
-                        }
-
-                        // Versuche abzuspielen
-                        const playPromise = audioRef.current.play();
-                        if (playPromise !== undefined) {
-                            playPromise
-                                .then(() => console.log("Audio playback started successfully"))
-                                .catch(error => {
-                                    console.error('Error playing audio:', error);
-                                    alert("Fehler beim Abspielen der Audio-Datei: " + error.message);
-                                });
-                        }
-
-                        if (!isAnalyzing) {
-                            startPitchAnalysis();
-                        }
-                    } catch (error) {
-                        console.error('Error during play attempt:', error);
-                        alert("Fehler beim Abspielen: " + error.message);
-                    }
-                }
-                setIsPlaying(!isPlaying);
-            } catch (err) {
-                console.error('Failed to start audio context:', err);
-                alert("Fehler beim Starten des Audio-Kontexts: " + err.message);
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
             }
-        } else {
-            console.error("Audio reference is not available");
-            alert("Audio-Element nicht verfügbar");
+            setIsPlaying(!isPlaying);
         }
     };
 
-    // Detect pitch from frequency data
+    // Add new lyric line with default endTime - VERBESSERT
+    const addLyricLine = () => {
+        // Berechne die Startzeit mit dem Offset
+        const offsetStartTime = currentTime + markerOffset;
+        const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
+        const calculatedEndTime = startTime + defaultEndTimeDuration;
+        const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
+
+        const newLyric = {
+            id: Date.now(),
+            text: '',
+            startTime: startTime,
+            endTime: endTime,
+            pitchTargets: []
+        };
+
+        // Aktualisiere lokalen State
+        const updatedLyrics = [...lyrics, newLyric];
+        setLyrics(updatedLyrics);
+
+        console.log(`Neuer Lyric hinzugefügt: startTime=${startTime}s, endTime=${endTime}s`);
+        console.log(`Aktuelle Lyrics-Array Länge: ${updatedLyrics.length}`);
+
+        // Finde passenden Index, aber ohne sofortiges UI-Update
+        const newIndex = updatedLyrics.findIndex((lyric, idx) => {
+            const nextLyric = updatedLyrics[idx + 1];
+            if (nextLyric) {
+                return currentTime >= lyric.startTime && currentTime < nextLyric.startTime;
+            }
+            return currentTime >= lyric.startTime;
+        });
+
+        if (newIndex >= 0) {
+            lastValidLyricIndexRef.current = newIndex;
+
+            // Verzögere das Index-Update um UI-Flickering zu verhindern
+            setTimeout(() => {
+                setCurrentLyricIndex(newIndex);
+                console.log(`Nach Hinzufügen: Zeit=${currentTime.toFixed(2)}s, Index=${newIndex} (gespeichert)`);
+            }, 100);
+        }
+    };
+
+    // Update lyric text - VERBESSERT
+    const updateLyricText = (id, text) => {
+        // Speichere Text in Ref für schnelles Zugreifen ohne UI-Update
+        lyricTextInputsRef.current[id] = text;
+
+        // Throttle das Update des Lyrics-Arrays (weniger UI-Updates)
+        if (!uiRefreshBlockerRef.current) {
+            uiRefreshBlockerRef.current = true;
+
+            setTimeout(() => {
+                // Sammle alle Textänderungen und wende sie auf einmal an
+                const updatedLyrics = lyrics.map(lyric => {
+                    if (lyricTextInputsRef.current[lyric.id] !== undefined) {
+                        return {...lyric, text: lyricTextInputsRef.current[lyric.id]};
+                    }
+                    return lyric;
+                });
+
+                setLyrics(updatedLyrics);
+                uiRefreshBlockerRef.current = false;
+            }, 500); // Verzögerung für Updates
+        }
+    };
+
+    // Update lyric startTime
+    const updateLyricStartTime = (id, startTime) => {
+        const numStartTime = parseFloat(startTime);
+        if (!isNaN(numStartTime)) {
+            // Runde auf eine Dezimalstelle
+            const roundedStartTime = Math.round(numStartTime * 10) / 10;
+            setLyrics(lyrics.map(lyric => {
+                if (lyric.id === id) {
+                    // Passe die endTime an, falls die startTime größer wird
+                    const endTime = Math.max(lyric.endTime, roundedStartTime + 0.1);
+                    return {...lyric, startTime: roundedStartTime, endTime};
+                }
+                return lyric;
+            }));
+        }
+    };
+
+    // Update lyric endTime
+    const updateLyricEndTime = (id, endTime) => {
+        const numEndTime = parseFloat(endTime);
+        if (!isNaN(numEndTime)) {
+            // Runde auf eine Dezimalstelle
+            const roundedEndTime = Math.round(numEndTime * 10) / 10;
+            setLyrics(lyrics.map(lyric => {
+                if (lyric.id === id) {
+                    // Stelle sicher, dass endTime größer als startTime ist
+                    const validEndTime = Math.max(roundedEndTime, lyric.startTime + 0.1);
+                    return {...lyric, endTime: validEndTime};
+                }
+                return lyric;
+            }));
+        }
+    };
+
+    // Detect pitch from frequency data - VERBESSERT
     const detectPitch = (frequencyData) => {
-        // Simple implementation - find the dominant frequency
+        // Finde den höchsten Wert und seinen Index
         let maxIndex = 0;
-        let maxValue = 0;
+        let maxValue = -Infinity; // Starte bei minus unendlich um sicherzustellen, dass negative Werte auch erfasst werden
+
+        // Ausgabe der ersten 10 Werte für Debugging
+        console.log("FFT Samples:", Array.from(frequencyData).slice(0, 10));
 
         for (let i = 0; i < frequencyData.length; i++) {
-            if (frequencyData[i] > maxValue) {
-                maxValue = frequencyData[i];
+            // Konvertiere zu number falls es ein TypedArray ist
+            const value = Number(frequencyData[i]);
+            if (value > maxValue) {
+                maxValue = value;
                 maxIndex = i;
             }
         }
 
-        // Convert FFT bin index to frequency
-        const nyquist = 22050; // Half the sample rate
-        const frequency = maxIndex * nyquist / frequencyData.length;
+        // Debug-Ausgabe zum Status
+        console.log(`FFT Max Value: ${maxValue} at index ${maxIndex}`);
 
-        // Only return if we have a significant peak
-        if (maxValue > 100) {
-            // Convert frequency to MIDI note number
-            // f = 440 * 2^((n-69)/12)
-            // n = 12 * log2(f/440) + 69
+        // Wir ignorieren den negativen Wert und arbeiten nur mit dem absoluten Betrag
+        const absValue = Math.abs(maxValue);
+
+        // Deutlich reduzierter Schwellenwert (von 100 auf 20)
+        if (absValue > 20) {
+            // Convert FFT bin index to frequency
+            const nyquist = 22050; // Half the sample rate
+            const frequency = maxIndex * nyquist / frequencyData.length;
+
+            // Konvertiere zu MIDI Notennummer
             const noteNumber = 12 * Math.log2(frequency / 440) + 69;
-            return Math.round(noteNumber);
+            const roundedNote = Math.round(noteNumber);
+
+            console.log(`Erkannte Frequenz: ${frequency.toFixed(1)} Hz, MIDI Note: ${roundedNote}`);
+            return roundedNote;
+        } else {
+            console.log(`Schwellenwert nicht erreicht: ${absValue} < 20`);
         }
 
         return null;
     };
 
-    // Start pitch analysis
+    // NEUE FUNKTION: Synchronisiere Pitch-Targets mit Lyrics
+    const syncPitchTargetsToLyrics = () => {
+        // Kopiere aktuelle Lyrics
+        const updatedLyrics = [...lyrics];
+
+        // Füge die gesammelten Pitch-Targets hinzu
+        Object.keys(pitchTargetsRef.current).forEach(index => {
+            const numIndex = parseInt(index);
+            if (updatedLyrics[numIndex]) {
+                updatedLyrics[numIndex].pitchTargets = [...pitchTargetsRef.current[numIndex]];
+            }
+        });
+
+        // Aktualisiere den State (löst Rerendering aus)
+        setLyrics(updatedLyrics);
+        console.log("Pitch-Targets mit Lyrics synchronisiert");
+    };
+
+    // Analyze pitch for microphone input - KOMPLETT ÜBERARBEITET
     const startPitchAnalysis = async () => {
         setIsAnalyzing(true);
 
         try {
-            // Tone.js wird bereits in togglePlayback initialisiert
+            await Tone.start();
+            console.log("Tone.js erfolgreich initialisiert");
 
             microphone.current = new Tone.UserMedia();
             await microphone.current.open();
-            console.log("Microphone access granted");
+            console.log("Mikrofon erfolgreich geöffnet");
 
             analyser.current = new Tone.Analyser('fft', 1024);
             microphone.current.connect(analyser.current);
+            console.log("Analyzer mit Mikrofon verbunden");
+
+            // Füge eine Force-Recording-Variable hinzu
+            let forceRecording = false;
+            // Button zum Umschalten hinzufügen
+            const forceRecordingButton = document.createElement('button');
+            forceRecordingButton.innerHTML = "Force Recording: OFF";
+            forceRecordingButton.style.padding = "8px";
+            forceRecordingButton.style.background = "#333";
+            forceRecordingButton.style.color = "white";
+            forceRecordingButton.style.border = "1px solid #666";
+            forceRecordingButton.style.borderRadius = "4px";
+            forceRecordingButton.style.marginLeft = "10px";
+
+            // Füge den Button neben dem Analyse-Button ein
+            const analysisControls = document.querySelector('.analysis-controls');
+            if (analysisControls) {
+                analysisControls.appendChild(forceRecordingButton);
+            }
+
+            forceRecordingButton.addEventListener('click', () => {
+                forceRecording = !forceRecording;
+                forceRecordingButton.innerHTML = `Force Recording: ${forceRecording ? 'ON' : 'OFF'}`;
+                forceRecordingButton.style.background = forceRecording ? "#8b5cf6" : "#333";
+                console.log(`Force Recording: ${forceRecording ? 'ON' : 'OFF'}`);
+            });
 
             const analyzeInterval = setInterval(() => {
                 if (analyser.current) {
                     const frequencyData = analyser.current.getValue();
+                    // Pitch erkennen mit verbesserter Funktion
                     const pitch = detectPitch(frequencyData);
 
-                    if (pitch) {
-                        setCurrentPitch(pitch);
+                    // Ob wir einen Pitch haben oder nicht, wir erfassen immer den Max-Wert
+                    const maxVal = Array.from(frequencyData).reduce((max, val) => Math.max(max, val), -Infinity);
+                    console.log(`Max Freq: ${maxVal.toFixed(1)}, Pitch: ${pitch || 'keiner'}, Lyric Index: ${currentLyricIndex}`);
 
-                        // Update pitch history for visualization
-                        setPitchHistory(prev => {
-                            const newHistory = [...prev, {time: currentTime, pitch}];
-                            // Keep only the last 100 pitch values
-                            if (newHistory.length > 100) {
-                                return newHistory.slice(newHistory.length - 100);
-                            }
-                            return newHistory;
+                    // WICHTIG: Verwende den effektiven Index
+                    const effectiveLyricIndex = currentLyricIndex >= 0 ?
+                        currentLyricIndex :
+                        lastValidLyricIndexRef.current;
+
+                    // Entweder wir haben einen Pitch und einen gültigen Index, oder wir forcieren die Aufnahme
+                    if ((pitch && (effectiveLyricIndex >= 0 || forceRecording))) {
+                        // Pitch-Daten für die Visualisierung aktualisieren
+                        const newPitchData = [...pitchData];
+                        newPitchData.push({
+                            time: currentTime,
+                            pitch: pitch
                         });
+                        setPitchData(newPitchData);
 
-                        // Update score based on target pitch
-                        if (targetPitch) {
-                            const pitchDifference = Math.abs(pitch - targetPitch);
-                            if (pitchDifference <= 2) {
-                                // Perfect match
-                                setScore(prev => prev + 10);
-                            } else if (pitchDifference <= 4) {
-                                // Good match
-                                setScore(prev => prev + 5);
-                            } else if (pitchDifference <= 7) {
-                                // Okay match
-                                setScore(prev => prev + 2);
+                        // Nur wenn wir einen gültigen Index haben ODER im Force-Modus sind
+                        if (effectiveLyricIndex >= 0) {
+                            // WICHTIG: Speicher die Pitch-Targets in der Ref statt direkt in lyrics
+                            // Dies verhindert zu viele State-Updates und UI-Rerender
+                            if (!pitchTargetsRef.current[effectiveLyricIndex]) {
+                                pitchTargetsRef.current[effectiveLyricIndex] = [];
                             }
+
+                            // Füge Pitch-Target zur Ref hinzu
+                            pitchTargetsRef.current[effectiveLyricIndex].push({
+                                time: currentTime - lyrics[effectiveLyricIndex].startTime,
+                                pitch: pitch
+                            });
+
+                            const targetCount = pitchTargetsRef.current[effectiveLyricIndex].length;
+                            console.log(`Pitch ${pitch} hinzugefügt, jetzt ${targetCount} Targets für Lyric "${lyrics[effectiveLyricIndex].text || '(kein Text)'}" bei Index ${effectiveLyricIndex}`);
+
+                            // Nur alle 5 Targets den State aktualisieren
+                            if (targetCount % 5 === 0) {
+                                syncPitchTargetsToLyrics();
+                            }
+                        } else if (forceRecording) {
+                            console.log(`Force Recording aktiv: Pitch ${pitch} erfasst, aber kein Lyric ausgewählt.`);
                         }
                     }
                 }
-            }, 100);
-
-            timeUpdateIntervalRef.current = analyzeInterval;
+            }, 200);
 
             return () => {
-                if (timeUpdateIntervalRef.current) {
-                    clearInterval(timeUpdateIntervalRef.current);
+                if (forceRecordingButton.parentNode) {
+                    forceRecordingButton.parentNode.removeChild(forceRecordingButton);
                 }
+
+                clearInterval(analyzeInterval);
                 if (microphone.current) {
                     microphone.current.close();
                 }
@@ -491,230 +394,143 @@ const KaraokePlayer = () => {
         } catch (err) {
             console.error("Error accessing microphone:", err);
             setIsAnalyzing(false);
+            alert("Fehler beim Zugriff auf das Mikrofon: " + err.message);
         }
     };
 
     // Stop pitch analysis
     const stopPitchAnalysis = () => {
         setIsAnalyzing(false);
-        if (timeUpdateIntervalRef.current) {
-            clearInterval(timeUpdateIntervalRef.current);
-        }
         if (microphone.current) {
             microphone.current.close();
         }
     };
 
-    // Get accuracy color based on pitch difference
-    const getAccuracyColor = () => {
-        if (!currentPitch || !targetPitch) return '#6B7280'; // Gray
+    // NEUE FUNKTION: Vorbereitung für JSON-Generierung
+    const prepareJsonGeneration = () => {
+        // Synchronisiere alle Pitch-Targets mit den Lyrics vor der JSON-Generierung
+        syncPitchTargetsToLyrics();
 
-        const difference = Math.abs(currentPitch - targetPitch);
+        // Kleine Verzögerung, damit React Zeit hat, den State zu aktualisieren
+        return new Promise(resolve => setTimeout(resolve, 200));
+    };
 
-        if (difference <= 2) return '#10B981'; // Green - perfect
-        if (difference <= 4) return '#FBBF24'; // Yellow - good
-        if (difference <= 7) return '#F59E0B'; // Orange - okay
-        return '#EF4444'; // Red - off
+    // Generate JSON output with endTime for each lyric - VERBESSERT
+    const generateJson = async () => {
+        // Stelle sicher, dass alle Pitch-Targets im lyrics-Array sind
+        await prepareJsonGeneration();
+
+        // Sortiere Lyrics nach startTime für korrekte endTime-Berechnung, wenn Option aktiviert
+        let processedLyrics = [...lyrics];
+
+        if (autoSortLyrics) {
+            processedLyrics.sort((a, b) => a.startTime - b.startTime);
+        }
+
+        // Verarbeite die Lyrics, um die endTime zu inkludieren oder zu korrigieren
+        processedLyrics = processedLyrics.map((lyric, index) => {
+            // Basisinformationen
+            const processedLyric = {
+                text: lyric.text,
+                startTime: parseFloat(lyric.startTime.toFixed(2)),
+                endTime: parseFloat(lyric.endTime.toFixed(2))
+            };
+
+            // Wenn es das letzte Lyric ist und die endTime über der Dauer liegt, korrigieren
+            if (index === processedLyrics.length - 1 && processedLyric.endTime > duration) {
+                processedLyric.endTime = parseFloat(duration.toFixed(2));
+            }
+
+            // Bei auto sort, stelle sicher, dass endTime nicht die startTime des nächsten Lyrics überschreitet
+            if (autoSortLyrics && index < processedLyrics.length - 1) {
+                const nextStartTime = processedLyrics[index + 1].startTime;
+                if (processedLyric.endTime > nextStartTime) {
+                    processedLyric.endTime = parseFloat(nextStartTime.toFixed(2));
+                }
+            }
+
+            // PitchTargets einschließen, falls vorhanden oder wenn leere Arrays erzwungen werden
+            if (lyric.pitchTargets.length > 0 || generateEmptyPitchTargets) {
+                processedLyric.pitchTargets = lyric.pitchTargets.map(target => ({
+                    time: parseFloat(target.time.toFixed(2)),
+                    pitch: parseFloat(target.pitch.toFixed(2))
+                }));
+            }
+
+            return processedLyric;
+        });
+
+        const output = {
+            songName: audioFile?.name.replace(/\.[^/.]+$/, "") || "Unnamed Song",
+            duration: parseFloat(duration.toFixed(6)),
+            lyrics: processedLyrics
+        };
+
+        setJsonOutput(JSON.stringify(output, null, 2));
+    };
+
+    // Download JSON file
+    const downloadJson = () => {
+        if (!jsonOutput) return;
+
+        const blob = new Blob([jsonOutput], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${audioFile?.name.replace(/\.[^/.]+$/, "")}_karaoke.json` || "karaoke_data.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     // Format time as MM:SS
     const formatTime = (time) => {
-        if (isNaN(time) || time === undefined) return "00:00";
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    // Start the game (hide uploads and show player)
-    const startGame = async () => {
-        if (songData && audioUrl) {
-            try {
-                await Tone.start();
-                console.log('Tone.js context started successfully');
-                firstPlayRef.current = false;
-            } catch (err) {
-                console.error('Failed to start Tone.js context:', err);
-            }
-            setShowUpload(false);
-        } else {
-            alert("Bitte lade sowohl eine JSON-Datei als auch eine Audio-Datei hoch");
-        }
-    };
-
-    // Reset the game
-    const resetGame = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-        }
-        setShowUpload(true);
-        setIsPlaying(false);
-        setCurrentTime(0);
-        setScore(0);
-        setPitchHistory([]);
-        setCurrentLyricIndex(-1);
-        stopPitchAnalysis();
-    };
-
-    // Seek audio to specific position when clicking progress bar
-    const handleProgressClick = (e) => {
-        if (audioRef.current && duration > 0) {
-            const container = e.currentTarget;
-            const rect = container.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const percentage = x / rect.width;
-            const newTime = percentage * duration;
-
-            audioRef.current.currentTime = newTime;
-            setCurrentTime(newTime);
-
-            console.log(`Seek to time: ${newTime.toFixed(2)}`);
-        }
-    };
-
     return (
         <div className="app-container">
             <main className="app-main">
-                {showUpload ? (
-                    <section className="card">
-                        <h2 className="card-title">
-                            <span className="card-number">1</span>
-                            Dateien hochladen oder Demo nutzen
-                        </h2>
+                {/* Audio upload section */}
+                <section className="card">
+                    <h2 className="card-title">
+                        <span className="card-number">1</span>
+                        Audio hochladen
+                    </h2>
+                    <label className="file-upload">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                             strokeLinejoin="round">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                        <p className="file-upload-text">{audioFile ? audioFile.name : 'MP3-Datei auswählen'}</p>
+                        <p className="file-upload-hint">{!audioFile && 'oder hierher ziehen'}</p>
+                        <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={handleFileUpload}
+                        />
+                    </label>
+                </section>
 
-                        <div className="upload-container">
-                            <label className="file-upload">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2"
-                                     strokeLinecap="round" strokeLinejoin="round">
-                                    <path
-                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                                <p className="file-upload-text">{songData && !isDefaultLoaded ? 'JSON geladen: ' + songData.songName : 'JSON Datei auswählen'}</p>
-                                <p className="file-upload-hint">{!songData && '(Mit dem jsong Generator erstellt)'}</p>
-                                <input
-                                    type="file"
-                                    accept="application/json"
-                                    onChange={handleJsonUpload}
-                                />
-                            </label>
-
-                            <label className="file-upload">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2"
-                                     strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M9 18V5l12-2v13"></path>
-                                    <circle cx="6" cy="18" r="3"></circle>
-                                    <circle cx="18" cy="16" r="3"></circle>
-                                </svg>
-                                <p className="file-upload-text">{audioFile && !isDefaultLoaded ? audioFile.name : 'MP3 Datei auswählen'}</p>
-                                <p className="file-upload-hint">{!audioFile && '(Passend zur JSON Datei)'}</p>
-                                <input
-                                    type="file"
-                                    accept="audio/*"
-                                    onChange={handleAudioUpload}
-                                />
-                            </label>
-                        </div>
-
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            gap: '1rem',
-                            marginTop: '1.5rem'
-                        }}>
-                            <button
-                                onClick={startGame}
-                                className={`btn ${songData && audioUrl && !isLoading ? 'btn-success' : 'btn-disabled'}`}
-                                disabled={!songData || !audioUrl || isLoading}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2"
-                                     strokeLinecap="round" strokeLinejoin="round">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                Spiel starten
-                            </button>
-
-                            <button
-                                onClick={loadDemoAndStart}
-                                className={`btn btn-primary ${isLoading ? 'btn-disabled' : ''}`}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <span>Wird geladen...</span>
-                                ) : (
-                                    <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" strokeWidth="2"
-                                             strokeLinecap="round" strokeLinejoin="round">
-                                            <path
-                                                d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                        </svg>
-                                        Demo laden
-                                    </>
-                                )}
-                            </button>
-                        </div>
-
-                        <div className="debug-container">
-                            <label className="debug-checkbox">
-                                <input
-                                    type="checkbox"
-                                    checked={debugMode}
-                                    onChange={() => setDebugMode(!debugMode)}
-                                />
-                                Debug-Modus
-                            </label>
-                        </div>
-                    </section>
-                ) : (
+                {audioUrl && (
                     <>
-                        {/* Karaoke Player UI */}
-                        <section className="card player-card">
-                            <div className="player-header">
-                                <div className="song-info">
-                                    <h2 className="song-title">{songData.songName}</h2>
-                                    <div className="player-score">
-                                        <span className="score-label">Punkte:</span>
-                                        <span className="score-value">{score}</span>
-                                    </div>
-                                </div>
+                        {/* Audio player */}
+                        <section className="card">
+                            <h2 className="card-title">
+                                <span className="card-number">2</span>
+                                Audio steuern
+                            </h2>
 
-                                <div style={{display: 'flex', gap: '8px'}}>
-                                    <button
-                                        onClick={resetGame}
-                                        className="btn btn-small btn-outline"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" strokeWidth="2"
-                                             strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
-                                            <path d="M22 11.5A10 10 0 0 0 3 9"></path>
-                                            <path d="M2 13a10 10 0 0 0 18.5 3"></path>
-                                        </svg>
-                                        Neues Lied
-                                    </button>
-
-                                    {debugMode && (
-                                        <button
-                                            onClick={debugState}
-                                            className="btn btn-small btn-outline debug-button"
-                                        >
-                                            Debug
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="player-controls">
+                            <div className="audio-player">
                                 <button
                                     onClick={togglePlayback}
-                                    className={`btn ${isPlaying ? 'btn-error' : 'btn-primary'} btn-large`}
+                                    className={`btn ${isPlaying ? 'btn-error' : 'btn-primary'}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                          fill="none" stroke="currentColor" strokeWidth="2"
@@ -735,50 +551,266 @@ const KaraokePlayer = () => {
                                 </div>
                             </div>
 
-                            <audio
-                                ref={audioRef}
-                                src={audioUrl}
-                                preload="auto"
-                                crossOrigin="anonymous"
-                                // Inline Event-Handler für zusätzliche Sicherheit
-                                onTimeUpdate={(e) => {
-                                    const time = e.target.currentTime;
-                                    updateDomTime(time);
-                                    setCurrentTime(e.target.currentTime);
-                                    console.log("Time update direct:", time);
-                                }}
-                                onDurationChange={(e) => {
-                                    const duration = e.target.duration;
-                                    const totalTimeElement = document.querySelector('.time-total');
-                                    if (totalTimeElement) {
-                                        totalTimeElement.textContent = formatTime(duration);
-                                    }
-                                    setDuration(duration);
-                                }}
-                                onPlay={() => console.log("Play event")}
-                                onError={(e) => console.error("Audio error event:", e)}
-                            />
+                            <audio ref={audioRef} src={audioUrl}/>
 
-                            <div
-                                className="progress-container"
-                                onClick={handleProgressClick}
-                            >
+                            <div className="progress-container">
                                 <div
                                     className="progress-bar"
-                                    style={{width: `${(currentTime / Math.max(duration, 0.01)) * 100}%`}}
+                                    style={{width: `${(currentTime / duration) * 100}%`}}
                                 />
                                 <div
                                     className="progress-handle"
-                                    style={{left: `${(currentTime / Math.max(duration, 0.01)) * 100}%`}}
+                                    style={{left: `${(currentTime / duration) * 100}%`}}
                                 />
                             </div>
                         </section>
 
-                        {/* Lyrics and Pitch Display */}
-                        <div className="karaoke-container">
-                            <section className="card lyrics-card">
+                        {/* JSON Configuration */}
+                        <section className="card">
+                            <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
-                                    <span className="card-number">
+                                    <span className="card-number">3</span>
+                                    JSON Konfiguration
+                                </h2>
+                                <button
+                                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                                    className="btn btn-primary"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    </svg>
+                                    {showAdvancedOptions ? "Einfache Optionen" : "Erweiterte Optionen"}
+                                </button>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-primary-light mb-2">
+                                    Standard Dauer für Lyric (Sekunden):
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0.5"
+                                    step="0.5"
+                                    value={defaultEndTimeDuration}
+                                    onChange={(e) => setDefaultEndTimeDuration(parseFloat(e.target.value))}
+                                    className="lyric-input"
+                                />
+                                <p className="file-upload-hint mt-2">
+                                    Diese Zeitspanne wird verwendet, um die endTime für neue Lyrics
+                                    zu berechnen (startTime + Dauer)
+                                </p>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-primary-light mb-2">
+                                    Zeitverschiebung (Offset) beim Hinzufügen (Sekunden):
+                                </label>
+                                <input
+                                    type="number"
+                                    min="-10"
+                                    max="10"
+                                    step="0.5"
+                                    value={markerOffset}
+                                    onChange={(e) => setMarkerOffset(parseFloat(e.target.value))}
+                                    className="lyric-input"
+                                />
+                                <p className="file-upload-hint mt-2">
+                                    Dieser Offset wird beim Setzen des Markers angewendet (z.B. -2 =
+                                    2 Sekunden früher).
+                                    Eine Markierung bei Sekunde 12 mit Offset -2 erstellt einen
+                                    Lyric bei Sekunde 10.
+                                </p>
+                            </div>
+
+                            {showAdvancedOptions && (
+                                <div className="flex flex-col space-y-4">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="autoSortLyrics"
+                                            checked={autoSortLyrics}
+                                            onChange={() => setAutoSortLyrics(!autoSortLyrics)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="autoSortLyrics"
+                                               className="text-primary-light">
+                                            Lyrics automatisch nach startTime sortieren
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="generateEmptyPitchTargets"
+                                            checked={generateEmptyPitchTargets}
+                                            onChange={() => setGenerateEmptyPitchTargets(!generateEmptyPitchTargets)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="generateEmptyPitchTargets"
+                                               className="text-primary-light">
+                                            Leere pitchTargets für Lyrics ohne Pitch-Daten erzeugen
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Lyrics editor */}
+                        <section className="card">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="card-title">
+                                    <span className="card-number">4</span>
+                                    Lyrics hinzufügen
+                                </h2>
+                                <button
+                                    onClick={addLyricLine}
+                                    className="btn btn-primary"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Zeile
+                                    bei {formatTime(Math.max(currentTime + markerOffset, 0))} ({(Math.max(currentTime + markerOffset, 0)).toFixed(1)}s)
+                                </button>
+                            </div>
+
+                            <div className="lyrics-container">
+                                {lyrics.map((lyric, index) => (
+                                    <div
+                                        key={lyric.id}
+                                        className={`lyric-item ${index === currentLyricIndex ? 'active' : ''}`}
+                                    >
+                                        <div className="lyric-meta">
+                                            <span
+                                                className={`lyric-time ${index === currentLyricIndex ? 'active' : ''}`}
+                                                style={{display: 'flex', alignItems: 'center'}}>
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{
+                                                         minWidth: '1rem',
+                                                         marginRight: '0.25rem'
+                                                     }}>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                                Start:
+                                                <div className="lyric-input-container" style={{
+                                                    width: '80px',
+                                                    display: 'inline-block',
+                                                    marginLeft: '8px'
+                                                }}>
+                                                    <input
+                                                        type="number"
+                                                        value={lyric.startTime.toFixed(1)}
+                                                        min="0"
+                                                        max={duration}
+                                                        step="0.1"
+                                                        onChange={(e) => updateLyricStartTime(lyric.id, e.target.value)}
+                                                        className="lyric-input"
+                                                        style={{
+                                                            padding: '0.4rem',
+                                                            textAlign: 'center'
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span style={{
+                                                    marginLeft: '8px',
+                                                    color: 'var(--text-dimmed)',
+                                                    fontSize: '0.8rem'
+                                                }}>
+                                                    ({formatTime(lyric.startTime)})
+                                                </span>
+                                            </span>
+                                            <span className="lyric-pitch">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M9 18V5l12-2v13"></path>
+                                                    <circle cx="6" cy="18" r="3"></circle>
+                                                </svg>
+                                                {lyric.pitchTargets.length} Pitch-Punkte
+                                            </span>
+                                        </div>
+                                        <div className="lyric-input-container">
+                                            <input
+                                                type="text"
+                                                value={lyric.text}
+                                                onChange={(e) => updateLyricText(lyric.id, e.target.value)}
+                                                className="lyric-input"
+                                                placeholder="Lyric text eingeben..."
+                                            />
+                                            <div className="lyric-edit-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M12 20h9"></path>
+                                                    <path
+                                                        d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        {/* End Time Input */}
+                                        <div className="lyric-meta" style={{marginTop: '0.5rem'}}>
+                                            <span className="lyric-time"
+                                                  style={{display: 'flex', alignItems: 'center'}}>
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24" fill="none"
+                                                     stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{
+                                                         minWidth: '1rem',
+                                                         marginRight: '0.25rem'
+                                                     }}>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="12" y1="6" x2="12" y2="12"></line>
+                                                    <line x1="12" y1="12" x2="16" y2="16"></line>
+                                                </svg>
+                                                Ende:
+                                                <div className="lyric-input-container" style={{
+                                                    width: '80px',
+                                                    display: 'inline-block',
+                                                    marginLeft: '8px'
+                                                }}>
+                                                    <input
+                                                        type="number"
+                                                        value={lyric.endTime.toFixed(1)}
+                                                        min={lyric.startTime + 0.1}
+                                                        max={duration}
+                                                        step="0.1"
+                                                        onChange={(e) => updateLyricEndTime(lyric.id, e.target.value)}
+                                                        className="lyric-input"
+                                                        style={{
+                                                            padding: '0.4rem',
+                                                            textAlign: 'center'
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span style={{
+                                                    marginLeft: '8px',
+                                                    color: 'var(--text-dimmed)',
+                                                    fontSize: '0.8rem'
+                                                }}>
+                                                    ({formatTime(lyric.endTime)})
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {lyrics.length === 0 && (
+                                    <div className="empty-lyrics">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                              fill="none" stroke="currentColor" strokeWidth="2"
                                              strokeLinecap="round" strokeLinejoin="round">
@@ -789,118 +821,183 @@ const KaraokePlayer = () => {
                                             <line x1="16" y1="17" x2="8" y2="17"></line>
                                             <polyline points="10 9 9 9 8 9"></polyline>
                                         </svg>
-                                    </span>
-                                    Lyrics
-                                </h2>
-
-                                {songData && songData.lyrics && (
-                                    <LyricsDisplay
-                                        lyrics={songData.lyrics}
-                                        currentLyricIndex={currentLyricIndex}
-                                        currentTime={currentTime} // Neue Prop hinzugefügt
-                                        debugMode={debugMode}
-                                        lyricsDisplayRef={lyricsDisplayRef}
-                                    />
+                                        <p>Klicke auf "+ Zeile" während der Wiedergabe,<br/>um
+                                            Lyrics zu erfassen</p>
+                                    </div>
                                 )}
-                            </section>
+                            </div>
+                        </section>
 
-                            <section className="card pitch-card">
+                        {/* Pitch analysis */}
+                        <section className="card">
+                            <h2 className="card-title">
+                                <span className="card-number">5</span>
+                                Pitch analysieren
+                            </h2>
+                            <div className="analysis-controls">
+                                <button
+                                    onClick={isAnalyzing ? stopPitchAnalysis : startPitchAnalysis}
+                                    className={`btn ${isAnalyzing ? 'btn-error' : 'btn-success'}`}
+                                >
+                                    {isAnalyzing ? (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="6" y="4" width="4" height="16"></rect>
+                                                <rect x="14" y="4" width="4" height="16"></rect>
+                                            </svg>
+                                            Analyse stoppen
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <path
+                                                    d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
+                                            </svg>
+                                            Analyse starten
+                                        </>
+                                    )}
+                                </button>
+                                <div
+                                    className={`mic-status ${isAnalyzing ? 'active' : 'inactive'}`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                                    </svg>
+                                    <span>{isAnalyzing ? 'Singe mit, um Pitch-Daten zu erfassen' : 'Mikrofon erforderlich'}</span>
+                                </div>
+                            </div>
+
+                            {pitchData.length > 0 ? (
+                                <div className="pitch-visualization">
+                                    <div className="pitch-grid">
+                                        {Array(48).fill(0).map((_, i) => (
+                                            <div key={i} className="pitch-grid-cell"></div>
+                                        ))}
+                                    </div>
+                                    {pitchData.map((data, index) => (
+                                        <div
+                                            key={index}
+                                            className="pitch-bar"
+                                            style={{
+                                                height: `${Math.min(data.pitch / 4, 100)}%`,
+                                                left: `${(data.time / duration) * 100}%`,
+                                                opacity: 0.7 + Math.min(data.pitch / 500, 0.3)
+                                            }}
+                                        >
+                                            <div className="pitch-dot"/>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="empty-pitch">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    </svg>
+                                    <p>Starte die Analyse und singe, um Pitch-Daten zu sammeln</p>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* JSON output */}
+                        <section className="card">
+                            <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
-                                    <span className="card-number">
+                                    <span className="card-number">6</span>
+                                    JSON generieren
+                                </h2>
+                                <div className="flex space-x-4">
+                                    <button
+                                        onClick={generateJson}
+                                        className="btn btn-primary"
+                                    >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                              fill="none" stroke="currentColor" strokeWidth="2"
                                              strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M9 18V5l12-2v13"></path>
-                                            <circle cx="6" cy="18" r="3"></circle>
-                                            <circle cx="18" cy="16" r="3"></circle>
+                                            <polyline points="16 18 22 12 16 6"></polyline>
+                                            <polyline points="8 6 2 12 8 18"></polyline>
                                         </svg>
-                                    </span>
-                                    Pitch
-                                </h2>
-
-                                <div className="pitch-display">
-                                    <div className="pitch-meter-container">
-                                        <div className="pitch-labels">
-                                            {Array.from({length: 5}, (_, i) => {
-                                                const note = ((targetPitch || 60) - 12) + (i * 6);
-                                                return (
-                                                    <div key={i} className="pitch-label">
-                                                        {note}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="pitch-meter">
-                                            {/* Target pitch indicator */}
-                                            {targetPitch && (
-                                                <div
-                                                    className="target-pitch"
-                                                    style={{bottom: `${((targetPitch - ((targetPitch || 60) - 12)) / 24) * 100}%`}}
-                                                ></div>
-                                            )}
-
-                                            {/* Current pitch indicator */}
-                                            {currentPitch && (
-                                                <div
-                                                    className="current-pitch"
-                                                    style={{
-                                                        bottom: `${((currentPitch - ((targetPitch || 60) - 12)) / 24) * 100}%`,
-                                                        backgroundColor: getAccuracyColor()
-                                                    }}
-                                                ></div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="pitch-stats">
-                                        <div className="pitch-stat-item">
-                                            <span className="pitch-stat-label">Dein Pitch:</span>
-                                            <span className="pitch-stat-value"
-                                                  style={{color: getAccuracyColor()}}>
-                                                {currentPitch || '-'}
-                                            </span>
-                                        </div>
-                                        <div className="pitch-stat-item">
-                                            <span className="pitch-stat-label">Ziel Pitch:</span>
-                                            <span className="pitch-stat-value">
-                                                {targetPitch || '-'}
-                                            </span>
-                                        </div>
-                                        <div className="pitch-accuracy"
-                                             style={{backgroundColor: getAccuracyColor()}}>
-                                            {currentPitch && targetPitch ? (
-                                                Math.abs(currentPitch - targetPitch) <= 2 ? 'Perfekt!' :
-                                                    Math.abs(currentPitch - targetPitch) <= 4 ? 'Gut!' :
-                                                        Math.abs(currentPitch - targetPitch) <= 7 ? 'Okay' : 'Daneben'
-                                            ) : 'Singe!'}
-                                        </div>
-                                    </div>
+                                        Generieren
+                                    </button>
+                                    <button
+                                        onClick={downloadJson}
+                                        disabled={!jsonOutput}
+                                        className={`btn ${jsonOutput ? 'btn-success' : 'btn-disabled'}`}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <path
+                                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                        Download
+                                    </button>
                                 </div>
+                            </div>
 
-                                <div className="pitch-history">
-                                    {pitchHistory.map((data, index) => (
-                                        <div
-                                            key={index}
-                                            className="pitch-history-bar"
-                                            style={{
-                                                height: `${Math.min(data.pitch / 100 * 100, 100)}%`,
-                                                left: `${(index / pitchHistory.length) * 100}%`,
-                                                backgroundColor: `hsl(${200 + (data.pitch % 30) * 5}, 70%, 60%)`
-                                            }}
-                                        ></div>
-                                    ))}
+                            {jsonOutput ? (
+                                <div className="json-preview">
+                                    <pre className="json-output">
+                                        <code>{jsonOutput}</code>
+                                    </pre>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(jsonOutput)
+                                        }}
+                                        className="json-copy-btn"
+                                        title="In die Zwischenablage kopieren"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" strokeWidth="2"
+                                             strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2"
+                                                  ry="2"></rect>
+                                            <path
+                                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
                                 </div>
-                            </section>
-                        </div>
+                            ) : (
+                                <div className="empty-json">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <path d="M10 12a1 1 0 0 0 0 2h4a1 1 0 0 0 0-2h-4z"></path>
+                                    </svg>
+                                    <p>Klicke auf "Generieren", um das JSON für deine<br/>Karaoke-App
+                                        zu erstellen</p>
+                                </div>
+                            )}
+                        </section>
                     </>
                 )}
             </main>
             <footer className="app-footer">
-                jsong Karaoke Player | Made with ❤️ by Martin Pfeffer
+                jsong Karaoke JSON Generator | Made with ❤️ by Martin Pfeffer
             </footer>
         </div>
     );
 };
 
-export default KaraokePlayer;
+export default KaraokeJsonGenerator;
