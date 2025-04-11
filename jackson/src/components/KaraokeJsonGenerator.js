@@ -499,11 +499,98 @@ const KaraokeJsonGenerator = () => {
                             </div>
                         </section>
 
-                        {/* JSON Configuration */}
+                        {/* Pitch analysis - VERSCHOBEN AN POSITION 3 */}
+                        <section className="card">
+                            <h2 className="card-title">
+                                <span className="card-number">3</span>
+                                Pitch aufnehmen ({globalPitchData.length} Datenpunkte)
+                            </h2>
+                            <div className="analysis-controls">
+                                <button
+                                    onClick={isAnalyzing ? stopPitchAnalysis : startPitchAnalysis}
+                                    className={`btn ${isAnalyzing ? 'btn-error' : 'btn-success'}`}
+                                >
+                                    {isAnalyzing ? (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="6" y="4" width="4" height="16"></rect>
+                                                <rect x="14" y="4" width="4" height="16"></rect>
+                                            </svg>
+                                            Analyse stoppen
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2"
+                                                 strokeLinecap="round" strokeLinejoin="round">
+                                                <path
+                                                    d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
+                                            </svg>
+                                            Analyse starten
+                                        </>
+                                    )}
+                                </button>
+                                <div
+                                    className={`mic-status ${isAnalyzing ? 'active' : 'inactive'}`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                                    </svg>
+                                    <span>{isAnalyzing ? 'Singe, um Pitch-Daten zu erfassen' : 'Mikrofon erforderlich'}</span>
+                                </div>
+                            </div>
+
+                            {pitchData.length > 0 ? (
+                                <div className="pitch-visualization">
+                                    <div className="pitch-grid">
+                                        {Array(48).fill(0).map((_, i) => (
+                                            <div key={i} className="pitch-grid-cell"></div>
+                                        ))}
+                                    </div>
+                                    {pitchData.map((data, index) => (
+                                        <div
+                                            key={index}
+                                            className="pitch-bar"
+                                            style={{
+                                                height: `${Math.min(data.pitch / 4, 100)}%`,
+                                                left: `${(data.time / duration) * 100}%`,
+                                                opacity: 0.7 + Math.min(data.pitch / 500, 0.3)
+                                            }}
+                                        >
+                                            <div className="pitch-dot"/>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="empty-pitch">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                         strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                                        <path
+                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    </svg>
+                                    <p>Starte die Analyse und singe, um Pitch-Daten aufzunehmen - unabhängig von den Lyrics</p>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* JSON Configuration - VERSCHOBEN AN POSITION 4 */}
                         <section className="card">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
-                                    <span className="card-number">3</span>
+                                    <span className="card-number">4</span>
                                     JSON Konfiguration
                                 </h2>
                                 <button
@@ -593,7 +680,7 @@ const KaraokeJsonGenerator = () => {
                         <section className="card">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="card-title">
-                                    <span className="card-number">4</span>
+                                    <span className="card-number">5</span>
                                     Lyrics hinzufügen
                                 </h2>
                                 <button
@@ -756,93 +843,6 @@ const KaraokeJsonGenerator = () => {
                                     </div>
                                 )}
                             </div>
-                        </section>
-
-                        {/* Pitch analysis */}
-                        <section className="card">
-                            <h2 className="card-title">
-                                <span className="card-number">5</span>
-                                Pitch aufnehmen ({globalPitchData.length} Datenpunkte)
-                            </h2>
-                            <div className="analysis-controls">
-                                <button
-                                    onClick={isAnalyzing ? stopPitchAnalysis : startPitchAnalysis}
-                                    className={`btn ${isAnalyzing ? 'btn-error' : 'btn-success'}`}
-                                >
-                                    {isAnalyzing ? (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                 viewBox="0 0 24 24" fill="none"
-                                                 stroke="currentColor" strokeWidth="2"
-                                                 strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="6" y="4" width="4" height="16"></rect>
-                                                <rect x="14" y="4" width="4" height="16"></rect>
-                                            </svg>
-                                            Analyse stoppen
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                 viewBox="0 0 24 24" fill="none"
-                                                 stroke="currentColor" strokeWidth="2"
-                                                 strokeLinecap="round" strokeLinejoin="round">
-                                                <path
-                                                    d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
-                                            </svg>
-                                            Analyse starten
-                                        </>
-                                    )}
-                                </button>
-                                <div
-                                    className={`mic-status ${isAnalyzing ? 'active' : 'inactive'}`}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path
-                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                                    </svg>
-                                    <span>{isAnalyzing ? 'Singe, um Pitch-Daten zu erfassen' : 'Mikrofon erforderlich'}</span>
-                                </div>
-                            </div>
-
-                            {pitchData.length > 0 ? (
-                                <div className="pitch-visualization">
-                                    <div className="pitch-grid">
-                                        {Array(48).fill(0).map((_, i) => (
-                                            <div key={i} className="pitch-grid-cell"></div>
-                                        ))}
-                                    </div>
-                                    {pitchData.map((data, index) => (
-                                        <div
-                                            key={index}
-                                            className="pitch-bar"
-                                            style={{
-                                                height: `${Math.min(data.pitch / 4, 100)}%`,
-                                                left: `${(data.time / duration) * 100}%`,
-                                                opacity: 0.7 + Math.min(data.pitch / 500, 0.3)
-                                            }}
-                                        >
-                                            <div className="pitch-dot"/>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-pitch">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" strokeWidth="2"
-                                         strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                                        <path
-                                            d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                    </svg>
-                                    <p>Starte die Analyse und singe, um Pitch-Daten aufzunehmen - unabhängig von den Lyrics</p>
-                                </div>
-                            )}
                         </section>
 
                         {/* JSON output */}
