@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import '../Player.css';
 
 const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyricsDisplayRef }) => {
     // Anzahl der Zeilen die im Viewport sichtbar sein sollen
@@ -32,23 +33,6 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
             console.log(`%c[LyricsDisplay] ${message}`, 'background: #334155; color: #a78bfa; padding: 2px 6px; border-radius: 4px;', data || '');
         }
     };
-
-    // DEBUGGING: Direktes Logging der aktuellen Zeit
-    useEffect(() => {
-        if (debugMode) {
-            console.log(`Current Time: ${currentTime}, Current Index: ${currentLyricIndex}`);
-
-            if (lyrics && lyrics.length > 0) {
-                lyrics.forEach((lyric, index) => {
-                    const isRelevant = currentTime >= lyric.startTime &&
-                        (lyric.endTime ? currentTime < lyric.endTime : true);
-                    if (isRelevant) {
-                        console.log(`Relevant Lyric [${index}]: "${lyric.text}" - Progress: ${calculateProgress(lyric, index).toFixed(1)}%`);
-                    }
-                });
-            }
-        }
-    }, [currentTime, lyrics, debugMode, currentLyricIndex]);
 
     // Berechne den Fortschritt des aktuellen Lyrics in Prozent
     const calculateProgress = (lyric, index) => {
@@ -257,58 +241,28 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                             className={classes}
                             data-index={lyric.actualIndex}
                             data-status={lyric.removing ? 'removing' : (lyric.animation || 'normal')}
-                            style={{
-                                position: 'relative',
-                                overflow: 'hidden',
-                                borderWidth: isTimeRelevant ? '1px' : '0',
-                                borderStyle: 'solid',
-                                borderColor: isTimeRelevant ? 'red' : 'transparent'
-                            }}
                         >
-                            {/* Lyric Text */}
-                            {lyric.text}
+                            {/* Lyric Text mit eigenem span-Element für die Texthervorhebung */}
+                            <span className="lyric-text">
+                                {lyric.text}
+                            </span>
 
-                            {/* IMMER einen Fortschrittsbalken zeigen, für Testzwecke */}
+                            {/* Fortschrittsbalken */}
                             <div
+                                className="lyric-progress-bar"
                                 style={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    height: '15px',
-                                    width: isTimeRelevant ? `${progress}%` : '0%',
-                                    backgroundColor: 'red',
-                                    transition: 'width 0.2s linear',
-                                    zIndex: 9999,
-                                    borderRight: '2px solid white'
+                                    width: isTimeRelevant ? `${progress}%` : '0%'
                                 }}
                             />
 
-                            {/* Prozent-Anzeige immer sichtbar machen */}
-                            <div style={{
-                                position: 'absolute',
-                                right: '10px',
-                                bottom: '5px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                color: 'white',
-                                background: 'black',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                zIndex: 10000
-                            }}>
+                            {/* Prozent-Anzeige für Fortschritt */}
+                            <div className="lyric-progress-percent">
                                 {progressLabel}
                             </div>
 
                             {/* Debug-Informationen */}
                             {debugMode && (
-                                <div style={{
-                                    marginTop: '8px',
-                                    fontSize: '10px',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                                    padding: '4px',
-                                    borderRadius: '4px'
-                                }}>
+                                <div className="debug-info">
                                     Zeit: {lyric.startTime.toFixed(2)}s -
                                     {lyric.endTime ? lyric.endTime.toFixed(2) : 'N/A'}s |
                                     Zeit relevant: {isTimeRelevant ? 'JA' : 'NEIN'} |
@@ -320,6 +274,59 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     );
                 })}
             </div>
+
+            {/* Zusätzliche Styles für die Texthervorhebung einfügen */}
+            <style>
+                {`
+                /* Intensiver Glow-Effekt direkt für den Text */
+                .lyric-line.active .lyric-text {
+                    color: white !important;  
+                    font-weight: bold !important;
+                    letter-spacing: 0.05em;
+                    text-shadow: 
+                        0 0 10px #fff,
+                        0 0 20px #fff,
+                        0 0 30px #8b5cf6,
+                        0 0 40px #8b5cf6,
+                        0 0 70px #8b5cf6,
+                        0 0 80px #8b5cf6 !important;
+                    animation: textNeonGlow 1.2s infinite alternate !important;
+                    display: inline-block;
+                }
+
+                @keyframes textNeonGlow {
+                    0% {
+                        text-shadow: 
+                            0 0 10px #fff,
+                            0 0 20px #fff,
+                            0 0 30px #8b5cf6,
+                            0 0 40px #8b5cf6,
+                            0 0 70px #8b5cf6;
+                    }
+                    100% {
+                        text-shadow: 
+                            0 0 15px #fff,
+                            0 0 30px #fff,
+                            0 0 40px #8b5cf6,
+                            0 0 70px #8b5cf6,
+                            0 0 90px #8b5cf6;
+                    }
+                }
+
+                /* Weitere CSS-Anpassungen, um den Texteffekt zu verstärken */
+                .lyric-text {
+                    position: relative;
+                    padding: 2px 4px;
+                }
+
+                /* Container-Styles anpassen, damit der Text besser sichtbar ist */
+                .lyric-line.active {
+                    background-color: rgba(44, 46, 59, 0.7) !important;
+                    border-left: 4px solid #8b5cf6 !important;
+                    padding-left: 16px !important;
+                }
+                `}
+            </style>
         </div>
     );
 };

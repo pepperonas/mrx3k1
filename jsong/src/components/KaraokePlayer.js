@@ -19,7 +19,7 @@ const KaraokePlayer = () => {
     const [score, setScore] = useState(0);
     const [pitchHistory, setPitchHistory] = useState([]);
     const [showUpload, setShowUpload] = useState(true);
-    const [debugMode, setDebugMode] = useState(true);
+    const [debugMode, setDebugMode] = useState(false);
 
     const audioRef = useRef(null);
     const analyser = useRef(null);
