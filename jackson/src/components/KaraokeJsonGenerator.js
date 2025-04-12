@@ -16,7 +16,7 @@ const KaraokeJsonGenerator = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Tab-Navigation und Batch-Input
-    const [activeTab, setActiveTab] = useState('einzeln');
+    const [activeTab, setActiveTab] = useState('masse');
     const [batchLyricsText, setBatchLyricsText] = useState('');
     const [parsedLyrics, setParsedLyrics] = useState([]);
     const [nextLyricIndex, setNextLyricIndex] = useState(0);
@@ -27,7 +27,7 @@ const KaraokeJsonGenerator = () => {
 
     // Konfigurationsoptionen
     const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
-    const [markerOffset, setMarkerOffset] = useState(-2);
+    const [markerOffset, setMarkerOffset] = useState(0);
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
     const [autoSortLyrics, setAutoSortLyrics] = useState(true);
 
@@ -1081,254 +1081,306 @@ const KaraokeJsonGenerator = () => {
                                         </div>
                                     </div>
 
-                                    {/* Anzeige der teilweise verarbeiteten Lyrics (nur Startzeit) */}
-                                    {pendingLyrics.length > 0 && (
-                                        <div className="pending-lyrics-container" style={{
-                                            marginBottom: '1rem',
-                                            padding: '0.75rem',
-                                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                            borderRadius: '0.5rem',
-                                            borderLeft: '4px solid var(--accent)'
-                                        }}>
-                                            <h3 style={{
-                                                margin: '0 0 0.75rem 0',
-                                                fontSize: '0.875rem',
-                                                color: 'var(--text-muted)',
-                                                display: 'flex',
-                                                alignItems: 'center'
-                                            }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                     fill="none" stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                                </svg>
-                                                Warten auf Endzeit ({pendingLyrics.length})
-                                            </h3>
-                                            <div style={{
-                                                maxHeight: '150px',
-                                                overflowY: 'auto',
-                                                paddingRight: '0.5rem'
-                                            }}>
-                                                {pendingLyrics.map((lyric, idx) => (
-                                                    <div key={`pending-${idx}`}
-                                                         style={{
-                                                             padding: '0.5rem 0.75rem',
-                                                             marginBottom: '0.5rem',
-                                                             backgroundColor: 'var(--inner-bg)',
-                                                             borderRadius: '0.25rem',
-                                                             fontSize: '0.875rem',
-                                                             color: 'var(--accent-light)',
-                                                             borderLeft: '3px solid var(--accent)',
-                                                             transition: 'all 0.3s ease',
-                                                             animation: 'slideInTop 0.5s',
-                                                             display: 'flex',
-                                                             justifyContent: 'space-between'
-                                                         }}>
-                                                        <span>{lyric.text}</span>
-                                                        <span style={{
-                                                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                                                            padding: '0.15rem 0.5rem',
-                                                            borderRadius: '0.25rem',
-                                                            fontSize: '0.75rem'
-                                                        }}>
-                                                            Start: {lyric.startTime.toFixed(1)}s
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Bereich für bereits verwendete Lyrics */}
-                                    {usedLyrics.length > 0 && (
-                                        <div className="used-lyrics-container" style={{
-                                            marginBottom: '1rem',
-                                            padding: '0.75rem',
-                                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                            borderRadius: '0.5rem',
-                                            borderLeft: '4px solid var(--primary)'
-                                        }}>
-                                            <h3 style={{
-                                                margin: '0 0 0.75rem 0',
-                                                fontSize: '0.875rem',
-                                                color: 'var(--text-muted)',
-                                                display: 'flex',
-                                                alignItems: 'center'
-                                            }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                     fill="none" stroke="currentColor" strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
-                                                    <polyline points="9 11 12 14 22 4"></polyline>
-                                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                                                </svg>
-                                                Fertige Zeilen ({usedLyrics.length})
-                                            </h3>
-                                            <div style={{
-                                                maxHeight: '150px',
-                                                overflowY: 'auto',
-                                                paddingRight: '0.5rem'
-                                            }}>
-                                                {usedLyrics.map((lyric, idx) => (
-                                                    <div key={`used-${idx}`}
-                                                         style={{
-                                                             padding: '0.5rem 0.75rem',
-                                                             marginBottom: '0.5rem',
-                                                             backgroundColor: 'var(--inner-bg)',
-                                                             borderRadius: '0.25rem',
-                                                             fontSize: '0.875rem',
-                                                             color: 'var(--text-muted)',
-                                                             borderLeft: '3px solid var(--primary-light)',
-                                                             transition: 'all 0.3s ease',
-                                                             animation: 'slideInTop 0.5s',
-                                                         }}>
-                                                        {lyric.text}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Scroll-Container für die Lyric-Buttons - aktualisiert, um Status anzuzeigen */}
-                                    <div className="lyrics-queue" style={{
-                                        maxHeight: '300px',
-                                        overflowY: 'auto',
-                                        padding: '0.5rem',
-                                        backgroundColor: 'var(--inner-bg)',
-                                        borderRadius: '0.5rem',
-                                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                                    {/* Zwei-Spalten Layout für die Lyrics */}
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        gap: '1rem',
+                                        marginBottom: '1rem'
                                     }}>
-                                        {parsedLyrics.length > 0 ? (
-                                            parsedLyrics.map((lyric, index) => {
-                                                // Prüfe, ob dieser Lyric bereits vollständig verwendet wurde
-                                                const isUsed = usedLyrics.some(used => used.index === index);
-
-                                                // Wenn vollständig verwendet, nicht anzeigen
-                                                if (isUsed) return null;
-
-                                                // Prüfe, ob dieser Lyric teilweise verarbeitet ist (nur startTime)
-                                                const isPending = pendingLyrics.some(pending => pending.index === index);
-
-                                                // Status bestimmen (nächster, wird verarbeitet, oder normal)
-                                                const isNext = !isPending && nextLyricIndex === index;
-
-                                                // Farben und Styles basierend auf Status
-                                                let buttonStyle = {
-                                                    display: 'block',
-                                                    width: '100%',
-                                                    textAlign: 'left',
-                                                    padding: '1rem',
-                                                    marginBottom: '0.5rem',
-                                                    color: 'var(--text-light)',
-                                                    border: '1px solid',
-                                                    borderRadius: '0.5rem',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                    position: 'relative',
-                                                    overflow: 'hidden',
-                                                };
-
-                                                // Status-abhängige Styles
-                                                if (isPending) {
-                                                    // Teilweise verarbeitet (warte auf Endzeit)
-                                                    buttonStyle = {
-                                                        ...buttonStyle,
-                                                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
-                                                        borderColor: 'var(--accent)',
-                                                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
-                                                    };
-                                                } else if (isNext) {
-                                                    // Nächster zu verarbeitender Lyric
-                                                    buttonStyle = {
-                                                        ...buttonStyle,
-                                                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                                                        borderColor: 'var(--primary)',
-                                                        boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)'
-                                                    };
-                                                } else {
-                                                    // Normaler, noch nicht bearbeiteter Lyric
-                                                    buttonStyle = {
-                                                        ...buttonStyle,
-                                                        backgroundColor: 'var(--card-bg)',
-                                                        borderColor: 'var(--border-light)'
-                                                    };
-                                                }
-
-                                                return (
-                                                    <button
-                                                        key={index}
-                                                        className={`lyric-queue-btn ${isNext ? 'next-lyric' : ''} ${isPending ? 'pending-lyric' : ''}`}
-                                                        onClick={() => addLyricFromQueue(lyric, index)}
-                                                        style={buttonStyle}
-                                                    >
-                                                        {lyric}
-
-                                                        {/* Status-Anzeige */}
-                                                        {isPending && (
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                top: '0.25rem',
-                                                                right: '0.5rem',
-                                                                backgroundColor: 'var(--accent)',
-                                                                color: 'white',
-                                                                padding: '0.25rem 0.5rem',
-                                                                borderRadius: '0.25rem',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: 'bold'
-                                                            }}>
-                                                                ENDZEIT SETZEN
-                                                            </div>
-                                                        )}
-
-                                                        {isNext && !isPending && (
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                top: '0.25rem',
-                                                                right: '0.5rem',
-                                                                backgroundColor: 'var(--primary)',
-                                                                color: 'white',
-                                                                padding: '0.25rem 0.5rem',
-                                                                borderRadius: '0.25rem',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: 'bold'
-                                                            }}>
-                                                                NÄCHSTE
-                                                            </div>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })
-                                        ) : (
-                                            <div className="empty-queue" style={{
+                                        {/* Linke Spalte: Scroll-Container für die Lyric-Buttons */}
+                                        <div className="lyrics-queue" style={{
+                                            flex: '1',
+                                            maxHeight: '500px',
+                                            overflowY: 'auto',
+                                            padding: '0.5rem',
+                                            backgroundColor: 'var(--inner-bg)',
+                                            borderRadius: '0.5rem',
+                                            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                                        }}>
+                                            <h3 style={{
+                                                margin: '0 0 0.75rem 0',
+                                                fontSize: '0.875rem',
+                                                color: 'var(--text-muted)',
                                                 textAlign: 'center',
-                                                padding: '2rem',
-                                                color: 'var(--text-muted)'
+                                                padding: '0.5rem',
+                                                borderBottom: '1px solid var(--border-light)'
                                             }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                     viewBox="0 0 24 24"
-                                                     fill="none" stroke="currentColor"
-                                                     strokeWidth="2"
-                                                     strokeLinecap="round" strokeLinejoin="round"
-                                                     style={{
-                                                         width: '3rem',
-                                                         height: '3rem',
-                                                         margin: '0 auto 1rem auto',
-                                                         color: 'var(--text-dimmed)'
-                                                     }}>
-                                                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                                                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                                                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                                                </svg>
-                                                <p>Füge Lyrics im Textfeld oben ein und klicke auf
-                                                    "Zeilen verarbeiten"</p>
+                                                Einzutragende Zeilen
+                                            </h3>
+
+
+                                            {parsedLyrics.length > 0 ? (
+                                                parsedLyrics.map((lyric, index) => {
+                                                    // Prüfe, ob dieser Lyric bereits vollständig verwendet wurde
+                                                    const isUsed = usedLyrics.some(used => used.index === index);
+
+                                                    // Wenn vollständig verwendet, nicht anzeigen
+                                                    if (isUsed) return null;
+
+                                                    // Prüfe, ob dieser Lyric teilweise verarbeitet ist (nur startTime)
+                                                    const isPending = pendingLyrics.some(pending => pending.index === index);
+
+                                                    // Status bestimmen (nächster, wird verarbeitet, oder normal)
+                                                    const isNext = !isPending && nextLyricIndex === index;
+
+                                                    // Farben und Styles basierend auf Status
+                                                    let buttonStyle = {
+                                                        display: 'block',
+                                                        width: '100%',
+                                                        textAlign: 'left',
+                                                        padding: '1rem',
+                                                        marginBottom: '0.5rem',
+                                                        color: 'var(--text-light)',
+                                                        border: '1px solid',
+                                                        borderRadius: '0.5rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s ease',
+                                                        position: 'relative',
+                                                        overflow: 'hidden',
+                                                    };
+
+                                                    // Status-abhängige Styles
+                                                    if (isPending) {
+                                                        // Teilweise verarbeitet (warte auf Endzeit)
+                                                        buttonStyle = {
+                                                            ...buttonStyle,
+                                                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                                                            borderColor: 'var(--accent)',
+                                                            boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
+                                                        };
+                                                    } else if (isNext) {
+                                                        // Nächster zu verarbeitender Lyric
+                                                        buttonStyle = {
+                                                            ...buttonStyle,
+                                                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                                            borderColor: 'var(--primary)',
+                                                            boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)'
+                                                        };
+                                                    } else {
+                                                        // Normaler, noch nicht bearbeiteter Lyric
+                                                        buttonStyle = {
+                                                            ...buttonStyle,
+                                                            backgroundColor: 'var(--card-bg)',
+                                                            borderColor: 'var(--border-light)'
+                                                        };
+                                                    }
+
+                                                    return (
+                                                        <button
+                                                            key={index}
+                                                            className={`lyric-queue-btn ${isNext ? 'next-lyric' : ''} ${isPending ? 'pending-lyric' : ''}`}
+                                                            onClick={() => addLyricFromQueue(lyric, index)}
+                                                            style={buttonStyle}
+                                                        >
+                                                            {lyric}
+
+                                                            {/* Status-Anzeige */}
+                                                            {isPending && (
+                                                                <div style={{
+                                                                    position: 'absolute',
+                                                                    top: '0.25rem',
+                                                                    right: '0.5rem',
+                                                                    backgroundColor: 'var(--accent)',
+                                                                    color: 'white',
+                                                                    padding: '0.25rem 0.5rem',
+                                                                    borderRadius: '0.25rem',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 'bold'
+                                                                }}>
+                                                                    ENDZEIT SETZEN
+                                                                </div>
+                                                            )}
+
+                                                            {isNext && !isPending && (
+                                                                <div style={{
+                                                                    position: 'absolute',
+                                                                    top: '0.25rem',
+                                                                    right: '0.5rem',
+                                                                    backgroundColor: 'var(--primary)',
+                                                                    color: 'white',
+                                                                    padding: '0.25rem 0.5rem',
+                                                                    borderRadius: '0.25rem',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 'bold'
+                                                                }}>
+                                                                    NÄCHSTE
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="empty-queue" style={{
+                                                    textAlign: 'center',
+                                                    padding: '2rem',
+                                                    color: 'var(--text-muted)'
+                                                }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor"
+                                                         strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round"
+                                                         style={{
+                                                             width: '3rem',
+                                                             height: '3rem',
+                                                             margin: '0 auto 1rem auto',
+                                                             color: 'var(--text-dimmed)'
+                                                         }}>
+                                                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                                                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                                                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                                                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                                    </svg>
+                                                    <p>Füge Lyrics im Textfeld oben ein und klicke auf
+                                                        "Zeilen verarbeiten"</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Rechte Spalte: Status-Listen */}
+                                        <div style={{
+                                            flex: '1',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '1rem'
+                                        }}>
+                                            {/* Anzeige der teilweise verarbeiteten Lyrics (nur Startzeit) */}
+                                            <div className="pending-lyrics-container" style={{
+                                                padding: '0.75rem',
+                                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                                borderRadius: '0.5rem',
+                                                borderLeft: '4px solid var(--accent)',
+                                                flex: '1',
+                                                display: 'flex',
+                                                flexDirection: 'column'
+                                            }}>
+                                                <h3 style={{
+                                                    margin: '0 0 0.75rem 0',
+                                                    fontSize: '0.875rem',
+                                                    color: 'var(--text-muted)',
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round"
+                                                         style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
+                                                        <circle cx="12" cy="12" r="10"></circle>
+                                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                                    </svg>
+                                                    Warten auf Endzeit ({pendingLyrics.length})
+                                                </h3>
+                                                <div style={{
+                                                    flex: '1',
+                                                    overflowY: 'auto',
+                                                    paddingRight: '0.5rem'
+                                                }}>
+                                                    {pendingLyrics.length > 0 ? (
+                                                        pendingLyrics.map((lyric, idx) => (
+                                                            <div key={`pending-${idx}`}
+                                                                 style={{
+                                                                     padding: '0.5rem 0.75rem',
+                                                                     marginBottom: '0.5rem',
+                                                                     backgroundColor: 'var(--inner-bg)',
+                                                                     borderRadius: '0.25rem',
+                                                                     fontSize: '0.875rem',
+                                                                     color: 'var(--accent-light)',
+                                                                     borderLeft: '3px solid var(--accent)',
+                                                                     transition: 'all 0.3s ease',
+                                                                     animation: 'slideInTop 0.5s',
+                                                                     display: 'flex',
+                                                                     justifyContent: 'space-between'
+                                                                 }}>
+                                                                <span>{lyric.text}</span>
+                                                                <span style={{
+                                                                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                                                    padding: '0.15rem 0.5rem',
+                                                                    borderRadius: '0.25rem',
+                                                                    fontSize: '0.75rem'
+                                                                }}>
+                                                                    Start: {lyric.startTime.toFixed(1)}s
+                                                                </span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div style={{
+                                                            textAlign: 'center',
+                                                            padding: '1rem',
+                                                            color: 'var(--text-muted)',
+                                                            fontStyle: 'italic'
+                                                        }}>
+                                                            Keine Zeilen warten auf Endzeit
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
+
+                                            {/* Bereich für bereits verwendete Lyrics */}
+                                            <div className="used-lyrics-container" style={{
+                                                padding: '0.75rem',
+                                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                                borderRadius: '0.5rem',
+                                                borderLeft: '4px solid var(--primary)',
+                                                flex: '1',
+                                                display: 'flex',
+                                                flexDirection: 'column'
+                                            }}>
+                                                <h3 style={{
+                                                    margin: '0 0 0.75rem 0',
+                                                    fontSize: '0.875rem',
+                                                    color: 'var(--text-muted)',
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" strokeWidth="2"
+                                                         strokeLinecap="round" strokeLinejoin="round"
+                                                         style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
+                                                        <polyline points="9 11 12 14 22 4"></polyline>
+                                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                                    </svg>
+                                                    Fertige Zeilen ({usedLyrics.length})
+                                                </h3>
+                                                <div style={{
+                                                    flex: '1',
+                                                    overflowY: 'auto',
+                                                    paddingRight: '0.5rem'
+                                                }}>
+                                                    {usedLyrics.length > 0 ? (
+                                                        usedLyrics.map((lyric, idx) => (
+                                                            <div key={`used-${idx}`}
+                                                                 style={{
+                                                                     padding: '0.5rem 0.75rem',
+                                                                     marginBottom: '0.5rem',
+                                                                     backgroundColor: 'var(--inner-bg)',
+                                                                     borderRadius: '0.25rem',
+                                                                     fontSize: '0.875rem',
+                                                                     color: 'var(--text-muted)',
+                                                                     borderLeft: '3px solid var(--primary-light)',
+                                                                     transition: 'all 0.3s ease',
+                                                                     animation: 'slideInTop 0.5s',
+                                                                 }}>
+                                                                {lyric.text}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div style={{
+                                                            textAlign: 'center',
+                                                            padding: '1rem',
+                                                            color: 'var(--text-muted)',
+                                                            fontStyle: 'italic'
+                                                        }}>
+                                                            Noch keine Zeilen fertig
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+
 
                                     {/* Aktualisierte Anleitung für zweistufige Erfassung */}
                                     <div style={{
