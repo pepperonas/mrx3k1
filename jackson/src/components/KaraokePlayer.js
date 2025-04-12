@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import * as Tone from 'tone';
+// Entferne Tone.js Import, um komplett auf native Web Audio API umzusteigen
+// import * as Tone from 'tone';
 import '../App.css';
 import '../Player.css';
 import '../Debug.css';
@@ -24,14 +25,19 @@ const KaraokePlayer = () => {
     const [currentTargetPitchData, setCurrentTargetPitchData] = useState(null);
 
     const audioRef = useRef(null);
-    const analyser = useRef(null);
-    const microphone = useRef(null);
     const lyricsDisplayRef = useRef(null);
     const timeUpdateIntervalRef = useRef(null);
     const firstPlayRef = useRef(true);
-    // Neue Refs für die Optimierung
+
+    // Refs für die optimierte Lyric-Index-Aktualisierung
     const currentLyricIndexRef = useRef(-1);
     const timeUpdateCounterRef = useRef(0);
+
+    // Neue Refs für Web Audio API
+    const audioContextRef = useRef(null);
+    const sourceRef = useRef(null);
+    const nativeAnalyserRef = useRef(null);
+    const streamRef = useRef(null);
 
     const [visiblePitchData, setVisiblePitchData] = useState([]);
     const [pitchRange, setPitchRange] = useState({min: 40, max: 90});
@@ -179,6 +185,11 @@ const KaraokePlayer = () => {
         console.log("Song Data:", songData);
         console.log("Current Lyric Index:", currentLyricIndex);
         console.log("Current Lyric Index Ref:", currentLyricIndexRef.current);
+        console.log("Web Audio:", {
+            audioContext: audioContextRef.current?.state,
+            stream: streamRef.current?.active,
+            analyser: !!nativeAnalyserRef.current
+        });
 
         if (songData && songData.lyrics) {
             console.log("Lyrics count:", songData.lyrics.length);
@@ -339,13 +350,11 @@ const KaraokePlayer = () => {
                 audioElement.removeEventListener('loadedmetadata', handleMetadata);
                 audioElement.removeEventListener('timeupdate', handleTimeUpdate);
                 audioElement.removeEventListener('durationchange', handleMetadata);
-                audioElement.removeEventListener('play', () => {
-                });
-                audioElement.removeEventListener('error', () => {
-                });
+                audioElement.removeEventListener('play', () => {});
+                audioElement.removeEventListener('error', () => {});
             };
         }
-    }, [audioUrl, songData]); // Entfernt: currentLyricIndex aus der Abhängigkeitsliste
+    }, [audioUrl, songData]);
 
     useEffect(() => {
         processPitchData();
@@ -425,167 +434,208 @@ const KaraokePlayer = () => {
         }
     };
 
-    // Play/pause audio
-    const togglePlayback = async () => {
+    // HIER BEGINNT DER NEUE ERSATZCODE - Play/pause Audio und die Pitch-Analyse-Funktionen
+    // Ersetzt die alten Tone.js-basierten Funktionen
+
+    const togglePlayback = () => {
         if (audioRef.current) {
-            try {
-                if (debugMode) {
-                    debugState();
+            if (isPlaying) {
+                audioRef.current.pause();
+                if (isAnalyzing) {
+                    stopPitchAnalysis();
                 }
-
-                // Starte Tone.js nur beim ersten Klick
-                if (firstPlayRef.current) {
-                    await Tone.start();
-                    console.log('Tone.js context started successfully');
-                    firstPlayRef.current = false;
-                }
-
-                if (isPlaying) {
-                    console.log("Pausing audio");
-                    audioRef.current.pause();
-                } else {
-                    console.log("Starting audio playback");
-                    try {
-                        // WICHTIG: Setze currentTime auf einen kleinen Wert größer als 0,
-                        // falls die Zeit 0 ist, um timeupdate-Events zu triggern
-                        if (audioRef.current.currentTime === 0) {
-                            audioRef.current.currentTime = 0.01;
-                        }
-
-                        // Versuche abzuspielen
-                        const playPromise = audioRef.current.play();
-                        if (playPromise !== undefined) {
-                            playPromise
-                                .then(() => console.log("Audio playback started successfully"))
-                                .catch(error => {
-                                    console.error('Error playing audio:', error);
-                                    alert("Fehler beim Abspielen der Audio-Datei: " + error.message);
-                                });
-                        }
-
+            } else {
+                audioRef.current.play()
+                    .then(() => {
+                        console.log("Audio playback started successfully");
                         if (!isAnalyzing) {
                             startPitchAnalysis();
                         }
-                    } catch (error) {
-                        console.error('Error during play attempt:', error);
+                    })
+                    .catch(error => {
+                        console.error('Error playing audio:', error);
                         alert("Fehler beim Abspielen: " + error.message);
-                    }
-                }
-                setIsPlaying(!isPlaying);
-            } catch (err) {
-                console.error('Failed to start audio context:', err);
-                alert("Fehler beim Starten des Audio-Kontexts: " + err.message);
+                    });
             }
-        } else {
-            console.error("Audio reference is not available");
-            alert("Audio-Element nicht verfügbar");
+            setIsPlaying(!isPlaying);
         }
     };
 
-    // Detect pitch from frequency data
-    const detectPitch = (frequencyData) => {
-        // Simple implementation - find the dominant frequency
-        let maxIndex = 0;
-        let maxValue = 0;
+    const startPitchAnalysis = async () => {
+        setIsAnalyzing(true);
 
-        for (let i = 0; i < frequencyData.length; i++) {
+        try {
+            // Erstelle AudioContext wenn nicht vorhanden
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext erstellt:", audioContextRef.current.state);
+            }
+
+            // Starte den AudioContext falls er suspendiert ist
+            if (audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+                console.log("AudioContext resumed:", audioContextRef.current.state);
+            }
+
+            // Fordere Mikrofon-Zugriff an
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            streamRef.current = stream;
+            console.log("Mikrofonzugriff erhalten:", stream.active);
+
+            // Erstelle MediaStreamSource
+            sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+
+            // Erstelle Analyser
+            nativeAnalyserRef.current = audioContextRef.current.createAnalyser();
+            nativeAnalyserRef.current.fftSize = 2048; // Größerer Wert für genauere Frequenzanalyse
+            nativeAnalyserRef.current.smoothingTimeConstant = 0.8; // Einstellbar für weniger flackern (0-1)
+
+            // Verbinde Source mit Analyser
+            sourceRef.current.connect(nativeAnalyserRef.current);
+            console.log("Audio-Analyse-Pipeline eingerichtet");
+
+            // Start analysis loop
+            const analyzeInterval = setInterval(() => {
+                if (nativeAnalyserRef.current) {
+                    try {
+                        // Erstelle Array für Frequenzdaten
+                        const dataArray = new Float32Array(nativeAnalyserRef.current.frequencyBinCount);
+
+                        // Hole aktuelles Frequenzspektrum
+                        nativeAnalyserRef.current.getFloatFrequencyData(dataArray);
+
+                        // Debug-Logging
+                        if (debugMode && timeUpdateCounterRef.current % 20 === 0) {
+                            // Finde Min/Max/Durchschnitt
+                            let min = Infinity;
+                            let max = -Infinity;
+                            let sum = 0;
+
+                            for (let i = 0; i < dataArray.length; i++) {
+                                min = Math.min(min, dataArray[i]);
+                                max = Math.max(max, dataArray[i]);
+                                sum += dataArray[i];
+                            }
+
+                            const avg = sum / dataArray.length;
+                            console.log(`Frequenzdaten: Min=${min.toFixed(1)}dB, Max=${max.toFixed(1)}dB, Avg=${avg.toFixed(1)}dB`);
+                        }
+
+                        // Pitch-Erkennung
+                        const pitch = detectPitch(dataArray);
+
+                        if (pitch) {
+                            setCurrentPitch(pitch);
+
+                            // History aktualisieren
+                            setPitchHistory(prev => {
+                                const newHistory = [...prev, {time: currentTime, pitch}];
+                                if (newHistory.length > 100) {
+                                    return newHistory.slice(newHistory.length - 100);
+                                }
+                                return newHistory;
+                            });
+
+                            // Score aktualisieren
+                            if (targetPitch) {
+                                const pitchDifference = Math.abs(pitch - targetPitch);
+                                if (pitchDifference <= 2) {
+                                    setScore(prev => prev + 10); // Perfect
+                                } else if (pitchDifference <= 4) {
+                                    setScore(prev => prev + 5);  // Good
+                                } else if (pitchDifference <= 7) {
+                                    setScore(prev => prev + 2);  // Okay
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Fehler bei der Frequenzanalyse:", err);
+                    }
+                }
+            }, 100);
+
+            timeUpdateIntervalRef.current = analyzeInterval;
+        } catch (err) {
+            console.error("Fehler beim Zugriff auf das Mikrofon:", err);
+            alert("Mikrofonzugriff fehlgeschlagen. Bitte erlaube den Zugriff in den Browser-Einstellungen.");
+            setIsAnalyzing(false);
+        }
+    };
+
+    const stopPitchAnalysis = () => {
+        setIsAnalyzing(false);
+
+        // Bereinige Intervall
+        if (timeUpdateIntervalRef.current) {
+            clearInterval(timeUpdateIntervalRef.current);
+            timeUpdateIntervalRef.current = null;
+        }
+
+        // Bereinige Audio-Stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+
+        // Trenne MediaStreamSource
+        if (sourceRef.current) {
+            sourceRef.current.disconnect();
+            sourceRef.current = null;
+        }
+
+        // Bereinige Analyser
+        if (nativeAnalyserRef.current) {
+            nativeAnalyserRef.current.disconnect();
+            nativeAnalyserRef.current = null;
+        }
+
+        console.log("Pitch-Analyse gestoppt und bereinigt");
+    };
+
+    const detectPitch = (frequencyData) => {
+        if (!frequencyData || frequencyData.length === 0) return null;
+
+        // Finde den dominanten Frequenz-Peak
+        let maxIndex = 0;
+        let maxValue = -Infinity;
+
+        // Ignoriere sehr niedrige Frequenzen (oft Rauschen)
+        const startBin = 10;
+
+        for (let i = startBin; i < frequencyData.length; i++) {
             if (frequencyData[i] > maxValue) {
                 maxValue = frequencyData[i];
                 maxIndex = i;
             }
         }
 
-        // Convert FFT bin index to frequency
-        const nyquist = 22050; // Half the sample rate
-        const frequency = maxIndex * nyquist / frequencyData.length;
+        // Log für Debugging
+        console.log(`Max frequency value: ${maxValue.toFixed(1)}, index: ${maxIndex}`);
 
-        // Only return if we have a significant peak
-        if (maxValue > 100) {
-            // Convert frequency to MIDI note number
-            // f = 440 * 2^((n-69)/12)
-            // n = 12 * log2(f/440) + 69
+        // Konvertiere Index zu Frequenz
+        const sampleRate = audioContextRef.current ? audioContextRef.current.sampleRate : 44100;
+        const nyquist = sampleRate / 2;
+        const frequency = maxIndex * nyquist / (frequencyData.length - 1);
+
+        // Typischer Schwellenwert für Spracherkennung in dB
+        // (Web Audio API gibt dB-Werte zurück, meist negativ, z.B. -100 bis -30)
+        const THRESHOLD = -60; // Schwellwert in dB, anpassbar
+
+        if (maxValue > THRESHOLD && frequency > 80) { // Setze eine Mindestfrequenz
+            // Konvertiere Frequenz zu MIDI-Notennummer
             const noteNumber = 12 * Math.log2(frequency / 440) + 69;
+            console.log(`Erkannter Pitch: ${Math.round(noteNumber)} (Freq: ${frequency.toFixed(1)} Hz)`);
             return Math.round(noteNumber);
         }
 
+        console.log(`Kein Pitch erkannt (unter Schwelle ${THRESHOLD} oder zu niedrige Frequenz)`);
         return null;
-    };
-
-    // Start pitch analysis
-    const startPitchAnalysis = async () => {
-        setIsAnalyzing(true);
-
-        try {
-            // Tone.js wird bereits in togglePlayback initialisiert
-
-            microphone.current = new Tone.UserMedia();
-            await microphone.current.open();
-            console.log("Microphone access granted");
-
-            analyser.current = new Tone.Analyser('fft', 1024);
-            microphone.current.connect(analyser.current);
-
-            const analyzeInterval = setInterval(() => {
-                if (analyser.current) {
-                    const frequencyData = analyser.current.getValue();
-                    const pitch = detectPitch(frequencyData);
-
-                    if (pitch) {
-                        setCurrentPitch(pitch);
-
-                        // Update pitch history for visualization
-                        setPitchHistory(prev => {
-                            const newHistory = [...prev, {time: currentTime, pitch}];
-                            // Keep only the last 100 pitch values
-                            if (newHistory.length > 100) {
-                                return newHistory.slice(newHistory.length - 100);
-                            }
-                            return newHistory;
-                        });
-
-                        // Update score based on target pitch
-                        if (targetPitch) {
-                            const pitchDifference = Math.abs(pitch - targetPitch);
-                            if (pitchDifference <= 2) {
-                                // Perfect match
-                                setScore(prev => prev + 10);
-                            } else if (pitchDifference <= 4) {
-                                // Good match
-                                setScore(prev => prev + 5);
-                            } else if (pitchDifference <= 7) {
-                                // Okay match
-                                setScore(prev => prev + 2);
-                            }
-                        }
-                    }
-                }
-            }, 100);
-
-            timeUpdateIntervalRef.current = analyzeInterval;
-
-            return () => {
-                if (timeUpdateIntervalRef.current) {
-                    clearInterval(timeUpdateIntervalRef.current);
-                }
-                if (microphone.current) {
-                    microphone.current.close();
-                }
-            };
-        } catch (err) {
-            console.error("Error accessing microphone:", err);
-            setIsAnalyzing(false);
-        }
-    };
-
-    // Stop pitch analysis
-    const stopPitchAnalysis = () => {
-        setIsAnalyzing(false);
-        if (timeUpdateIntervalRef.current) {
-            clearInterval(timeUpdateIntervalRef.current);
-        }
-        if (microphone.current) {
-            microphone.current.close();
-        }
     };
 
     // Get accuracy color based on pitch difference
@@ -611,12 +661,10 @@ const KaraokePlayer = () => {
     // Start the game (hide uploads and show player)
     const startGame = async () => {
         if (songData && audioUrl) {
-            try {
-                await Tone.start();
-                console.log('Tone.js context started successfully');
-                firstPlayRef.current = false;
-            } catch (err) {
-                console.error('Failed to start Tone.js context:', err);
+            // Beim Spielstart versuchen wir den Audio Context zu erstellen, falls nötig
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('Audio context created:', audioContextRef.current.state);
             }
             setShowUpload(false);
         } else {
