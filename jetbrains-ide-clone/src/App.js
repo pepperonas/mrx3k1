@@ -221,7 +221,7 @@ function App() {
           <p>Dies ist eine Beispiel-Anwendung.</p>
         </main>
       </div>
-      <footer>© 2025 My Company</footer>
+      <footer>Made with ❤️ by Martin Pfeffer</footer>
     </div>
   );
 }

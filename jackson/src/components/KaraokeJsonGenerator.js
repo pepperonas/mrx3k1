@@ -22,6 +22,8 @@ const KaraokeJsonGenerator = () => {
     const [nextLyricIndex, setNextLyricIndex] = useState(0);
     // Neuer State für verwendete Lyrics
     const [usedLyrics, setUsedLyrics] = useState([]);
+    // Neuer State für teilweise verarbeitete Lyrics (mit Startzeit, aber ohne Endzeit)
+    const [pendingLyrics, setPendingLyrics] = useState([]);
 
     // Konfigurationsoptionen
     const [defaultEndTimeDuration, setDefaultEndTimeDuration] = useState(3);
@@ -447,40 +449,64 @@ const KaraokeJsonGenerator = () => {
         setNextLyricIndex(0);
         // Beim Verarbeiten neuer Zeilen setzen wir die verwendeten Lyrics zurück
         setUsedLyrics([]);
+        // Auch pendingLyrics zurücksetzen
+        setPendingLyrics([]);
     };
 
+    // Überarbeitete Funktion zum Hinzufügen oder Aktualisieren von Lyrics
     const addLyricFromQueue = (text, index) => {
         if (!audioRef.current) return;
 
-        // Berechne die Startzeit mit dem Offset
-        const offsetStartTime = currentTime + markerOffset;
-        // Stelle sicher, dass startTime nicht negativ wird und runde auf eine Dezimalstelle
-        const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
+        // Prüfen, ob dieser Lyric bereits in pendingLyrics ist (Erster Klick bereits erfolgt)
+        const pendingIndex = pendingLyrics.findIndex(pending => pending.index === index);
 
-        const calculatedEndTime = startTime + defaultEndTimeDuration;
-        // Ensure endTime doesn't exceed the duration of the song and round to one decimal place
-        const endTime = Math.round(Math.min(calculatedEndTime, duration) * 10) / 10;
+        if (pendingIndex === -1) {
+            // ERSTER KLICK: Startzeit erfassen
+            const offsetStartTime = currentTime + markerOffset;
+            const startTime = Math.round(Math.max(offsetStartTime, 0) * 10) / 10;
 
-        // Lyric erstellen
-        const lyricId = Date.now();
-        const newLyric = {
-            id: lyricId,
-            text: text,
-            startTime: startTime,
-            endTime: endTime
-        };
+            // Temporäre ID generieren
+            const tempId = Date.now();
 
-        // Lyric hinzufügen
-        const updatedLyrics = [...lyrics, newLyric];
-        setLyrics(updatedLyrics);
+            // Lyric zu pendingLyrics hinzufügen
+            setPendingLyrics(prev => [...prev, {
+                id: tempId,
+                text,
+                index,
+                startTime
+            }]);
 
-        console.log(`Neuer Lyric aus Queue hinzugefügt: "${text}", startTime=${startTime}s, endTime=${endTime}s`);
+            console.log(`Startzeit für "${text}" gesetzt: ${startTime}s (Erster Klick)`);
+        } else {
+            // ZWEITER KLICK: Endzeit erfassen und Lyric fertigstellen
+            const pendingLyric = pendingLyrics[pendingIndex];
 
-        // Markiere dieses Lyric als verwendet
-        setUsedLyrics(prev => [...prev, {text, index}]);
+            // Endzeit berechnen
+            const endTime = Math.round(Math.max(currentTime, pendingLyric.startTime + 0.1) * 10) / 10;
 
-        // Nächsten Lyric in der Queue markieren
-        setNextLyricIndex(index + 1);
+            // Neuen Lyric mit Start- und Endzeit erstellen
+            const lyricId = Date.now();
+            const newLyric = {
+                id: lyricId,
+                text: pendingLyric.text,
+                startTime: pendingLyric.startTime,
+                endTime: endTime
+            };
+
+            // Lyric zum Hauptarray hinzufügen
+            setLyrics(prev => [...prev, newLyric]);
+
+            // Aus pendingLyrics entfernen
+            setPendingLyrics(prev => prev.filter(pending => pending.index !== index));
+
+            // Zu verwendeten Lyrics hinzufügen
+            setUsedLyrics(prev => [...prev, {text, index}]);
+
+            // Nächsten Lyric in der Queue markieren
+            setNextLyricIndex(index + 1);
+
+            console.log(`Lyric "${text}" vollständig hinzugefügt: startTime=${pendingLyric.startTime}s, endTime=${endTime}s (Zweiter Klick)`);
+        }
     };
 
     return (
@@ -1055,7 +1081,67 @@ const KaraokeJsonGenerator = () => {
                                         </div>
                                     </div>
 
-                                    {/* Neu: Bereich für bereits verwendete Lyrics */}
+                                    {/* Anzeige der teilweise verarbeiteten Lyrics (nur Startzeit) */}
+                                    {pendingLyrics.length > 0 && (
+                                        <div className="pending-lyrics-container" style={{
+                                            marginBottom: '1rem',
+                                            padding: '0.75rem',
+                                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            borderLeft: '4px solid var(--accent)'
+                                        }}>
+                                            <h3 style={{
+                                                margin: '0 0 0.75rem 0',
+                                                fontSize: '0.875rem',
+                                                color: 'var(--text-muted)',
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" strokeWidth="2"
+                                                     strokeLinecap="round" strokeLinejoin="round"
+                                                     style={{width: '1rem', height: '1rem', marginRight: '0.5rem'}}>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                                Warten auf Endzeit ({pendingLyrics.length})
+                                            </h3>
+                                            <div style={{
+                                                maxHeight: '150px',
+                                                overflowY: 'auto',
+                                                paddingRight: '0.5rem'
+                                            }}>
+                                                {pendingLyrics.map((lyric, idx) => (
+                                                    <div key={`pending-${idx}`}
+                                                         style={{
+                                                             padding: '0.5rem 0.75rem',
+                                                             marginBottom: '0.5rem',
+                                                             backgroundColor: 'var(--inner-bg)',
+                                                             borderRadius: '0.25rem',
+                                                             fontSize: '0.875rem',
+                                                             color: 'var(--accent-light)',
+                                                             borderLeft: '3px solid var(--accent)',
+                                                             transition: 'all 0.3s ease',
+                                                             animation: 'slideInTop 0.5s',
+                                                             display: 'flex',
+                                                             justifyContent: 'space-between'
+                                                         }}>
+                                                        <span>{lyric.text}</span>
+                                                        <span style={{
+                                                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                                            padding: '0.15rem 0.5rem',
+                                                            borderRadius: '0.25rem',
+                                                            fontSize: '0.75rem'
+                                                        }}>
+                                                            Start: {lyric.startTime.toFixed(1)}s
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Bereich für bereits verwendete Lyrics */}
                                     {usedLyrics.length > 0 && (
                                         <div className="used-lyrics-container" style={{
                                             marginBottom: '1rem',
@@ -1078,7 +1164,7 @@ const KaraokeJsonGenerator = () => {
                                                     <polyline points="9 11 12 14 22 4"></polyline>
                                                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                                                 </svg>
-                                                Verwendete Zeilen ({usedLyrics.length})
+                                                Fertige Zeilen ({usedLyrics.length})
                                             </h3>
                                             <div style={{
                                                 maxHeight: '150px',
@@ -1105,7 +1191,7 @@ const KaraokeJsonGenerator = () => {
                                         </div>
                                     )}
 
-                                    {/* Scroll-Container für die Lyric-Buttons - aktualisiert, um nur nicht verwendete anzuzeigen */}
+                                    {/* Scroll-Container für die Lyric-Buttons - aktualisiert, um Status anzuzeigen */}
                                     <div className="lyrics-queue" style={{
                                         maxHeight: '300px',
                                         overflowY: 'auto',
@@ -1116,37 +1202,87 @@ const KaraokeJsonGenerator = () => {
                                     }}>
                                         {parsedLyrics.length > 0 ? (
                                             parsedLyrics.map((lyric, index) => {
-                                                // Prüfe, ob dieser Lyric bereits verwendet wurde
+                                                // Prüfe, ob dieser Lyric bereits vollständig verwendet wurde
                                                 const isUsed = usedLyrics.some(used => used.index === index);
 
-                                                // Wenn verwendet, nicht anzeigen
+                                                // Wenn vollständig verwendet, nicht anzeigen
                                                 if (isUsed) return null;
+
+                                                // Prüfe, ob dieser Lyric teilweise verarbeitet ist (nur startTime)
+                                                const isPending = pendingLyrics.some(pending => pending.index === index);
+
+                                                // Status bestimmen (nächster, wird verarbeitet, oder normal)
+                                                const isNext = !isPending && nextLyricIndex === index;
+
+                                                // Farben und Styles basierend auf Status
+                                                let buttonStyle = {
+                                                    display: 'block',
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                    padding: '1rem',
+                                                    marginBottom: '0.5rem',
+                                                    color: 'var(--text-light)',
+                                                    border: '1px solid',
+                                                    borderRadius: '0.5rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                };
+
+                                                // Status-abhängige Styles
+                                                if (isPending) {
+                                                    // Teilweise verarbeitet (warte auf Endzeit)
+                                                    buttonStyle = {
+                                                        ...buttonStyle,
+                                                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                                                        borderColor: 'var(--accent)',
+                                                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
+                                                    };
+                                                } else if (isNext) {
+                                                    // Nächster zu verarbeitender Lyric
+                                                    buttonStyle = {
+                                                        ...buttonStyle,
+                                                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                                        borderColor: 'var(--primary)',
+                                                        boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)'
+                                                    };
+                                                } else {
+                                                    // Normaler, noch nicht bearbeiteter Lyric
+                                                    buttonStyle = {
+                                                        ...buttonStyle,
+                                                        backgroundColor: 'var(--card-bg)',
+                                                        borderColor: 'var(--border-light)'
+                                                    };
+                                                }
 
                                                 return (
                                                     <button
                                                         key={index}
-                                                        className={`lyric-queue-btn ${nextLyricIndex === index ? 'next-lyric' : ''}`}
+                                                        className={`lyric-queue-btn ${isNext ? 'next-lyric' : ''} ${isPending ? 'pending-lyric' : ''}`}
                                                         onClick={() => addLyricFromQueue(lyric, index)}
-                                                        style={{
-                                                            display: 'block',
-                                                            width: '100%',
-                                                            textAlign: 'left',
-                                                            padding: '1rem',
-                                                            marginBottom: '0.5rem',
-                                                            backgroundColor: nextLyricIndex === index ? 'rgba(139, 92, 246, 0.2)' : 'var(--card-bg)',
-                                                            color: 'var(--text-light)',
-                                                            border: '1px solid',
-                                                            borderColor: nextLyricIndex === index ? 'var(--primary)' : 'var(--border-light)',
-                                                            borderRadius: '0.5rem',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s ease',
-                                                            position: 'relative',
-                                                            overflow: 'hidden',
-                                                            boxShadow: nextLyricIndex === index ? '0 0 10px rgba(139, 92, 246, 0.3)' : 'none'
-                                                        }}
+                                                        style={buttonStyle}
                                                     >
                                                         {lyric}
-                                                        {nextLyricIndex === index && (
+
+                                                        {/* Status-Anzeige */}
+                                                        {isPending && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '0.25rem',
+                                                                right: '0.5rem',
+                                                                backgroundColor: 'var(--accent)',
+                                                                color: 'white',
+                                                                padding: '0.25rem 0.5rem',
+                                                                borderRadius: '0.25rem',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 'bold'
+                                                            }}>
+                                                                ENDZEIT SETZEN
+                                                            </div>
+                                                        )}
+
+                                                        {isNext && !isPending && (
                                                             <div style={{
                                                                 position: 'absolute',
                                                                 top: '0.25rem',
@@ -1194,7 +1330,7 @@ const KaraokeJsonGenerator = () => {
                                         )}
                                     </div>
 
-                                    {/* Anleitung - aktualisiert */}
+                                    {/* Aktualisierte Anleitung für zweistufige Erfassung */}
                                     <div style={{
                                         marginTop: '1rem',
                                         padding: '1rem',
@@ -1233,9 +1369,10 @@ const KaraokeJsonGenerator = () => {
                                             <li>Füge alle Liedzeilen oben ein</li>
                                             <li>Klicke auf "Zeilen verarbeiten"</li>
                                             <li>Spiele das Lied ab</li>
-                                            <li>Klicke auf den Zeilen-Button, wenn die Stelle im Song erreicht ist</li>
-                                            <li>Der Button verschwindet und die Zeile erscheint oben unter "Verwendete Zeilen"</li>
+                                            <li><strong>Erster Klick:</strong> Startzeit für Zeile erfassen (wird blau)</li>
+                                            <li><strong>Zweiter Klick:</strong> Endzeit für Zeile erfassen (wird lila)</li>
                                             <li>Die nächste Zeile wird automatisch markiert</li>
+                                            <li>Wiederhole, bis alle Zeilen erfasst sind</li>
                                         </ol>
                                     </div>
                                 </div>
