@@ -39,6 +39,10 @@ const KaraokePlayer = () => {
     const nativeAnalyserRef = useRef(null);
     const streamRef = useRef(null);
 
+    // Neue Refs für Pitch-Erkennung mit Timer
+    const lastPitchTimeRef = useRef(0);
+    const silenceTimerRef = useRef(null);
+
     const [visiblePitchData, setVisiblePitchData] = useState([]);
     const [pitchRange, setPitchRange] = useState({min: 40, max: 90});
 
@@ -527,7 +531,7 @@ const KaraokePlayer = () => {
                             console.log(`Frequenzdaten: Min=${min.toFixed(1)}dB, Max=${max.toFixed(1)}dB, Avg=${avg.toFixed(1)}dB`);
                         }
 
-                        // Pitch-Erkennung
+                        // Pitch-Erkennung - wird immer aufgerufen, auch wenn kein Ton erkannt wird
                         const pitch = detectPitch(dataArray);
 
                         if (pitch) {
@@ -554,6 +558,7 @@ const KaraokePlayer = () => {
                                 }
                             }
                         }
+                        // Hier ist kein else-Block nötig, da detectPitch direkt setCurrentPitch(null) aufruft
                     } catch (err) {
                         console.error("Fehler bei der Frequenzanalyse:", err);
                     }
@@ -577,6 +582,12 @@ const KaraokePlayer = () => {
             timeUpdateIntervalRef.current = null;
         }
 
+        // Bereinige den Silence-Timer
+        if (silenceTimerRef.current) {
+            clearInterval(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+
         // Bereinige Audio-Stream
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
@@ -594,6 +605,9 @@ const KaraokePlayer = () => {
             nativeAnalyserRef.current.disconnect();
             nativeAnalyserRef.current = null;
         }
+
+        // Setze Pitch zurück
+        setCurrentPitch(null);
 
         console.log("Pitch-Analyse gestoppt und bereinigt");
     };
@@ -623,9 +637,8 @@ const KaraokePlayer = () => {
         const nyquist = sampleRate / 2;
         const frequency = maxIndex * nyquist / (frequencyData.length - 1);
 
-        // Typischer Schwellenwert für Spracherkennung in dB
-        // (Web Audio API gibt dB-Werte zurück, meist negativ, z.B. -100 bis -30)
-        const THRESHOLD = -60; // Schwellwert in dB, anpassbar
+        // Angepasster Schwellenwert für Spracherkennung in dB
+        const THRESHOLD = -55; // Schwellwert in dB
 
         if (maxValue > THRESHOLD && frequency > 80) { // Setze eine Mindestfrequenz
             // Konvertiere Frequenz zu MIDI-Notennummer
@@ -635,6 +648,8 @@ const KaraokePlayer = () => {
         }
 
         console.log(`Kein Pitch erkannt (unter Schwelle ${THRESHOLD} oder zu niedrige Frequenz)`);
+        // Hier DIREKT auf null setzen, um sicherzustellen, dass die Benutzeroberfläche aktualisiert wird
+        setCurrentPitch(null);
         return null;
     };
 
