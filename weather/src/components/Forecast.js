@@ -38,7 +38,7 @@ function Forecast({ forecast }) {
   };
 
   return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
         {forecast.map((dayData, index) => {
           const date = new Date(dayData[0].dt * 1000);
           const dayName = getDayName(date);
@@ -50,21 +50,21 @@ function Forecast({ forecast }) {
           return (
               <div
                   key={index}
-                  className={`rounded-lg shadow-md p-4 flex flex-col items-center ${darkMode ? 'bg-primary-light' : 'bg-white'}`}
+                  className={`rounded-lg shadow-md p-3 sm:p-4 flex flex-col items-center ${darkMode ? 'bg-primary-light' : 'bg-white'}`}
               >
-                <h3 className="font-semibold text-lg mb-2">{dayName}</h3>
-                <p className={darkMode ? 'text-gray-300 text-sm' : 'text-gray-500 text-sm'}>
+                <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2">{dayName}</h3>
+                <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} text-xs sm:text-sm`}>
                   {date.toLocaleDateString('de-DE')}
                 </p>
                 <img
                     src={iconUrl}
                     alt={description}
-                    className="w-16 h-16 my-2"
+                    className="w-12 h-12 sm:w-16 sm:h-16 my-1 sm:my-2"
                 />
-                <p className={`capitalize text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <p className={`capitalize text-xs sm:text-sm mb-1 sm:mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   {description}
                 </p>
-                <p className="text-2xl font-bold">{avgTemp}°C</p>
+                <p className="text-xl sm:text-2xl font-bold">{avgTemp}°C</p>
               </div>
           );
         })}

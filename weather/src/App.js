@@ -60,9 +60,9 @@ function App() {
 
     return (
         <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-primary text-white' : 'bg-white text-gray-800'}`}>
-            <div className="container mx-auto px-4 py-8 max-w-5xl">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className={`text-4xl font-bold tracking-tight ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
+            <div className="container mx-auto px-4 py-4 sm:py-8 max-w-5xl">
+                <div className="flex justify-between items-center mb-4 sm:mb-8">
+                    <h1 className={`text-2xl sm:text-4xl font-bold tracking-tight ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
                         Wetter App
                     </h1>
                     <ThemeSwitch />
@@ -72,7 +72,7 @@ function App() {
 
                 {error && (
                     <div
-                        className={`border px-4 py-3 rounded-lg shadow-sm relative mt-4 mb-4 ${darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-gray-100 border-red-300 text-red-600'}`}>
+                        className={`border px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow-sm relative mt-3 mb-3 sm:mt-4 sm:mb-4 text-sm sm:text-base ${darkMode ? 'bg-red-900 border-red-700 text-red-200' : 'bg-gray-100 border-red-300 text-red-600'}`}>
                         {error}
                     </div>
                 )}
@@ -84,8 +84,8 @@ function App() {
                         {weather && <WeatherCard weather={weather}/>}
 
                         {forecast && (
-                            <div className="mt-8">
-                                <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
+                            <div className="mt-6 sm:mt-8">
+                                <h2 className={`text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
                                     5-Tage-Vorhersage für {location}
                                 </h2>
                                 <Forecast forecast={forecast}/>
@@ -94,9 +94,9 @@ function App() {
                     </>
                 )}
 
-                <div className="mt-8 text-center">
+                <div className="mt-6 sm:mt-8 text-center mb-6">
                     <button
-                        className={`font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+                        className={`text-sm sm:text-base font-semibold py-2 px-4 sm:px-6 rounded-full shadow-md transition duration-300 ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
                         onClick={() => fetchWeather(location)}
                     >
                         JETZT AKTUALISIEREN!

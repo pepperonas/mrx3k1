@@ -9,8 +9,31 @@ body {
     sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .dark {
     color-scheme: dark;
+}
+
+/* Besseres Touch-Feedback für mobile Geräte */
+button, a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Reduziert Verzögerung bei Touch-Events */
+* {
+    touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+    /* Optimierung für kleine Bildschirme */
+    input, button {
+        font-size: 16px; /* Verhindert Zoom auf iOS bei Focus */
+    }
+}
+
+/* Verbessert die Lesbarkeit auf dunklen Hintergründen */
+.dark input::placeholder {
+    opacity: 0.7;
 }
