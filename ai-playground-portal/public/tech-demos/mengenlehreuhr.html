@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Berliner Mengenlehreuhr</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #2C2E3B;
+            color: white;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #222;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 95%;
+            max-width: 500px;
+        }
+
+        .digital-time {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+
+        .seconds-light {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            border: 2px solid #555;
+            background-color: #333;
+        }
+
+        .seconds-light.on {
+            background-color: #ffcc00;
+            box-shadow: 0 0 15px #ffcc00;
+        }
+
+        .row {
+            display: flex;
+            margin-bottom: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .light {
+            height: 25px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background-color: #333;
+            margin: 0 2px;
+            flex-grow: 1;
+        }
+
+        .five-hour .light, .one-hour .light, .one-minute .light {
+            max-width: calc(25% - 4px);
+        }
+
+        .five-minute .light {
+            max-width: calc(9.09% - 4px);
+        }
+
+        .five-hour .light.on {
+            background-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .one-hour .light.on {
+            background-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .five-minute .light.on {
+            background-color: #ffcc00;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+
+        .five-minute .light.on:nth-child(3n) {
+            background-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .one-minute .light.on {
+            background-color: #ffcc00;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+
+        h1 {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .explanation {
+            width: 95%;
+            max-width: 500px;
+            margin-top: 20px;
+            line-height: 1.5;
+            text-align: start;
+            font-size: 0.9em;
+        }
+
+        /* Responsive-Anpassungen */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3em;
+                margin: 15px 0;
+            }
+
+            .digital-time {
+                font-size: 1.5em;
+            }
+
+            .seconds-light {
+                width: 30px;
+                height: 30px;
+            }
+
+            .light {
+                height: 20px;
+            }
+
+            .explanation ul {
+                padding-left: 20px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .light {
+                height: 32px;
+                margin: 0 4px;
+            }
+
+            .seconds-light {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>Berliner Mengenlehreuhr</h1>
+
+<div class="clock-container">
+    <div class="seconds-light"></div>
+
+    <div class="row five-hour">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+    <div class="row one-hour">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+    <div class="row five-minute">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+    <div class="row one-minute">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+    <div class="digital-time">00:00:00</div>
+</div>
+
+<div class="explanation">
+    <p>Die Mengenlehreuhr wurde 1975 von Dieter Binninger entworfen und im Berliner Stadtbild
+        aufgestellt.</p>
+    <p>So liest man die Uhr:</p>
+    <ul style="text-align: left; margin-top: 5px;">
+        <li>Der runde Kreis oben blinkt im Sekundentakt</li>
+        <li>Die erste Reihe: Jede Lampe steht für 5 Stunden</li>
+        <li>Die zweite Reihe: Jede Lampe steht für 1 Stunde</li>
+        <li>Die dritte Reihe: Jede Lampe steht für 5 Minuten</li>
+        <li>Die vierte Reihe: Jede Lampe steht für 1 Minute</li>
+    </ul>
+</div>
+<script>
+    function updateClock() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+
+        // Update digital time
+        document.querySelector('.digital-time').textContent =
+            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Update seconds light (blinks every second)
+        document.querySelector('.seconds-light').classList.toggle('on', seconds % 2 === 0);
+
+        // Update 5-hour row (each light = 5 hours)
+        const fiveHourLights = document.querySelectorAll('.five-hour .light');
+        const fiveHourCount = Math.floor(hours / 5);
+        fiveHourLights.forEach((light, index) => {
+            light.classList.toggle('on', index < fiveHourCount);
+        });
+
+        // Update 1-hour row (each light = 1 hour, max 4)
+        const oneHourLights = document.querySelectorAll('.one-hour .light');
+        const oneHourCount = hours % 5;
+        oneHourLights.forEach((light, index) => {
+            light.classList.toggle('on', index < oneHourCount);
+        });
+
+        // Update 5-minute row (each light = 5 minutes)
+        const fiveMinuteLights = document.querySelectorAll('.five-minute .light');
+        const fiveMinuteCount = Math.floor(minutes / 5);
+        fiveMinuteLights.forEach((light, index) => {
+            light.classList.toggle('on', index < fiveMinuteCount);
+        });
+
+        // Update 1-minute row (each light = 1 minute, max 4)
+        const oneMinuteLights = document.querySelectorAll('.one-minute .light');
+        const oneMinuteCount = minutes % 5;
+        oneMinuteLights.forEach((light, index) => {
+            light.classList.toggle('on', index < oneMinuteCount);
+        });
+    }
+
+    // Update the clock immediately and then every 500ms
+    updateClock();
+    setInterval(updateClock, 500);
+</script>
+
+</body>
+</html>

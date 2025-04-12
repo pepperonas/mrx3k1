@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>James Bond Statistiken</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #333;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .chart-container {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2C2E3B;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #4D5382;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        .color-box {
+            width: 15px;
+            height: 15px;
+            margin-right: 6px;
+            border-radius: 3px;
+        }
+
+        .facts {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .facts li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .facts li:last-child {
+            border-bottom: none;
+        }
+
+        .facts strong {
+            color: #4D5382;
+        }
+
+        /* Responsive Anpassungen */
+        @media (max-width: 768px) {
+            .chart-wrapper {
+                height: 300px;
+            }
+
+            .legend {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>Todesfälle in James Bond Filmen</h1>
+
+<div class="chart-container">
+    <h2>Todesfälle pro Film (chronologisch)</h2>
+    <p>Entwicklung der Todesfälle über die Zeit</p>
+    <div class="chart-wrapper">
+        <canvas id="timeline-chart"></canvas>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Top 10 Bond-Filme mit den meisten Todesfällen</h2>
+    <div class="chart-wrapper">
+        <canvas id="top10-chart"></canvas>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Durchschnittliche Todesfälle pro Bond-Darsteller</h2>
+    <div class="chart-wrapper">
+        <canvas id="actor-chart"></canvas>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Interessante Fakten</h2>
+    <ul class="facts">
+        <li>Der tödlichste Film ist <strong>Spectre (2015)</strong> mit 235 Todesfällen.</li>
+        <li>Der "friedlichste" Film ist <strong>The Man with the Golden Gun (1974)</strong> mit nur
+            9 Todesfällen.
+        </li>
+        <li>Daniel Craig's Bond-Filme haben durchschnittlich die meisten Todesfälle (106,4).</li>
+        <li>Die durchschnittliche Anzahl von Todesfällen über alle 25 Filme beträgt 67,5.</li>
+        <li>Während Bond-Filme in den 1960er und 1970er Jahren durchschnittlich 49 Todesfälle
+            hatten, stieg diese Zahl in den 2000er und 2010er Jahren auf 106.
+        </li>
+    </ul>
+</div>
+
+<div class="legend">
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #E53935;"></div>
+        <span>Sean Connery</span>
+    </div>
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #43A047;"></div>
+        <span>George Lazenby</span>
+    </div>
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #1E88E5;"></div>
+        <span>Roger Moore</span>
+    </div>
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #FDD835;"></div>
+        <span>Timothy Dalton</span>
+    </div>
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #8E24AA;"></div>
+        <span>Pierce Brosnan</span>
+    </div>
+    <div class="legend-item">
+        <div class="color-box" style="background-color: #FB8C00;"></div>
+        <span>Daniel Craig</span>
+    </div>
+</div>
+
+<script>
+    // Daten über Todesfälle in James Bond Filmen
+    const jamesBondDeaths = [
+        {film: "Dr. No (1962)", deaths: 12, actor: "Sean Connery", year: 1962},
+        {film: "From Russia with Love (1963)", deaths: 28, actor: "Sean Connery", year: 1963},
+        {film: "Goldfinger (1964)", deaths: 77, actor: "Sean Connery", year: 1964},
+        {film: "Thunderball (1965)", deaths: 50, actor: "Sean Connery", year: 1965},
+        {film: "You Only Live Twice (1967)", deaths: 196, actor: "Sean Connery", year: 1967},
+        {
+            film: "On Her Majesty's Secret Service (1969)",
+            deaths: 43,
+            actor: "George Lazenby",
+            year: 1969
+        },
+        {film: "Diamonds Are Forever (1971)", deaths: 56, actor: "Sean Connery", year: 1971},
+        {film: "Live and Let Die (1973)", deaths: 27, actor: "Roger Moore", year: 1973},
+        {film: "The Man with the Golden Gun (1974)", deaths: 9, actor: "Roger Moore", year: 1974},
+        {film: "The Spy Who Loved Me (1977)", deaths: 72, actor: "Roger Moore", year: 1977},
+        {film: "Moonraker (1979)", deaths: 59, actor: "Roger Moore", year: 1979},
+        {film: "For Your Eyes Only (1981)", deaths: 30, actor: "Roger Moore", year: 1981},
+        {film: "Octopussy (1983)", deaths: 54, actor: "Roger Moore", year: 1983},
+        {film: "A View to a Kill (1985)", deaths: 58, actor: "Roger Moore", year: 1985},
+        {film: "The Living Daylights (1987)", deaths: 52, actor: "Timothy Dalton", year: 1987},
+        {film: "Licence to Kill (1989)", deaths: 30, actor: "Timothy Dalton", year: 1989},
+        {film: "GoldenEye (1995)", deaths: 71, actor: "Pierce Brosnan", year: 1995},
+        {film: "Tomorrow Never Dies (1997)", deaths: 110, actor: "Pierce Brosnan", year: 1997},
+        {film: "The World Is Not Enough (1999)", deaths: 68, actor: "Pierce Brosnan", year: 1999},
+        {film: "Die Another Day (2002)", deaths: 103, actor: "Pierce Brosnan", year: 2002},
+        {film: "Casino Royale (2006)", deaths: 29, actor: "Daniel Craig", year: 2006},
+        {film: "Quantum of Solace (2008)", deaths: 33, actor: "Daniel Craig", year: 2008},
+        {film: "Skyfall (2012)", deaths: 72, actor: "Daniel Craig", year: 2012},
+        {film: "Spectre (2015)", deaths: 235, actor: "Daniel Craig", year: 2015},
+        {film: "No Time to Die (2021)", deaths: 163, actor: "Daniel Craig", year: 2021}
+    ];
+
+    // Sortieren nach Erscheinungsjahr für die Zeitleiste
+    const chronologicalData = [...jamesBondDeaths].sort((a, b) => a.year - b.year);
+
+    // Top 10 Filme mit den meisten Todesfällen
+    const topDeathsData = [...jamesBondDeaths].sort((a, b) => b.deaths - a.deaths).slice(0, 10);
+
+    // Durchschnittliche Todesfälle pro Bond-Darsteller
+    const actorData = [
+        {actor: "Sean Connery", avgDeaths: 69.8},
+        {actor: "George Lazenby", avgDeaths: 43},
+        {actor: "Roger Moore", avgDeaths: 44.1},
+        {actor: "Timothy Dalton", avgDeaths: 41},
+        {actor: "Pierce Brosnan", avgDeaths: 88},
+        {actor: "Daniel Craig", avgDeaths: 106.4}
+    ];
+
+    // Farbzuordnung für Bond-Darsteller
+    const actorColors = {
+        "Sean Connery": "#E53935",
+        "George Lazenby": "#43A047",
+        "Roger Moore": "#1E88E5",
+        "Timothy Dalton": "#FDD835",
+        "Pierce Brosnan": "#8E24AA",
+        "Daniel Craig": "#FB8C00"
+    };
+
+    // Formatierung der Filme für X-Achse
+    const formatFilmName = (film) => {
+        const match = film.match(/(.*) \((\d{4})\)/);
+        if (match) {
+            return match[1];
+        }
+        return film;
+    };
+
+    // Chart-Konfiguration mit gemeinsamen Eigenschaften
+    const chartConfig = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            tooltip: {
+                backgroundColor: 'rgba(44, 46, 59, 0.9)',
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                padding: 10
+            }
+        }
+    };
+
+    // Timeline Chart
+    const timelineChart = new Chart(
+        document.getElementById('timeline-chart'),
+        {
+            type: 'line',
+            data: {
+                labels: chronologicalData.map(item => item.year),
+                datasets: [{
+                    label: 'Todesfälle',
+                    data: chronologicalData.map(item => item.deaths),
+                    borderColor: '#1E88E5',
+                    tension: 0.2,
+                    pointBackgroundColor: chronologicalData.map(item => actorColors[item.actor]),
+                    pointBorderColor: chronologicalData.map(item => actorColors[item.actor]),
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                ...chartConfig,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Todesfälle',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        suggestedMax: 250,
+                        ticks: { stepSize: 50 }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahr',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function (tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return chronologicalData[index].film;
+                            },
+                            afterTitle: function (tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return 'Darsteller: ' + chronologicalData[index].actor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    // Top 10 Chart
+    const top10Chart = new Chart(
+        document.getElementById('top10-chart'),
+        {
+            type: 'bar',
+            data: {
+                labels: topDeathsData.map(item => formatFilmName(item.film)),
+                datasets: [{
+                    label: 'Todesfälle',
+                    data: topDeathsData.map(item => item.deaths),
+                    backgroundColor: topDeathsData.map(item => actorColors[item.actor]),
+                    borderWidth: 1,
+                    borderColor: '#2C2E3B'
+                }]
+            },
+            options: {
+                ...chartConfig,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        suggestedMax: 250,
+                        ticks: { stepSize: 50 },
+                        title: {
+                            display: true,
+                            text: 'Todesfälle',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function (value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                const maxLength = 18;
+                                if (label.length > maxLength) {
+                                    return label.substr(0, maxLength) + '...';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function (tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return topDeathsData[index].film;
+                            },
+                            afterTitle: function (tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return 'Darsteller: ' + topDeathsData[index].actor;
+                            },
+                            afterLabel: function (tooltipItem) {
+                                const index = tooltipItem.dataIndex;
+                                return 'Jahr: ' + topDeathsData[index].year;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    // Actor Chart
+    const actorChart = new Chart(
+        document.getElementById('actor-chart'),
+        {
+            type: 'bar',
+            data: {
+                labels: actorData.map(item => item.actor),
+                datasets: [{
+                    label: 'Durchschnittliche Todesfälle',
+                    data: actorData.map(item => item.avgDeaths),
+                    backgroundColor: actorData.map(item => actorColors[item.actor]),
+                    borderWidth: 1,
+                    borderColor: '#2C2E3B'
+                }]
+            },
+            options: {
+                ...chartConfig,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 120,
+                        ticks: { stepSize: 20 },
+                        title: {
+                            display: true,
+                            text: 'Durchschnittliche Todesfälle',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function (tooltipItem) {
+                                const actor = actorData[tooltipItem.dataIndex].actor;
+                                const films = jamesBondDeaths.filter(item => item.actor === actor);
+                                return 'Anzahl Filme: ' + films.length;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    // Funktion zur Anpassung der Chart-Höhe bei Fenstergröße
+    function updateChartHeight() {
+        const wrappers = document.querySelectorAll('.chart-wrapper');
+        const windowHeight = window.innerHeight;
+
+        // Passen Sie die Höhe der Charts basierend auf der Fenstergröße an
+        const height = windowHeight < 800 ? 300 : 400;
+
+        wrappers.forEach(wrapper => {
+            wrapper.style.height = `${height}px`;
+        });
+
+        // Charts müssen aktualisiert werden
+        [timelineChart, top10Chart, actorChart].forEach(chart => chart.resize());
+    }
+
+    // Initial und bei Größenänderung aktualisieren
+    window.addEventListener('resize', updateChartHeight);
+    updateChartHeight();
+</script>
+</body>
+</html>
