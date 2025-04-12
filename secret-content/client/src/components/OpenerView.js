@@ -1,21 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 
-function OpenerView({ currentOpener, onNext, onCopy, onBack }) {
-    const [fadeIn, setFadeIn] = useState(true);
+function OpenerView({currentOpener, onNext, onCopy, onBack}) {
+    const [isVisible, setIsVisible] = useState(true);
+    const [displayText, setDisplayText] = useState(currentOpener);
 
-    // Fade-Effekt bei Änderung des Openers
+    // Optimierter Fade-Effekt bei Änderung des Openers
     useEffect(() => {
-        setFadeIn(false);
-        const timer = setTimeout(() => setFadeIn(true), 300);
-        return () => clearTimeout(timer);
-    }, [currentOpener]);
+        if (currentOpener !== displayText) {
+            // Ausblenden
+            setIsVisible(false);
+
+            // Warte bis der Fade-out abgeschlossen ist, dann Text aktualisieren
+            const timer = setTimeout(() => {
+                setDisplayText(currentOpener);
+                // Einblenden nach Text-Update
+                setIsVisible(true);
+            }, 300); // Diese Zeit sollte mit der CSS-Transition übereinstimmen
+
+            return () => clearTimeout(timer);
+        }
+    }, [currentOpener, displayText]);
 
     return (
         <div className="opener-view">
             <div className="content-container">
-        <span className={`content-text ${fadeIn ? 'fade-in' : 'fade-out'}`}>
-          {currentOpener}
-        </span>
+                <span
+                    className={`content-text ${isVisible ? 'fade-in' : 'fade-out'}`}
+                    style={{transition: 'opacity 0.3s ease'}}
+                >
+                    {displayText}
+                </span>
             </div>
 
             <div className="button-container">
