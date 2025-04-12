@@ -16,6 +16,7 @@
             <excludedPath local="true" path="$PROJECT_DIR$/jackson/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/ai-playground-portal/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/docs-portal/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/jetbrains-ide-clone/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>
