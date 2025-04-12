@@ -137,6 +137,14 @@ const categoriesData = [
         name: 'Tech Demos',
         files: [
             {
+                id: 'ki-vergleich',
+                name: 'KI-Vergleich',
+                path: 'tech-demos/m5-cardputer-comparison.html',
+                description: 'Vergleich von HTML-Implementierungen des M5 CardPuter durch verschiedene KI-Modelle.',
+                category: 'Showcase',
+                tags: ['ki', 'generierung', 'technik', 'simulation']
+            },
+            {
                 id: 'mengenlehreuhr',
                 name: 'Mengenlehreuhr',
                 path: 'tech-demos/mengenlehreuhr.html',
@@ -171,6 +179,7 @@ const documentSources = {
     'os-distribution': 'statistics/os-distribution.html',
     'war-report': 'statistics/war-report.html',
     'tech-report': 'statistics/tech-report.html',
+    'ki-vergleich': 'tech-demos/m5-cardputer-comparison.html',
     'mengenlehreuhr': 'tech-demos/mengenlehreuhr.html',
     'mandelbrot': 'tech-demos/mandelbrot.html',
     'story-code': 'tech-demos/story-code.html'

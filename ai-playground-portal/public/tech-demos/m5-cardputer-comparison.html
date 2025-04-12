@@ -3,216 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5 Cardputer - Implementationsvergleich</title>
+    <title>M5 CardPuter KI-Implementierungsvergleich</title>
     <style>
         :root {
-            --primary-color: #2C2E3B;
-            --secondary-color: #3D405B;
-            --accent-color: #E07A5F;
-            --text-color: #F4F1DE;
+            --primary: #2C2E3B;
+            --secondary: #3F4259;
+            --accent: #5D6183;
+            --text: #E9EAEF;
+            --highlight: #FF9470;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--primary-color);
-            color: var(--text-color);
+            background-color: var(--primary);
+            color: var(--text);
             line-height: 1.6;
             padding: 20px;
         }
-        
+
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: var(--secondary);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            color: var(--accent-color);
+            color: var(--highlight);
         }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.8;
+
+        .original-device {
+            margin-bottom: 40px;
+            text-align: center;
         }
-        
-        .original-image {
-            display: block;
-            max-width: 600px;
-            margin: 0 auto 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+
+        .original-device img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
         }
-        
-        .preview-grid {
+
+        .comparison-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
             margin-bottom: 40px;
         }
-        
-        .preview-card {
-            background-color: var(--secondary-color);
-            border-radius: 10px;
+
+        .model-card {
+            background-color: var(--secondary);
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
-        
-        .preview-header {
+
+        .model-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .model-header {
+            background-color: var(--accent);
             padding: 15px;
-            background-color: rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 2px solid var(--highlight);
         }
-        
-        .preview-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--accent-color);
+
+        .model-title {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 5px;
         }
-        
-        .preview-actions {
-            display: flex;
-            gap: 10px;
+
+        .model-content {
+            padding: 20px;
         }
-        
-        .preview-btn {
-            background-color: var(--accent-color);
-            color: var(--primary-color);
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .preview-btn:hover {
-            opacity: 0.9;
-        }
-        
-        .preview-iframe-container {
-            position: relative;
+
+        .model-preview {
             height: 500px;
+            overflow: auto;
             background-color: #fff;
-            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 20px;
         }
-        
-        .preview-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+
+        .model-preview iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-        
-        .code-view {
-            height: 500px;
-            overflow: auto;
-            background-color: #1E1F2B;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            color: #E0E0E0;
-            display: none;
-        }
-        
-        .code-content {
-            white-space: pre-wrap;
-        }
-        
-        .comparison-table {
+
+        .rating-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 40px 0;
-            background-color: var(--secondary-color);
-            border-radius: 10px;
+            margin-top: 20px;
+            background-color: var(--secondary);
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-        
-        .comparison-table th,
-        .comparison-table td {
+
+        .rating-table th, .rating-table td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .comparison-table th {
-            background-color: rgba(0, 0, 0, 0.2);
-            color: var(--accent-color);
-            font-weight: bold;
+
+        .rating-table th {
+            background-color: var(--accent);
+            color: var(--text);
+            font-weight: 600;
         }
-        
+
+        .rating-table tr:nth-child(even) {
+            background-color: rgba(93, 97, 131, 0.1);
+        }
+
         .rating {
-            color: gold;
+            display: flex;
+            align-items: center;
         }
-        
-        .conclusion {
-            background-color: var(--secondary-color);
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+        .rating-bar {
+            height: 10px;
+            background-color: var(--highlight);
+            border-radius: 5px;
+            margin-right: 10px;
         }
-        
-        h2 {
-            color: var(--accent-color);
-            margin-bottom: 15px;
+
+        .rating-value {
+            font-weight: 600;
         }
-        
-        p {
-            margin-bottom: 15px;
-        }
-        
+
         footer {
             text-align: center;
             margin-top: 40px;
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
             opacity: 0.7;
+            font-size: 0.9rem;
         }
-        
-        /* Responsive */
-        @media (max-width: 1000px) {
-            .preview-grid {
-                grid-template-columns: 1fr;
-            }
+
+        .conclusion {
+            background-color: var(--secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .conclusion h2 {
+            color: var(--highlight);
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>M5 Cardputer - Implementationsvergleich</h1>
-            <div class="subtitle">Vergleich von vier verschiedenen HTML/CSS-Umsetzungen</div>
-        </header>
-        
-        <img src="/api/placeholder/600/350" alt="M5 Cardputer Original" class="original-image">
-        
-        <div class="preview-grid">
-            <div class="preview-card">
-                <div class="preview-header">
-                    <div class="preview-title">Claude 3.7 Version</div>
-                    <div class="preview-actions">
-                        <button class="preview-btn toggle-view" data-target="claude-preview">Code anzeigen</button>
-                    </div>
-                </div>
-                <div class="preview-iframe-container" id="claude-preview">
-                    <iframe class="preview-iframe" srcdoc='<!DOCTYPE html>
+<div class="container">
+    <header>
+        <h1>M5 CardPuter KI-Implementierungsvergleich</h1>
+        <p>Vergleich von HTML-Implementierungen des M5 CardPuter durch verschiedene KI-Modelle</p>
+    </header>
+
+    <div class="original-device">
+        <h2>Original M5 CardPuter</h2>
+        <p>Referenzgerät zum Vergleich der Implementierungen</p>
+        <img src="../img/m5-preset.png" alt="M5 CardPuter Original">
+    </div>
+
+    <div class="comparison-grid">
+        <div class="model-card">
+            <div class="model-header">
+                <h3 class="model-title">Claude 3.7 Implementierung</h3>
+            </div>
+            <div class="model-content">
+                <div class="model-preview">
+                    <iframe srcdoc='<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -571,10 +551,11 @@
                 <div class="key">K</div>
                 <div class="key">L</div>
                 <div class="key">;<span class="key-secondary">:</span></div>
-                <div class="key">\'<span class="key-secondary">"</span></div>
+                <div class="key">"<span class="key-secondary">\'
+                    </span></div>
                 <div class="key function">↵</div>
             </div>
-            
+
             <div class="kb-row">
                 <div class="key wide">ctrl</div>
                 <div class="key special">opt</div>
@@ -592,7 +573,7 @@
                 <div class="key special">⏎</div>
             </div>
         </div>
-        
+
         <div class="arrow-keys">
             <div class="arrow-key">←</div>
             <div class="arrow-key">↑</div>
@@ -602,513 +583,375 @@
     </div>
 </body>
 </html>'></iframe>
-                </div>
-                <div class="code-view" id="claude-code">
-                    <div class="code-content">&lt;!DOCTYPE html&gt;
-&lt;html lang="de"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;M5 CardPuter&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
+</div>
+<p>Claude 3.7 hat eine detaillierte Implementierung mit guter Beachtung der Feinheiten des Designs
+    erstellt. Die Tastatur-Layout ist präzise und die Farbgebung entspricht größtenteils dem
+    Original.</p>
+</div>
+</div>
 
-        .cardputer {
-            position: relative;
-            width: 400px;
-            height: 250px;
-            background-color: #DDDDDD;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .top-section {
-            display: flex;
-            height: 70px;
-            margin-bottom: 10px;
-        }
-
-        .logo-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .card-logo {
-            font-weight: bold;
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        .computer-text {
-            font-size: 12px;
-            margin-top: -3px;
-        }
-
-        .mic {
-            position: absolute;
-            left: 130px;
-            top: 40px;
-            font-size: 12px;
-        }
-
-        .mic-icon {
-            width: 12px;
-            height: 12px;
-            background-color: #333;
-            border-radius: 50%;
-        }
-
-        .data-section {
-            position: absolute;
-            left: 145px;
-            top: 25px;
-            font-size: 8px;
-        }
-
-        .display-section {
-            flex: 2;
-            background-color: #000;
-            border-radius: 5px;
-            padding: 5px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .display-app {
-            width: 30px;
-            height: 30px;
-            background-color: white;
-            border-radius: 5px;
-            margin: 2px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-        }
-
-        .display-app.scan {
-            background-color: #333;
-            color: white;
-        }
-
-        .display-app.record {
-            background-color: white;
-            position: relative;
-        }
-
-        .record-icon {
-            width: 15px;
-            height: 15px;
-            border: 2px solid #FF5555;
-            border-radius: 5px;
-            position: relative;
-        }
-
-        .record-icon::before {
-            content: "";
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background-color: #FF5555;
-            border-radius: 50%;
-            top: 3.5px;
-            left: 3.5px;
-        }
-
-        .display-app.chat {
-            background-color: #553355;
-            color: white;
-        }
-
-        /* Weitere Styles... */
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;!-- HTML-Struktur des Claude 3.7 M5 Cardputer --&gt;
-&lt;/body&gt;
-&lt;/html&gt;</div>
-                </div>
-            </div>
-            
-            <div class="preview-card">
-                <div class="preview-header">
-                    <div class="preview-title">Gemini 2.5 Version</div>
-                    <div class="preview-actions">
-                        <button class="preview-btn toggle-view" data-target="gemini-preview">Code anzeigen</button>
-                    </div>
-                </div>
-                <div class="preview-iframe-container" id="gemini-preview">
-                    <iframe class="preview-iframe" srcdoc='<!DOCTYPE html>
+<div class="model-card">
+    <div class="model-header">
+        <h3 class="model-title">Gemini 2.5 Implementierung</h3>
+    </div>
+    <div class="model-content">
+        <div class="model-preview">
+            <iframe srcdoc='<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M5 Cardputer Darstellung</title>
     <style>
-/* Basic Reset & Font */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        /* Basic Reset & Font */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f0f0f0;
-    font-family: sans-serif;
-    font-size: 10px; /* Base font size for scaling */
-}
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: "Roboto", sans-serif;
+            font-size: 10px; /* Base font size for scaling */
+        }
 
-/* Main Cardputer Body */
-.cardputer {
-    width: 400px; /* Adjust width as needed */
-    background-color: #E0E0E0; /* Light grey body */
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border: 1px solid #bdbdbd;
-}
+        /* Main Cardputer Body */
+        .cardputer {
+            width: 400px; /* Adjust width as needed */
+            background-color: #E0E0E0; /* Light grey body */
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 1px solid #bdbdbd;
+        }
 
-/* Top Section (Screen, Stamp, Screws) */
-.top-section {
-    display: flex;
-    align-items: flex-start; /* Align items to the top */
-    margin-bottom: 10px;
-    position: relative;
-    gap: 10px;
-}
+        /* Top Section (Screen, Stamp, Screws) */
+        .top-section {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            position: relative;
+            gap: 10px;
+        }
 
-.screw {
-    width: 12px;
-    height: 12px;
-    background-color: #757575; /* Darker grey for screws */
-    border-radius: 50%;
-    position: absolute;
-    top: 10px; /* Adjust vertical position */
-    border: 1px solid #616161;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.screw::after { /* Simple cross pattern */
-    content: "+";
-    color: #555;
-    font-size: 10px;
-    font-weight: bold;
-    line-height: 1;
+        .screw {
+            width: 12px;
+            height: 12px;
+            background-color: #757575;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            border: 1px solid #616161;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .screw::after {
+            content: "+";
+            color: #555;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1;
 
-}
+        }
 
-.screw-left { left: 25px; } /* Adjust horizontal position */
-.screw-right { right: 25px; } /* Adjust horizontal position */
-
-
-/* Screen Area (Left Part) */
-.screen-area {
-    flex: 1; /* Take available space */
-    background-color: #C5C5C5; /* Slightly darker grey */
-    border-radius: 5px;
-    padding: 5px;
-    border: 1px solid #BDBDBD;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.logo-area {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 2px;
-}
-
-.logo-box {
-    width: 10px;
-    height: 10px;
-    background-color: #757575;
-    border: 1px solid #616161;
-}
-
-.logo-text {
-    font-size: 0.9em;
-    line-height: 1.1;
-    text-align: center;
-    color: #424242;
-}
-
-.logo-text strong {
-    font-weight: bold;
-    display: block;
-}
-
-.mic-area {
-    font-size: 0.8em;
-    color: #424242;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.mic-icon { /* Simple mic representation */
-    display: inline-block;
-    width: 6px;
-    height: 10px;
-    background-color: #757575;
-    border-radius: 3px 3px 0 0;
-    position: relative;
-}
-.mic-icon::after {
-    content: "";
-    position: absolute;
-    bottom: -2px;
-    left: 2px;
-    width: 2px;
-    height: 3px;
-    background-color: #757575;
-}
-
-.data-label {
-     font-size: 0.7em;
-     color: #616161;
-     line-height: 1.1;
-     margin-top: auto; /* Pushes it down */
-}
-
-/* Display Screen */
-.display {
-    background-color: #424242; /* Dark grey screen */
-    border: 1px solid #616161;
-    border-radius: 3px;
-    color: #F5F5F5; /* Light text on screen */
-    height: 60px; /* Adjust height */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.status-bar {
-    background-color: #616161;
-    padding: 1px 4px;
-    font-size: 0.7em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.status-text {
-    /* Style as needed */
-}
-
-.battery-icon { /* Simple battery representation */
-    width: 8px;
-    height: 4px;
-    border: 1px solid #F5F5F5;
-    border-radius: 1px;
-    display: inline-block;
-    position: relative;
-    margin-left: 3px;
-}
-.battery-icon::after {
-    content: "";
-    position: absolute;
-    right: -2px;
-    top: 1px;
-    width: 1px;
-    height: 2px;
-    background-color: #F5F5F5;
-}
-
-.display-content {
-    flex-grow: 1;
-    padding: 5px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    gap: 5px;
-}
-
-.icon-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.icon {
-    width: 18px;
-    height: 18px;
-    background-color: #757575; /* Placeholder color */
-    border: 1px solid #9E9E9E;
-    margin-bottom: 3px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.7em;
-    line-height: 1;
-    color: #fff;
-}
-
-/* Specific Icon Styling (Simplified) */
-.icon.wifi::before { content: "WIFI"; } /* Replace with actual icons if possible */
-.icon.bt::before { content: "BT"; }
-.icon.wave { background: linear-gradient(to top, #757575 20%, #eee 20%, #eee 40%, #757575 40%, #757575 60%, #eee 60%, #eee 80%, #757575 80%); }
-.icon.esp { background-color: #E65100; color: white; font-weight: bold;}
+        .screw-left { left: 25px; }
+        .screw-right { right: 25px; }
 
 
-.label {
-    font-size: 0.7em;
-    color: #BDBDBD;
-}
+        /* Screen Area (Left Part) */
+        .screen-area {
+            flex: 1;
+            background-color: #C5C5C5;
+            border-radius: 5px;
+            padding: 5px;
+            border: 1px solid #BDBDBD;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
-/* Stamp S3 Area (Right Part) */
-.stamp-s3-area {
-    flex-basis: 120px; /* Fixed width for Stamp */
-    background-color: #B2DFDB; /* Teal-like background */
-    border-radius: 5px;
-    padding: 5px;
-    border: 1px solid #80CBC4;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.7em;
-    color: #004D40; /* Dark teal text */
-    position: relative; /* For positioning text */
-    overflow: hidden; /* Hide overflowing text */
-    min-height: 100px; /* Match approx height */
-}
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
 
-.stamp-header {
-    font-weight: bold;
-    font-size: 1.4em;
-    text-align: center;
-    margin-bottom: 5px;
-    letter-spacing: -0.5px;
-}
-.stamp-header span { color: #E65100; } /* Orange S3 */
+        .logo-box {
+            width: 10px;
+            height: 10px;
+            background-color: #757575;
+            border: 1px solid #616161;
+        }
 
-.stamp-details {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px 5px;
-    width: 100%;
-    font-size: 0.9em;
-}
+        .logo-text {
+            font-size: 0.9em;
+            line-height: 1.1;
+            text-align: center;
+            color: #424242;
+        }
 
-.stamp-details .detail {
-    background-color: rgba(255, 255, 255, 0.3);
-    padding: 1px 3px;
-    border-radius: 2px;
-    text-align: center;
-    white-space: nowrap; /* Prevent wrapping */
-}
-.stamp-details .fcc, .stamp-details .ce {
-    font-weight: bold; /* Make logos stand out slightly */
-     border: 1px solid #004D40;
-}
-.stamp-details .usb { grid-column: 1 / -1; } /* Span full width */
-.stamp-details .pins { grid-column: 1 / -1; }
-.stamp-details .btn { grid-column: 1 / -1; }
-.stamp-details .adc { grid-column: 1 / -1; }
+        .logo-text strong {
+            font-weight: bold;
+            display: block;
+        }
 
-/* Keyboard Area */
-.keyboard {
-    background-color: #F5F5F5; /* Lighter grey for keyboard base */
-    border-radius: 5px;
-    padding: 8px;
-    border: 1px solid #E0E0E0;
-}
+        .mic-area {
+            font-size: 0.8em;
+            color: #424242;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
 
-.key-row {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 4px;
-    gap: 3px; /* Spacing between keys */
-}
-.key-row:last-child { margin-bottom: 0; }
+        .mic-icon {
+            display: inline-block;
+            width: 6px;
+            height: 10px;
+            background-color: #757575;
+            border-radius: 3px 3px 0 0;
+            position: relative;
+        }
+        .mic-icon::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 2px;
+            width: 2px;
+            height: 3px;
+            background-color: #757575;
+        }
 
-.key {
-    background-color: #616161; /* Dark grey keys */
-    color: #FFFFFF; /* White text */
-    border: 1px solid #424242;
-    border-radius: 3px;
-    padding: 5px 0; /* Vertical padding, horizontal handled by width */
-    font-size: 0.9em; /* Base key font size */
-    font-family: inherit;
-    min-width: 22px; /* Minimum key width */
-    height: 22px; /* Fixed key height */
-    text-align: center;
-    line-height: 1; /* Adjust for vertical centering */
-    display: inline-flex; /* Helps center content */
-    justify-content: center;
-    align-items: center;
-    flex-grow: 0; /* Don't grow by default */
-    flex-shrink: 0; /* Don't shrink by default */
-    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-    cursor: pointer;
-    transition: background-color 0.1s ease;
-}
+        .data-label {
+             font-size: 0.7em;
+             color: #616161;
+             line-height: 1.1;
+             margin-top: auto;
+        }
 
-.key:hover {
-    background-color: #757575;
-}
-.key:active {
-    background-color: #424242;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
-}
+        /* Display Screen */
+        .display {
+            background-color: #424242;
+            border: 1px solid #616161;
+            border-radius: 3px;
+            color: #F5F5F5;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            background-color: #616161;
+            padding: 1px 4px;
+            font-size: 0.7em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .status-text {
+        }
+
+        .battery-icon {
+            width: 8px;
+            height: 4px;
+            border: 1px solid #F5F5F5;
+            border-radius: 1px;
+            display: inline-block;
+            position: relative;
+            margin-left: 3px;
+        }
+        .battery-icon::after {
+            content: "";
+            position: absolute;
+            right: -2px;
+            top: 1px;
+            width: 1px;
+            height: 2px;
+            background-color: #F5F5F5;
+        }
+
+        .display-content {
+            flex-grow: 1;
+            padding: 5px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .icon-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            background-color: #757575;
+            border: 1px solid #9E9E9E;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7em;
+            line-height: 1;
+            color: #fff;
+        }
+
+        /* Specific Icon Styling (Simplified) */
+        .icon.wifi::before { content: "WIFI"; }
+        .icon.bt::before { content: "BT"; }
+        .icon.wave { background: linear-gradient(to top, #757575 20%, #eee 20%, #eee 40%, #757575 40%, #757575 60%, #eee 60%, #eee 80%, #757575 80%); }
+        .icon.esp { background-color: #E65100; color: white; font-weight: bold;}
 
 
-.key sup { /* Styling for secondary characters */
-    font-size: 0.7em;
-    margin-left: 1px;
-    vertical-align: top;
-    line-height: 1.5; /* Adjust alignment */
-}
+        .label {
+            font-size: 0.7em;
+            color: #BDBDBD;
+        }
 
-/* Specific Key Styling */
-.key-esc, .key-fn { background-color: #FF9800; } /* Orange */
-.key-esc:hover, .key-fn:hover { background-color: #FFA726; }
-.key-esc:active, .key-fn:active { background-color: #FB8C00; }
+        /* Stamp S3 Area (Right Part) */
+        .stamp-s3-area {
+            flex-basis: 120px;
+            background-color: #B2DFDB;
+            border-radius: 5px;
+            padding: 5px;
+            border: 1px solid #80CBC4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7em;
+            color: #004D40;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+        }
 
-.key-opt, .key-alt { background-color: #009688; } /* Teal */
-.key-opt:hover, .key-alt:hover { background-color: #26A69A; }
-.key-opt:active, .key-alt:active { background-color: #00897B; }
+        .stamp-header {
+            font-weight: bold;
+            font-size: 1.4em;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+        .stamp-header span { color: #E65100; }
 
-.key-aa { font-weight: bold; } /* Bold Aa key */
+        .stamp-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px 5px;
+            width: 100%;
+            font-size: 0.9em;
+        }
 
-.key-del { min-width: 30px; }
-.key-tab { min-width: 30px; }
-.key-ok { min-width: 30px; }
-.key-ctrl { min-width: 30px; }
-.key-shift { min-width: 30px; }
+        .stamp-details .detail {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 1px 3px;
+            border-radius: 2px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .stamp-details .fcc, .stamp-details .ce {
+            font-weight: bold;
+             border: 1px solid #004D40;
+        }
+        .stamp-details .usb { grid-column: 1 / -1; }
+        .stamp-details .pins { grid-column: 1 / -1; }
+        .stamp-details .btn { grid-column: 1 / -1; }
+        .stamp-details .adc { grid-column: 1 / -1; }
+
+        /* Keyboard Area */
+        .keyboard {
+            background-color: #F5F5F5;
+            border-radius: 5px;
+            padding: 8px;
+            border: 1px solid #E0E0E0;
+        }
+
+        .key-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 4px;
+            gap: 3px;
+        }
+        .key-row:last-child { margin-bottom: 0; }
+
+        .key {
+            background-color: #616161;
+            color: #FFFFFF;
+            border: 1px solid #424242;
+            border-radius: 3px;
+            padding: 5px 0;
+            font-size: 0.9em;
+            font-family: inherit;
+            min-width: 22px;
+            height: 22px;
+            text-align: center;
+            line-height: 1;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 0;
+            flex-shrink: 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+        }
+
+        .key:hover {
+            background-color: #757575;
+        }
+        .key:active {
+            background-color: #424242;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
+        }
 
 
-.key-space {
-    flex-grow: 1; /* Allow spacebar to fill space */
-    min-width: 100px; /* Minimum width for spacebar */
-}
+        .key sup { /* Styling for secondary characters */
+            font-size: 0.7em;
+            margin-left: 1px;
+            vertical-align: top;
+            line-height: 1.5; /* Adjust alignment */
+        }
 
-.key-arrow {
-    min-width: 25px;
-    font-size: 1.1em;
-}
+        /* Specific Key Styling */
+        .key-esc, .key-fn { background-color: #FF9800; } /* Orange */
+        .key-esc:hover, .key-fn:hover { background-color: #FFA726; }
+        .key-esc:active, .key-fn:active { background-color: #FB8C00; }
+
+        .key-opt, .key-alt { background-color: #009688; } /* Teal */
+        .key-opt:hover, .key-alt:hover { background-color: #26A69A; }
+        .key-opt:active, .key-alt:active { background-color: #00897B; }
+
+        .key-aa { font-weight: bold; } /* Bold Aa key */
+
+        .key-del { min-width: 30px; }
+        .key-tab { min-width: 30px; }
+        .key-ok { min-width: 30px; }
+        .key-ctrl { min-width: 30px; }
+        .key-shift { min-width: 30px; }
+
+
+        .key-space {
+            flex-grow: 1; /* Allow spacebar to fill space */
+            min-width: 100px; /* Minimum width for spacebar */
+        }
+
+        .key-arrow {
+            min-width: 25px;
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
@@ -1212,91 +1055,51 @@ body {
                 <button class="key">K</button>
                 <button class="key">L</button>
                 <button class="key">; <sup>:</sup></button>
-                <button class="key">\' <sup>"</sup></button>
-                 <button class="key key-ok">ok</button>
-            </div>
-             <div class="key-row">
-                <button class="key key-ctrl">ctrl</button>
-                <button class="key key-opt">opt</button>
-                <button class="key key-alt">alt</button>
-                <button class="key">Z</button>
-                <button class="key">X</button>
-                <button class="key">C</button>
-                <button class="key">V</button>
-                <button class="key">B</button>
-                <button class="key">N</button>
-                <button class="key">M</button>
-                <button class="key">, <sup>&lt;</sup></button>
-                <button class="key">. <sup>&gt;</sup></button>
-                <button class="key">/ <sup>?</sup></button>
-                <button class="key key-shift">▲</button>
+                <button class="key">\'
+            <sup>"</sup></button>
+            <button class="key key-ok">ok</button>
+        </div>
+        <div class="key-row">
+            <button class="key key-ctrl">ctrl</button>
+            <button class="key key-opt">opt</button>
+            <button class="key key-alt">alt</button>
+            <button class="key">Z</button>
+            <button class="key">X</button>
+            <button class="key">C</button>
+            <button class="key">V</button>
+            <button class="key">B</button>
+            <button class="key">N</button>
+            <button class="key">M</button>
+            <button class="key">, <sup>&lt;</sup></button>
+            <button class="key">. <sup>&gt;</sup></button>
+            <button class="key">/ <sup>?</sup></button>
+            <button class="key key-shift">▲</button>
 
-            </div>
-            <div class="key-row">
-                 <button class="key key-space"></button>
-                 <button class="key key-arrow">◀</button>
-                 <button class="key key-arrow">▼</button>
-                 <button class="key key-arrow">▶</button>
-            </div>
+        </div>
+        <div class="key-row">
+            <button class="key key-space"></button>
+            <button class="key key-arrow">◀</button>
+            <button class="key key-arrow">▼</button>
+            <button class="key key-arrow">▶</button>
         </div>
     </div>
+</div>
 </body>
 </html>'></iframe>
-                </div>
-                <div class="code-view" id="gemini-code">
-                    <div class="code-content">&lt;!DOCTYPE html&gt;
-&lt;html lang="de"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;M5 Cardputer Darstellung&lt;/title&gt;
-    &lt;style&gt;
-/* Basic Reset & Font */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+</div>
+<p>Gemini 2.5 hat eine moderne Umsetzung mit interaktiven Elementen (hover-Effekte) erstellt. Die
+    Darstellung enthält zusätzliche Details wie Schrauben und verwendet <code>button</code>-Elemente
+    für die Tastatur.</p>
+</div>
+</div>
 
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f0f0f0;
-    font-family: 'Roboto', sans-serif;
-    font-size: 10px; /* Base font size for scaling */
-}
-
-/* Main Cardputer Body */
-.cardputer {
-    width: 400px; /* Adjust width as needed */
-    background-color: #E0E0E0; /* Light grey body */
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border: 1px solid #bdbdbd;
-}
-
-/* Weitere Styles... */
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;!-- HTML-Struktur des Gemini 2.5 M5 Cardputer --&gt;
-&lt;/body&gt;
-&lt;/html&gt;</div>
-                </div>
-            </div>
-            
-            <div class="preview-card">
-                <div class="preview-header">
-                    <div class="preview-title">GPT-4.0 Version</div>
-                    <div class="preview-actions">
-                        <button class="preview-btn toggle-view" data-target="gpt-preview">Code anzeigen</button>
-                    </div>
-                </div>
-                <div class="preview-iframe-container" id="gpt-preview">
-                    <iframe class="preview-iframe" srcdoc='<!DOCTYPE html>
+<div class="model-card">
+    <div class="model-header">
+        <h3 class="model-title">GPT-4.0 Implementierung</h3>
+    </div>
+    <div class="model-content">
+        <div class="model-preview">
+            <iframe srcdoc='<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -1447,50 +1250,20 @@ body {
   </div>
 </body>
 </html>'></iframe>
-                </div>
-                <div class="code-view" id="gpt-code">
-                    <div class="code-content">&lt;!DOCTYPE html&gt;
-&lt;html lang="de"&gt;
-&lt;head&gt;
-  &lt;meta charset="UTF-8"&gt;
-  &lt;title&gt;M5 CardComputer UI&lt;/title&gt;
-  &lt;style&gt;
-    body {
-      background: #e0e0e0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: monospace;
-    }
+        </div>
+        <p>GPT-4.0 hat eine minimalistische Implementierung erstellt, die den Grundaufbau abbildet.
+            Die Darstellung verwendet ein Grid-Layout für die Tastatur und hat eine vereinfachte
+            Bildschirmdarstellung.</p>
+    </div>
+</div>
 
-    .card-computer {
-      background: #d8d8d8;
-      border-radius: 10px;
-      padding: 20px;
-      width: 400px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Weitere Styles... */
-  &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;!-- HTML-Struktur des GPT-4.0 M5 Cardputer --&gt;
-&lt;/body&gt;
-&lt;/html&gt;</div>
-                </div>
-            </div>
-            
-            <div class="preview-card">
-                <div class="preview-header">
-                    <div class="preview-title">Grok 3 Version</div>
-                    <div class="preview-actions">
-                        <button class="preview-btn toggle-view" data-target="grok-preview">Code anzeigen</button>
-                    </div>
-                </div>
-                <div class="preview-iframe-container" id="grok-preview">
-                    <iframe class="preview-iframe" srcdoc='<!DOCTYPE html>
+<div class="model-card">
+    <div class="model-header">
+        <h3 class="model-title">Grok 3 Implementierung</h3>
+    </div>
+    <div class="model-content">
+        <div class="model-preview">
+            <iframe srcdoc='<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -1711,99 +1484,211 @@ body {
                 <div class="key">K</div>
                 <div class="key">L</div>
                 <div class="key red">;</div>
-                <div class="key red">\'</div>
-                <div class="key blue">ok</div>
-            </div>
-            <div class="row">
-                <div class="key green">ctrl</div>
-                <div class="key green">opt</div>
-                <div class="key green">alt</div>
-                <div class="key">Z</div>
-                <div class="key">X</div>
-                <div class="key">C</div>
-                <div class="key">V</div>
-                <div class="key">B</div>
-                <div class="key">N</div>
-                <div class="key">M</div>
-                <div class="key red">,</div>
-                <div class="key red">.</div>
-                <div class="key red">/</div>
-                <div class="key blue">⏎</div>
-            </div>
+                <div class="key red">\'
         </div>
+        <div class="key blue">ok</div>
     </div>
+    <div class="row">
+        <div class="key green">ctrl</div>
+        <div class="key green">opt</div>
+        <div class="key green">alt</div>
+        <div class="key">Z</div>
+        <div class="key">X</div>
+        <div class="key">C</div>
+        <div class="key">V</div>
+        <div class="key">B</div>
+        <div class="key">N</div>
+        <div class="key">M</div>
+        <div class="key red">,</div>
+        <div class="key red">.</div>
+        <div class="key red">/</div>
+        <div class="key blue">⏎</div>
+    </div>
+</div>
+</div>
 </body>
 </html>'></iframe>
-                </div>
-                <div class="code-view" id="grok-code">
-                    <div class="code-content">&lt;!DOCTYPE html&gt;
-&lt;html lang="de"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;M5 Cardputer&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
+</div>
+<p>Grok 3 hat eine farbenfrohe Implementierung mit Unicode-Symbolen für die Icons im Display
+    erstellt. Die Tastatur verwendet verschiedene Farben für die Funktionstasten und nutzt ein
+    Grid-Layout mit flexiblen Reihen.</p>
+</div>
+</div>
+</div>
 
-        .cardputer {
-            width: 600px;
-            height: 400px;
-            background-color: #d3d3d3;
-            border: 2px solid #000;
-            border-radius: 10px;
-            position: relative;
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Weitere Styles... */
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;!-- HTML-Struktur des Grok 3 M5 Cardputer --&gt;
-&lt;/body&gt;
-&lt;/html&gt;</div>
-                </div>
+<table class="rating-table">
+    <thead>
+    <tr>
+        <th>Kriterium</th>
+        <th>Claude 3.7</th>
+        <th>Gemini 2.5</th>
+        <th>GPT-4.0</th>
+        <th>Grok 3</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Designgenauigkeit</td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 90px;"></div>
+                <span class="rating-value">9/10</span>
             </div>
-        </div>
-        
-        <div class="comparison-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Kriterium</th>
-                        <th>Claude 3.7</th>
-                        <th>Gemini 2.5</th>
-                        <th>GPT-4.0</th>
-                        <th>Grok 3</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Originalgetreue Darstellung</td>
-                        <td>★★★★★</td>
-                        <td>★★★★☆</td>
-                        <td>★★★☆☆</td>
-                        <td>★★☆☆☆</td>
-                    </tr>
-                    <tr>
-                        <td>Tastaturdefinition</td>
-                        <td>Flexbox</td>
-                        <td>HTML-Buttons</td>
-                        <td>CSS Grid</td>
-                        <td>CSS Grid</td>
-                    </tr>
-                    <tr>
-                        <td>Code-Lesbarkeit</td>
-                        <td>★★★★☆</td>
-                        <td>★★★★★</td>
-                        <td>★★★★★</td>
-                        <td>★★★☆☆</td>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 85px;"></div>
+                <span class="rating-value">8.5/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 60px;"></div>
+                <span class="rating-value">6/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 70px;"></div>
+                <span class="rating-value">7/10</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>Code-Komplexität</td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 80px;"></div>
+                <span class="rating-value">8/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 90px;"></div>
+                <span class="rating-value">9/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 50px;"></div>
+                <span class="rating-value">5/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 70px;"></div>
+                <span class="rating-value">7/10</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>Kreative Details</td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 80px;"></div>
+                <span class="rating-value">8/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 90px;"></div>
+                <span class="rating-value">9/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 40px;"></div>
+                <span class="rating-value">4/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 75px;"></div>
+                <span class="rating-value">7.5/10</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>Interaktivität</td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 50px;"></div>
+                <span class="rating-value">5/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 80px;"></div>
+                <span class="rating-value">8/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 30px;"></div>
+                <span class="rating-value">3/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 60px;"></div>
+                <span class="rating-value">6/10</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>Gesamtbewertung</td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 85px;"></div>
+                <span class="rating-value">8.5/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 88px;"></div>
+                <span class="rating-value">8.8/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 55px;"></div>
+                <span class="rating-value">5.5/10</span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                <div class="rating-bar" style="width: 72px;"></div>
+                <span class="rating-value">7.2/10</span>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="conclusion">
+    <h2>Fazit</h2>
+    <p>Die Analyse der vier verschiedenen KI-Implementierungen des M5 CardPuter zeigt deutliche
+        Unterschiede im Detailgrad und der Umsetzungsqualität:</p>
+    <ul>
+        <li><strong>Gemini 2.5</strong> liefert die umfangreichste Implementierung mit interaktiven
+            Elementen, detaillierten Komponenten und einer strukturierten HTML-Struktur mit
+            Button-Elementen.
+        </li>
+        <li><strong>Claude 3.7</strong> überzeugt mit einer präzisen Nachbildung des Designs und
+            einer ausgewogenen Balance zwischen Komplexität und Funktionalität.
+        </li>
+        <li><strong>Grok 3</strong> punktet mit einer kreativen, farbenfrohen Umsetzung, die einige
+            eigene Interpretationen des Designs enthält.
+        </li>
+        <li><strong>GPT-4.0</strong> bietet eine minimalistische Grundstruktur, die zwar funktional
+            ist, aber im Detail-Level hinter den anderen Implementierungen zurückbleibt.
+        </li>
+    </ul>
+</div>
+
+<footer>
+    <p>Vergleich erstellt am 12. April 2025 | M5 CardPuter KI-Implementierungsvergleich</p>
+</footer>
+</div>
+</body>
+</html>
