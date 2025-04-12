@@ -1,34 +1,64 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-function OpenerView({currentOpener, onNext, onCopy, onBack}) {
-    const [isVisible, setIsVisible] = useState(true);
-    const [displayText, setDisplayText] = useState(currentOpener);
-
-    // Optimierter Fade-Effekt bei Änderung des Openers
+function OpenerView({ currentOpener, onNext, onCopy, onBack }) {
+    // Lade beim ersten Rendern
     useEffect(() => {
-        if (currentOpener !== displayText) {
+        fullTextRef.current = currentOpener;
+        setIsTyping(true);
+    }, []);
+    const [isVisible, setIsVisible] = useState(true);
+    const [displayText, setDisplayText] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const fullTextRef = useRef(currentOpener);
+    const typingSpeedRef = useRef(30); // Millisekunden pro Zeichen
+
+    // Text-Tipp-Animation
+    useEffect(() => {
+        if (isTyping && displayText.length < fullTextRef.current.length) {
+            const typingTimer = setTimeout(() => {
+                setDisplayText(prevText => fullTextRef.current.substring(0, prevText.length + 1));
+            }, typingSpeedRef.current);
+
+            return () => clearTimeout(typingTimer);
+        } else if (isTyping && displayText.length === fullTextRef.current.length) {
+            setIsTyping(false);
+        }
+    }, [displayText, isTyping]);
+
+    // Optimierter Fade-Effekt und Tippanimation bei Änderung des Openers
+    useEffect(() => {
+        if (currentOpener !== fullTextRef.current) {
             // Ausblenden
             setIsVisible(false);
 
             // Warte bis der Fade-out abgeschlossen ist, dann Text aktualisieren
             const timer = setTimeout(() => {
-                setDisplayText(currentOpener);
-                // Einblenden nach Text-Update
+                fullTextRef.current = currentOpener;
+                setDisplayText(''); // Text zurücksetzen für neue Tippanimation
                 setIsVisible(true);
+                setIsTyping(true);
             }, 300); // Diese Zeit sollte mit der CSS-Transition übereinstimmen
 
             return () => clearTimeout(timer);
         }
-    }, [currentOpener, displayText]);
+    }, [currentOpener]);
+
+    // Initial Typing starten
+    useEffect(() => {
+        if (displayText === '' && fullTextRef.current && !isTyping && isVisible) {
+            setIsTyping(true);
+        }
+    }, [displayText, isTyping, isVisible]);
 
     return (
         <div className="opener-view">
             <div className="content-container">
                 <span
                     className={`content-text ${isVisible ? 'fade-in' : 'fade-out'}`}
-                    style={{transition: 'opacity 0.3s ease'}}
+                    style={{ transition: 'opacity 0.3s ease' }}
                 >
                     {displayText}
+                    {isTyping && <span className="typing-cursor">|</span>}
                 </span>
             </div>
 

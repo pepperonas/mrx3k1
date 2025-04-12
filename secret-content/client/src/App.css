@@ -356,3 +356,32 @@ input[type="password"]:focus {
     font-size: 13px;
   }
 }
+
+.typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Anpassung der Text-Transition für bessere Lesbarkeit */
+.content-text {
+  display: inline-block;
+  font-weight: 500;
+  line-height: 1.5;
+  min-height: 1.5em; /* Verhindert Springen der Höhe */
+}
+
+.content-text.fade-in {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.content-text.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
