@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Eine umfassende Checkliste der wichtigsten SEO-Faktoren für Webentwickler">
+    <title>SEO-Checkliste: Die wichtigsten Faktoren</title>
+    <style>
+        :root {
+            --primary: #2C2E3B;
+            --secondary: #3E4155;
+            --accent: #5D62A0;
+            --text: #E6E6EA;
+            --light: #8A8DAA;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+        
+        header {
+            background-color: var(--secondary);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .card {
+            background-color: var(--secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        h2 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+        
+        h3 {
+            color: var(--light);
+            margin: 1rem 0 0.5rem;
+            font-size: 1.4rem;
+        }
+        
+        ul {
+            list-style-position: inside;
+            margin-left: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .tip {
+            background-color: rgba(93, 98, 160, 0.2);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        footer {
+            background-color: var(--secondary);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--light);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SEO-Checkliste: Die wichtigsten Faktoren</h1>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h2>1. Technische SEO</h2>
+            
+            <h3>Metadaten & Struktur</h3>
+            <ul>
+                <li><strong>Title-Tag:</strong> Einzigartig, 50-60 Zeichen, Hauptkeyword am Anfang</li>
+                <li><strong>Meta-Description:</strong> 150-160 Zeichen, handlungsorientiert mit Keyword</li>
+                <li><strong>URL-Struktur:</strong> Kurz, sprechend, mit Keywords, keine Sonderzeichen</li>
+                <li><strong>HTML-Semantik:</strong> Korrekte Verwendung von <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;footer&gt;</code></li>
+            </ul>
+            
+            <div class="tip">
+                <strong>Beispiel für guten Title und Meta-Description:</strong><br>
+                <code>&lt;title&gt;SEO-Checkliste 2025: Die 10 wichtigsten Faktoren | ExpertName&lt;/title&gt;</code><br>
+                <code>&lt;meta name="description" content="Entdecke die 10 kritischen SEO-Faktoren für besseres Ranking. Unsere Experten-Checkliste hilft dir, mehr Traffic und Conversions zu erreichen."&gt;</code>
+            </div>
+            
+            <h3>Technische Faktoren</h3>
+            <ul>
+                <li><strong>Mobile-First:</strong> Responsive Design, Mobile-Friendly Test bestehen</li>
+                <li><strong>Ladegeschwindigkeit:</strong> Core Web Vitals optimieren (LCP, FID, CLS)</li>
+                <li><strong>HTTPS:</strong> Sichere Verbindung mit gültigem SSL-Zertifikat</li>
+                <li><strong>robots.txt:</strong> Richtig konfigurieren für Crawling-Kontrolle</li>
+                <li><strong>XML-Sitemap:</strong> Aktuell halten und in Google Search Console einreichen</li>
+                <li><strong>Canonical Tags:</strong> Bei Duplicate Content nutzen (<code>&lt;link rel="canonical" href="https://example.com/original-page" /&gt;</code>)</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h2>2. Content-Optimierung</h2>
+            
+            <h3>Grundlagen</h3>
+            <ul>
+                <li><strong>Keyword-Recherche:</strong> Haupt- und semantisch verwandte Keywords identifizieren</li>
+                <li><strong>Content-Länge:</strong> Ausführliche Inhalte (1500+ Wörter für Hauptseiten)</li>
+                <li><strong>Aktualität:</strong> Regelmäßige Content-Updates mit neuen Informationen</li>
+                <li><strong>E-E-A-T:</strong> Experience, Expertise, Authoritativeness, Trustworthiness demonstrieren</li>
+            </ul>
+            
+            <h3>Strukturierung</h3>
+            <ul>
+                <li><strong>Überschriften-Hierarchie:</strong> Korrekte Verwendung von H1-H6 mit Keywords</li>
+                <li><strong>Absätze:</strong> Kurz und prägnant, ein Gedanke pro Absatz</li>
+                <li><strong>Listen & Tabellen:</strong> Für bessere Lesbarkeit verwenden</li>
+                <li><strong>Hervorhebungen:</strong> Wichtige Informationen durch <strong>Bold</strong> oder <em>Italic</em> betonen</li>
+                <li><strong>Media:</strong> Relevante Bilder, Videos, Infografiken einbinden (mit Alt-Text!)</li>
+            </ul>
+            
+            <div class="tip">
+                <strong>Alt-Text Best Practice:</strong><br>
+                <code>&lt;img src="seo-checkliste-grafik.jpg" alt="SEO-Checkliste mit 10 wichtigen Ranking-Faktoren als übersichtliche Infografik" width="800" height="600"&gt;</code>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>3. Link-Strategie</h2>
+            
+            <h3>Interne Verlinkung</h3>
+            <ul>
+                <li><strong>Seitenstruktur:</strong> Flache Hierarchie (max. 3 Klicks zur Zielseite)</li>
+                <li><strong>Kontextuelle Links:</strong> Sinnvolle Verlinkung zwischen thematisch verwandten Seiten</li>
+                <li><strong>Anchor-Texte:</strong> Deskriptiv und mit relevanten Keywords</li>
+                <li><strong>Breadcrumbs:</strong> Für Navigation und Struktur implementieren</li>
+            </ul>
+            
+            <h3>Externe Verlinkung</h3>
+            <ul>
+                <li><strong>Backlink-Aufbau:</strong> Hochwertige Links von autoritären Websites</li>
+                <li><strong>Natürliches Linkprofil:</strong> Diversität in Quellen, Anchor-Texten und Linkarten</li>
+                <li><strong>Broken Links:</strong> Regelmäßig prüfen und reparieren</li>
+                <li><strong>Toxic Links:</strong> Schädliche Backlinks mit Disavow-Tool ablehnen</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h2>4. Lokale & Spezifische SEO</h2>
+            
+            <h3>Lokale Optimierung</h3>
+            <ul>
+                <li><strong>Google Business Profile:</strong> Vollständig ausfüllen und verifizieren</li>
+                <li><strong>NAP-Konsistenz:</strong> Name, Adresse, Telefonnummer überall identisch</li>
+                <li><strong>Lokale Keywords:</strong> Standortbezogene Begriffe in Content einbauen</li>
+                <li><strong>Lokale Backlinks:</strong> Von regionalen Quellen (Branchenbücher, lokale Websites)</li>
+            </ul>
+            
+            <h3>Strukturierte Daten</h3>
+            <ul>
+                <li><strong>Schema.org Markup:</strong> Für Rich Snippets in Suchergebnissen</li>
+                <li><strong>FAQ-Schema:</strong> Für häufig gestellte Fragen</li>
+                <li><strong>Review-Schema:</strong> Für Produktbewertungen und Rezensionen</li>
+                <li><strong>Event-Schema:</strong> Für Veranstaltungen</li>
+            </ul>
+            
+            <div class="tip">
+                <strong>Schema.org Beispiel:</strong><br>
+                <code>
+&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Was sind die wichtigsten SEO-Faktoren 2025?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Die wichtigsten SEO-Faktoren 2025 sind: Mobile-First-Optimierung, Core Web Vitals, E-E-A-T, semantische Suche und nutzerorientierter Content."
+    }
+  }]
+}
+&lt;/script&gt;</code>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>5. Monitoring & Optimierung</h2>
+            
+            <h3>Tools & Analytics</h3>
+            <ul>
+                <li><strong>Google Search Console:</strong> Index-Status, Klicks, Impressionen überwachen</li>
+                <li><strong>Google Analytics:</strong> Nutzerverhalten und Conversion-Tracking</li>
+                <li><strong>Keyword-Tracking:</strong> Positions-Monitoring für wichtige Keywords</li>
+                <li><strong>Technical SEO Audit:</strong> Regelmäßige technische Prüfung der Website</li>
+            </ul>
+            
+            <h3>Kontinuierliche Verbesserung</h3>
+            <ul>
+                <li><strong>A/B-Tests:</strong> Content, Headlines, Meta-Beschreibungen testen</li>
+                <li><strong>Conversion-Optimierung:</strong> Nutzererfahrung verbessern</li>
+                <li><strong>Competitor-Analyse:</strong> Von erfolgreichen Wettbewerbern lernen</li>
+                <li><strong>SEO-Trends:</strong> Algorithmus-Updates verfolgen und anpassen</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

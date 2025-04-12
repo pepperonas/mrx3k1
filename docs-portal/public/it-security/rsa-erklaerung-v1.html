@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA-Verschlüsselung für Kinder</title>
+    <style>
+        :root {
+            --main-bg-color: #2C2E3B;
+            --text-color: #ffffff;
+            --accent-color: #61DAFB;
+            --secondary-color: #FF6B6B;
+            --container-bg: #3A3D52;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--main-bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .subheading {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .card {
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        .box-analogy {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .box {
+            width: 150px;
+            height: 150px;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .box:hover {
+            transform: scale(1.05);
+        }
+
+        .box-lid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px 10px 0 0;
+            transform-origin: top;
+            transition: transform 0.5s;
+        }
+
+        .box:hover .box-lid {
+            transform: rotateX(60deg);
+        }
+
+        .box-content {
+            font-size: 24px;
+            font-weight: bold;
+            padding-top: 20px;
+        }
+
+        .box-label {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .number-examples {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .number-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .steps-container {
+            counter-reset: step;
+            margin: 30px 0;
+        }
+
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            padding-left: 60px;
+        }
+
+        .step:before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .animation-container {
+            height: 300px;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .alice, .bob {
+            position: absolute;
+            bottom: 30px;
+            width: 80px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .alice {
+            left: 100px;
+        }
+
+        .bob {
+            right: 100px;
+        }
+
+        .person-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .alice .person-circle {
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
+        }
+
+        .bob .person-circle {
+            background-color: var(--secondary-color);
+            color: var(--main-bg-color);
+        }
+
+        .person-name {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .message {
+            position: absolute;
+            background-color: white;
+            color: var(--main-bg-color);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .key {
+            width: 50px;
+            height: 30px;
+            position: absolute;
+            background-color: gold;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--main-bg-color);
+        }
+
+        .letter {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--main-bg-color);
+            transition: all 1s;
+        }
+
+        .locked-letter {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            background-color: var(--container-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--accent-color);
+            transition: all 1s;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4db6c6;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .box {
+                width: 120px;
+                height: 120px;
+            }
+
+            .animation-container {
+                height: 250px;
+            }
+
+            .alice {
+                left: 50px;
+            }
+
+            .bob {
+                right: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>RSA-Verschlüsselung</h1>
+        <div class="subheading">Du sicherst Daten clever, stark und zuverlässig – meistere die Kryptografie!</div>
+    </header>
+
+    <div class="card">
+        <h2>Was ist eigentlich Verschlüsselung?</h2>
+        <p>Stell dir vor, du willst deiner Freundin eine geheime Nachricht schicken. Aber du willst nicht, dass andere sie lesen können! Dafür nutzt man Verschlüsselung - einen geheimen Code, der deine Nachricht versteckt.</p>
+        <p>RSA ist ein besonders schlauer Geheimcode. Er funktioniert wie eine magische Box mit einem Schloss, die nur bestimmte Personen öffnen können.</p>
+
+        <div class="box-analogy">
+            <div>
+                <div class="box">
+                    <div class="box-lid"></div>
+                    <div class="box-content">🔤</div>
+                </div>
+                <div class="box-label">Deine Nachricht</div>
+            </div>
+
+            <div>
+                <div class="box">
+                    <div class="box-lid"></div>
+                    <div class="box-content">🔐</div>
+                </div>
+                <div class="box-label">Verschlüsselt</div>
+            </div>
+
+            <div>
+                <div class="box">
+                    <div class="box-lid"></div>
+                    <div class="box-content">🔤</div>
+                </div>
+                <div class="box-label">Wieder lesbar</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Die Magie der Zahlen</h2>
+        <p>RSA nutzt große Zahlen und mathematische Tricks. Stell dir vor, wir nehmen zwei Geheimzahlen und vermischen sie - das ist einfach! Aber sie wieder zu trennen ist super schwer!</p>
+
+        <div class="number-examples">
+            <div class="number-card">
+                <p>7 × 13 = 91</p>
+                <p>Das ist leicht zu berechnen!</p>
+            </div>
+
+            <div class="number-card">
+                <p>Wenn wir nur 91 kennen...</p>
+                <p>Welche Zahlen wurden multipliziert?</p>
+                <p>Das ist viel schwieriger!</p>
+            </div>
+        </div>
+
+        <p>Bei RSA werden riesige Zahlen verwendet, manchmal mit hunderten von Stellen! Selbst für die schnellsten Computer dauert es sehr lange, diese großen Zahlen wieder in ihre Ursprungszahlen zu zerlegen.</p>
+    </div>
+
+    <div class="card">
+        <h2>RSA einfach erklärt</h2>
+        <p>Hier ist, wie RSA funktioniert, mit unserem Beispiel der magischen Box:</p>
+
+        <div class="steps-container">
+            <div class="step">
+                <p>Jeder, der eine geheime Nachricht bekommen möchte, hat zwei Schlüssel: einen öffentlichen Schlüssel (den alle sehen dürfen) und einen privaten Schlüssel (der geheim bleibt).</p>
+            </div>
+
+            <div class="step">
+                <p>Wenn du eine Nachricht senden willst, nimmst du den öffentlichen Schlüssel der Person und verschließt damit die Box. Jetzt kann nur noch der private Schlüssel die Box öffnen!</p>
+            </div>
+
+            <div class="step">
+                <p>Die verschlossene Box kann jetzt sicher versendet werden, auch wenn andere sie sehen können!</p>
+            </div>
+
+            <div class="step">
+                <p>Nur die Person mit dem passenden privaten Schlüssel kann die Box öffnen und deine Nachricht lesen.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Animation: So funktioniert's!</h2>
+        <p>Schau dir an, wie Alice eine geheime Nachricht an Bob sendet:</p>
+
+        <div class="animation-container" id="animationContainer">
+            <div class="alice">
+                <div class="person-circle">A</div>
+                <div class="person-name">Alice</div>
+            </div>
+
+            <div class="bob">
+                <div class="person-circle">B</div>
+                <div class="person-name">Bob</div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="startAnimationBtn">Animation starten</button>
+            <button id="resetAnimationBtn">Zurücksetzen</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Warum ist RSA so wichtig?</h2>
+        <p>RSA wird überall im Internet verwendet:</p>
+        <ul>
+            <li>Wenn du eine Webseite mit "https://" besuchst</li>
+            <li>Beim Online-Banking</li>
+            <li>In verschlüsselten Chats mit deinen Freunden</li>
+            <li>Wenn du etwas online kaufst</li>
+        </ul>
+        <p>Es schützt deine Geheimnisse vor neugierigen Blicken und sorgt dafür, dass nur die richtigen Personen deine Nachrichten lesen können!</p>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const animationContainer = document.getElementById('animationContainer');
+        const startBtn = document.getElementById('startAnimationBtn');
+        const resetBtn = document.getElementById('resetAnimationBtn');
+
+        let animationElements = [];
+        let animationTimers = [];
+
+        function clearAnimation() {
+            // Remove all animation elements
+            animationElements.forEach(element => {
+                if (element && element.parentNode) {
+                    element.parentNode.removeChild(element);
+                }
+            });
+
+            // Clear all timers
+            animationTimers.forEach(timer => clearTimeout(timer));
+
+            animationElements = [];
+            animationTimers = [];
+        }
+
+        function startAnimation() {
+            clearAnimation();
+
+            // Step 1: Bob creates and sends his public key
+            const bobPublicKey = createElementWithClass('key', '🔑');
+            bobPublicKey.style.left = '230px';
+            bobPublicKey.style.top = '150px';
+            bobPublicKey.style.opacity = '0';
+            animationContainer.appendChild(bobPublicKey);
+            animationElements.push(bobPublicKey);
+
+            const bobMessage = createElementWithClass('message', 'Hier ist mein öffentlicher Schlüssel!');
+            bobMessage.style.right = '150px';
+            bobMessage.style.top = '100px';
+            bobMessage.style.opacity = '0';
+            animationContainer.appendChild(bobMessage);
+            animationElements.push(bobMessage);
+
+            // Show Bob's message and key
+            animationTimers.push(setTimeout(() => {
+                bobMessage.style.opacity = '1';
+                bobPublicKey.style.opacity = '1';
+            }, 500));
+
+            // Move key to Alice
+            animationTimers.push(setTimeout(() => {
+                bobMessage.style.opacity = '0';
+                bobPublicKey.style.transition = 'all 1.5s';
+                bobPublicKey.style.left = '130px';
+            }, 2000));
+
+            // Step 2: Alice writes a message
+            const letter = createElementWithClass('letter', 'Hallo');
+            letter.style.left = '130px';
+            letter.style.top = '150px';
+            letter.style.opacity = '0';
+            animationContainer.appendChild(letter);
+            animationElements.push(letter);
+
+            const aliceMessage = createElementWithClass('message', 'Ich schreibe eine Nachricht...');
+            aliceMessage.style.left = '150px';
+            aliceMessage.style.top = '100px';
+            aliceMessage.style.opacity = '0';
+            animationContainer.appendChild(aliceMessage);
+            animationElements.push(aliceMessage);
+
+            animationTimers.push(setTimeout(() => {
+                aliceMessage.style.opacity = '1';
+                letter.style.opacity = '1';
+            }, 4000));
+
+            // Step 3: Alice encrypts the message
+            const lockedLetter = createElementWithClass('locked-letter', '?!#?');
+            lockedLetter.style.left = '130px';
+            lockedLetter.style.top = '150px';
+            lockedLetter.style.opacity = '0';
+            animationContainer.appendChild(lockedLetter);
+            animationElements.push(lockedLetter);
+
+            const encryptMessage = createElementWithClass('message', 'Ich verschlüssele mit Bobs Schlüssel!');
+            encryptMessage.style.left = '150px';
+            encryptMessage.style.top = '100px';
+            encryptMessage.style.opacity = '0';
+            animationContainer.appendChild(encryptMessage);
+            animationElements.push(encryptMessage);
+
+            animationTimers.push(setTimeout(() => {
+                aliceMessage.style.opacity = '0';
+                encryptMessage.style.opacity = '1';
+                letter.style.opacity = '0';
+                lockedLetter.style.opacity = '1';
+            }, 6000));
+
+            // Step 4: Alice sends encrypted message
+            animationTimers.push(setTimeout(() => {
+                encryptMessage.style.opacity = '0';
+                lockedLetter.style.transition = 'all 1.5s';
+                lockedLetter.style.left = '230px';
+            }, 8000));
+
+            // Step 5: Bob decrypts with private key
+            const bobPrivateKey = createElementWithClass('key', '🗝️');
+            bobPrivateKey.style.right = '130px';
+            bobPrivateKey.style.top = '180px';
+            bobPrivateKey.style.opacity = '0';
+            animationContainer.appendChild(bobPrivateKey);
+            animationElements.push(bobPrivateKey);
+
+            const decryptMessage = createElementWithClass('message', 'Ich entschlüssele mit meinem privaten Schlüssel!');
+            decryptMessage.style.right = '150px';
+            decryptMessage.style.top = '100px';
+            decryptMessage.style.opacity = '0';
+            animationContainer.appendChild(decryptMessage);
+            animationElements.push(decryptMessage);
+
+            const decryptedLetter = createElementWithClass('letter', 'Hallo');
+            decryptedLetter.style.right = '130px';
+            decryptedLetter.style.top = '150px';
+            decryptedLetter.style.opacity = '0';
+            animationContainer.appendChild(decryptedLetter);
+            animationElements.push(decryptedLetter);
+
+            animationTimers.push(setTimeout(() => {
+                decryptMessage.style.opacity = '1';
+                bobPrivateKey.style.opacity = '1';
+            }, 10000));
+
+            animationTimers.push(setTimeout(() => {
+                lockedLetter.style.opacity = '0';
+                decryptedLetter.style.opacity = '1';
+            }, 12000));
+
+            // Step 6: Bob reads the message
+            const happyMessage = createElementWithClass('message', 'Jetzt kann ich die Nachricht lesen!');
+            happyMessage.style.right = '150px';
+            happyMessage.style.top = '100px';
+            happyMessage.style.opacity = '0';
+            animationContainer.appendChild(happyMessage);
+            animationElements.push(happyMessage);
+
+            animationTimers.push(setTimeout(() => {
+                decryptMessage.style.opacity = '0';
+                happyMessage.style.opacity = '1';
+            }, 14000));
+        }
+
+        function createElementWithClass(className, text) {
+            const element = document.createElement('div');
+            element.className = className;
+            element.textContent = text;
+            return element;
+        }
+
+        startBtn.addEventListener('click', startAnimation);
+        resetBtn.addEventListener('click', clearAnimation);
+    });
+</script>
+</body>
+</html>
