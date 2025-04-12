@@ -13,7 +13,9 @@
             <excludedPath local="true" path="$PROJECT_DIR$/../celox.io/docs/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/docs/blog-framework/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/techdocs/node_modules" />
-            <excludedPath local="true" path="$PROJECT_DIR$/jsong/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/jackson/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/ai-playground-portal/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/docs-portal/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>
