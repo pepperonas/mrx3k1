@@ -5,278 +5,326 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSA-Verschlüsselung einfach erklärt</title>
     <style>
+        :root {
+            --main-bg-color: #2C2E3B;
+            --text-color: #ffffff;
+            --accent-color: #61DAFB;
+            --secondary-color: #FF6B6B;
+            --container-bg: #3A3D52;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            background-color: #373A4D;
+            color: var(--text-color);
             margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 0;
+            line-height: 1.6;
         }
-        
+
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
         }
-        
-        h1 {
-            color: #2C2E3B;
+
+        header {
             text-align: center;
-            margin-bottom: 30px;
+            padding: 30px 0;
         }
-        
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .subheading {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            text-align: center;
+        }
+
         h2 {
-            color: #4D5382;
+            color: var(--accent-color);
             margin-top: 30px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--container-bg);
             padding-bottom: 10px;
         }
-        
+
+        .card {
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
         .concept-box {
-            background-color: #f5f5f5;
-            border-left: 4px solid #4D5382;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
             padding: 15px;
             margin: 20px 0;
             border-radius: 0 5px 5px 0;
         }
-        
+
         .example {
-            background-color: #fffaf0;
+            background-color: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 5px;
             margin: 20px 0;
+            border-left: 4px solid var(--secondary-color);
         }
-        
+
         .analogy {
-            background-color: #f0f8ff;
+            background-color: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 5px;
             margin: 20px 0;
         }
-        
+
         .visual {
             text-align: center;
             margin: 30px 0;
         }
-        
+
         img {
             max-width: 100%;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        
+
         .key-point {
             font-weight: bold;
-            color: #4D5382;
+            color: var(--accent-color);
         }
-        
+
         .two-col {
             display: flex;
             gap: 20px;
             margin: 20px 0;
         }
-        
+
         .col {
             flex: 1;
         }
-        
+
         .steps {
             counter-reset: step;
             list-style-type: none;
             padding-left: 0;
         }
-        
+
         .steps li {
             position: relative;
-            padding-left: 40px;
-            margin-bottom: 15px;
+            padding-left: 50px;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px 15px 15px 50px;
         }
-        
+
         .steps li:before {
-            content: counter(step);
             counter-increment: step;
+            content: counter(step);
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 30px;
             height: 30px;
-            background-color: #4D5382;
-            color: white;
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
         }
-        
+
         .comparison-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
         }
-        
+
         .comparison-table th, .comparison-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 12px 15px;
+            border: 1px solid var(--container-bg);
             text-align: left;
         }
-        
+
         .comparison-table th {
-            background-color: #4D5382;
-            color: white;
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
         }
-        
+
+        .comparison-table tr:nth-child(odd) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
         .comparison-table tr:nth-child(even) {
-            background-color: #f5f5f5;
+            background-color: rgba(255, 255, 255, 0.1);
         }
-        
-        .mail-visual {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
-            background-color: white;
+
+        .visual-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
         }
-        
+
+        .person {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 20px;
+        }
+
+        .person-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .person:nth-child(1) .person-circle {
+            background-color: var(--accent-color);
+            color: var(--main-bg-color);
+        }
+
+        .person:nth-child(3) .person-circle {
+            background-color: var(--secondary-color);
+            color: var(--main-bg-color);
+        }
+
+        .person-name {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
         .mailbox {
             width: 80px;
             height: 100px;
-            background-color: #4D5382;
-            border-radius: 5px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
             position: relative;
-            margin: 15px;
-            display: inline-block;
-        }
-        
-        .mailbox:after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            width: 40px;
-            height: 10px;
-            background-color: #333;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .lock {
-            width: 20px;
-            height: 30px;
-            background-color: gold;
-            border-radius: 3px;
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .person {
-            text-align: center;
-            display: inline-block;
             margin: 0 20px;
-            vertical-align: top;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        
-        .person-icon {
-            width: 50px;
-            height: 50px;
-            background-color: #ddd;
-            border-radius: 50%;
-            margin: 0 auto 10px;
-            position: relative;
-        }
-        
-        .person-icon:after {
-            content: '';
-            position: absolute;
+
+        .lock {
             width: 30px;
             height: 30px;
-            background-color: #ddd;
-            border-radius: 50%;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
+            background-color: var(--accent-color);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--main-bg-color);
+            font-weight: bold;
         }
-        
+
         .arrow {
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 50px;
-            height: 20px;
             position: relative;
-            margin: 40px 10px;
         }
-        
+
         .arrow:after {
             content: '';
-            position: absolute;
-            width: 100%;
             height: 2px;
-            background-color: #333;
-            top: 50%;
-            left: 0;
+            width: 30px;
+            background-color: var(--text-color);
+            position: relative;
         }
-        
+
         .arrow:before {
             content: '';
             position: absolute;
+            right: 5px;
             width: 10px;
             height: 10px;
-            border-top: 2px solid #333;
-            border-right: 2px solid #333;
+            border-top: 2px solid var(--text-color);
+            border-right: 2px solid var(--text-color);
             transform: rotate(45deg);
-            right: 0;
-            top: 5px;
         }
-        
+
         .key {
-            width: 30px;
-            height: 10px;
+            width: 40px;
+            height: 25px;
             background-color: gold;
-            position: relative;
-            border-radius: 2px;
-            margin: 10px auto;
-            display: block;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--main-bg-color);
+            margin: 10px 0;
         }
-        
-        .key:after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: gold;
-            left: -5px;
-            top: 0;
-        }
-        
+
         .key.private {
-            background-color: red;
+            background-color: var(--secondary-color);
         }
-        
-        .key.private:after {
-            background-color: red;
-        }
-        
+
         @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
             .two-col {
                 flex-direction: column;
+            }
+
+            .visual-container {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                margin: 15px 0;
+            }
+
+            .person, .mailbox {
+                margin: 10px 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>RSA-Verschlüsselung: Einfach erklärt</h1>
-        
+<div class="container">
+    <header>
+        <h1>RSA-Verschlüsselung</h1>
+        <div class="subheading">Daten sicher verschlüsseln – einfach erklärt</div>
+    </header>
+
+    <div class="card">
+        <h2>Was ist eigentlich Verschlüsselung?</h2>
+
         <div class="concept-box">
             <p>RSA ist eine Methode, wie man Nachrichten sicher verschicken kann, ohne dass jemand anderes sie lesen kann – selbst wenn diese Person die verschlüsselte Nachricht abfängt.</p>
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Das Briefkasten-Prinzip</h2>
-        
+
         <div class="analogy">
             <p>Stellen Sie sich vor, Sie haben einen besonderen Briefkasten mit zwei verschiedenen Schlüsseln:</p>
             <ul>
@@ -285,33 +333,35 @@
             </ul>
             <p>Sie können jedem den öffentlichen Schlüssel geben, aber den privaten Schlüssel behalten Sie für sich.</p>
         </div>
-        
-        <div class="visual">
+
+        <div class="visual-container">
             <div class="person">
-                <div class="person-icon"></div>
-                <p>Absender</p>
-                <div class="key"></div>
+                <div class="person-circle">A</div>
+                <div class="person-name">Absender</div>
+                <div class="key">🔑</div>
                 <p>Hat öffentlichen Schlüssel</p>
             </div>
-            
+
             <div class="arrow"></div>
-            
+
             <div class="mailbox">
-                <div class="lock"></div>
+                <div class="lock">🔒</div>
             </div>
-            
+
             <div class="arrow"></div>
-            
+
             <div class="person">
-                <div class="person-icon"></div>
-                <p>Empfänger</p>
-                <div class="key private"></div>
+                <div class="person-circle">E</div>
+                <div class="person-name">Empfänger</div>
+                <div class="key private">🗝️</div>
                 <p>Hat privaten Schlüssel</p>
             </div>
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Wie funktioniert es im Alltag?</h2>
-        
+
         <ol class="steps">
             <li>Maria möchte Peter eine geheime Nachricht schicken.</li>
             <li>Peter hat einen öffentlichen Schlüssel, den jeder bekommen kann, und einen privaten Schlüssel, den nur er kennt.</li>
@@ -321,26 +371,30 @@
             <li>Wenn jemand die Nachricht unterwegs abfängt, kann er sie nicht lesen, weil er Peters privaten Schlüssel nicht hat.</li>
             <li>Peter empfängt die Nachricht und entschlüsselt sie mit seinem privaten Schlüssel.</li>
         </ol>
-        
+
         <div class="visual">
             <img src="/api/placeholder/700/400" alt="Visualisierung des RSA-Verschlüsselungsprozesses" />
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Warum ist das besonders?</h2>
-        
+
         <div class="concept-box">
             <p>Das Besondere an RSA: Mit dem öffentlichen Schlüssel kann man verschlüsseln, aber nicht entschlüsseln. Das ist, als hätte man einen Briefkasten, in den jeder etwas einwerfen kann, aber nur Sie selbst können mit Ihrem speziellen Schlüssel die Briefe wieder herausholen.</p>
         </div>
-        
+
         <h2>Ein alltagstaugliches Beispiel</h2>
-        
+
         <div class="example">
             <p>Wenn Sie online einkaufen und Ihre Kreditkartendaten eingeben, nutzt Ihr Browser oft die RSA-Verschlüsselung. Der Online-Shop hat Ihnen seinen öffentlichen Schlüssel gegeben, Ihr Browser verschlüsselt Ihre Daten damit, und nur der Shop kann mit seinem privaten Schlüssel diese Daten wieder entschlüsseln.</p>
             <p>Dies ist der Grund, warum Sie ein Schloss-Symbol in Ihrem Browser sehen, wenn Sie auf einer sicheren Webseite sind.</p>
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Vergleich mit traditionellen Schlüsseln</h2>
-        
+
         <table class="comparison-table">
             <tr>
                 <th>Traditionelles Schloss</th>
@@ -363,20 +417,24 @@
                 <td>Basiert auf komplexer Mathematik</td>
             </tr>
         </table>
-        
+    </div>
+
+    <div class="card">
         <h2>Warum ist es sicher?</h2>
-        
+
         <div class="concept-box">
             <p>Die Sicherheit von RSA beruht auf einer mathematischen Herausforderung: Es ist sehr einfach, zwei große Primzahlen zu multiplizieren. Aber es ist extrem schwierig, ein sehr großes Produkt wieder in seine Primfaktoren zu zerlegen.</p>
             <p>Das ist so, als würden Sie zwei große Zahlen leicht multiplizieren können (z.B. 123 × 456), aber es wäre sehr schwer, von der Lösung (56.088) wieder auf die Ausgangszahlen zurückzuschließen.</p>
         </div>
-        
+
         <div class="visual">
             <img src="/api/placeholder/700/350" alt="Illustration der mathematischen Komplexität" />
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Wo begegnet Ihnen RSA im Alltag?</h2>
-        
+
         <div class="two-col">
             <div class="col">
                 <ul>
@@ -393,9 +451,11 @@
                 </div>
             </div>
         </div>
-        
+    </div>
+
+    <div class="card">
         <h2>Zusammenfassung</h2>
-        
+
         <div class="concept-box">
             <p>RSA-Verschlüsselung macht es möglich, dass:</p>
             <ul>
@@ -405,8 +465,9 @@
                 <li>Hacker trotz Abfangen der Daten diese nicht lesen können</li>
             </ul>
         </div>
-        
+
         <p>RSA ist wie ein Briefkasten, in den jeder etwas einwerfen kann, aber nur der Besitzer mit seinem speziellen Schlüssel die Post wieder herausholen kann. So einfach ist das Grundprinzip – auch wenn die Mathematik dahinter natürlich komplizierter ist.</p>
     </div>
+</div>
 </body>
 </html>
