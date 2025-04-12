@@ -307,12 +307,6 @@ class CodeFragment {
             this.vx += (Math.random() - 0.5) * 0.3;
         }
 
-        // Zufällige Größenänderungen
-        if (Math.random() < 0.02) {
-            this.size += (Math.random() - 0.5) * 0.5;
-            this.size = Math.max(6, Math.min(this.size, 16));
-        }
-
         // Zufällige Farbänderungen
         if (Math.random() < 0.05) {
             this.hue = (this.hue + Math.random() * 20 - 10) % 360;
