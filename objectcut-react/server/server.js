@@ -1,169 +1,152 @@
-// server/server.js
+// server/server.js - Anpassungen für den Pfad /objectcut-react
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
-const { processImage } = require('./imageProcessingAPI');
+const { spawn } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4991;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Set up multer for file uploads
-const storage = multer.memoryStorage();
+// Temporärer Speicherort für Uploads
+const uploadDir = path.join(os.tmpdir(), 'objectcut-uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer-Konfiguration für Datei-Uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        // Eindeutigen Dateinamen generieren
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'input-' + uniqueSuffix + ext);
+    }
+});
+
 const upload = multer({
     storage,
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
+        fileSize: 10 * 1024 * 1024, // 10MB Limit
+    },
+    fileFilter: (req, file, cb) => {
+        // Akzeptiere nur Bilder
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Nur Bilddateien sind erlaubt'), false);
+        }
     }
 });
 
-// API routes
+// API-Route für die Hintergrundentfernung
 app.post('/api/remove-background', upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No image file uploaded' });
+            return res.status(400).json({ error: 'Keine Bilddatei hochgeladen' });
         }
 
-        const processedImageBuffer = await processImage(req.file.buffer);
+        const inputPath = req.file.path;
+        const outputPath = path.join(uploadDir, 'output-' + path.basename(inputPath));
 
-        res.set('Content-Type', 'image/png');
-        res.send(processedImageBuffer);
-    } catch (error) {
-        console.error('Error processing image:', error);
-        res.status(500).json({ error: 'Failed to process image' });
-    }
-});
+        console.log(`Processing image: ${inputPath}`);
+        console.log(`Output will be saved to: ${outputPath}`);
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../build')));
-
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../build', 'index.html'));
-    });
-}
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
-// server/imageProcessingAPI.js
-const sharp = require('sharp');
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-
-// Process image with rembg using python script
-async function processImage(imageBuffer) {
-    return new Promise((resolve, reject) => {
-        // Create temporary directory for processing
-        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'objectcut-'));
-        const inputPath = path.join(tempDir, 'input.png');
-        const outputPath = path.join(tempDir, 'output.png');
-
-        // Write input image to disk
-        fs.writeFileSync(inputPath, imageBuffer);
-
-        // Run rembg using Python
-        const python = spawn('python', [
-            '-c',
-            `
-import sys
-from rembg import remove
-from PIL import Image
-import io
-
-# Read input image
-with open('${inputPath.replace(/\\/g, '\\\\')}', 'rb') as i:
-    input_data = i.read()
-    
-# Process with rembg
-output_data = remove(input_data)
-
-# Save to output path
-with open('${outputPath.replace(/\\/g, '\\\\')}', 'wb') as o:
-    o.write(output_data)
-      `
+        // Python-Skript ausführen
+        const pythonProcess = spawn('/var/www/html/objectcut-react/venv/bin/python3', [
+            path.join(__dirname, 'remove_bg.py'),
+            inputPath,
+            outputPath
         ]);
 
-        python.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
+        let errorOutput = '';
+
+        // Fehlerausgabe sammeln
+        pythonProcess.stderr.on('data', (data) => {
+            console.log(`Python stderr: ${data}`);
+            errorOutput += data.toString();
         });
 
-        python.on('close', (code) => {
-            if (code !== 0) {
-                // Clean up temp files
+        // Warten auf Prozessende
+        const exitCode = await new Promise((resolve) => {
+            pythonProcess.on('close', (code) => {
+                resolve(code);
+            });
+        });
+
+        // Überprüfen, ob das Skript erfolgreich war
+        if (exitCode !== 0) {
+            console.error(`Python process exited with code ${exitCode}`);
+            console.error(`Error output: ${errorOutput}`);
+            return res.status(500).json({
+                error: 'Fehler bei der Hintergrundentfernung',
+                details: errorOutput
+            });
+        }
+
+        // Überprüfen, ob die Ausgabedatei existiert
+        if (!fs.existsSync(outputPath)) {
+            return res.status(500).json({
+                error: 'Ausgabedatei wurde nicht erstellt',
+                details: errorOutput
+            });
+        }
+
+        // Datei senden
+        res.sendFile(outputPath, (err) => {
+            if (err) {
+                console.error('Error sending file:', err);
+                res.status(500).json({ error: 'Fehler beim Senden der Datei' });
+            }
+
+            // Aufräumen: Temporäre Dateien löschen
+            setTimeout(() => {
                 try {
                     fs.unlinkSync(inputPath);
                     fs.unlinkSync(outputPath);
-                    fs.rmdirSync(tempDir);
                 } catch (err) {
-                    console.error('Error cleaning up:', err);
+                    console.error('Fehler beim Löschen temporärer Dateien:', err);
                 }
-
-                return reject(new Error(`Python process exited with code ${code}`));
-            }
-
-            try {
-                // Read processed image
-                const outputBuffer = fs.readFileSync(outputPath);
-
-                // Clean up temp files
-                fs.unlinkSync(inputPath);
-                fs.unlinkSync(outputPath);
-                fs.rmdirSync(tempDir);
-
-                resolve(outputBuffer);
-            } catch (err) {
-                reject(err);
-            }
+            }, 1000);
         });
-    });
-}
-
-// Fallback method if rembg isn't available
-async function processImageFallback(imageBuffer) {
-    try {
-        // Using sharp for a simple transparency effect (not as good as rembg)
-        // This is just a fallback that creates a simple circular mask
-        const metadata = await sharp(imageBuffer).metadata();
-
-        // Create a circular mask
-        const size = Math.min(metadata.width, metadata.height);
-        const radius = size / 2;
-        const centerX = metadata.width / 2;
-        const centerY = metadata.height / 2;
-
-        // Create an SVG circle mask
-        const circleSvg = Buffer.from(
-            `<svg width="${metadata.width}" height="${metadata.height}">
-        <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="white"/>
-      </svg>`
-        );
-
-        // Apply the mask
-        const result = await sharp(imageBuffer)
-            .composite([
-                {
-                    input: circleSvg,
-                    blend: 'dest-in'
-                }
-            ])
-            .png()
-            .toBuffer();
-
-        return result;
     } catch (error) {
-        console.error('Fallback processing error:', error);
-        throw error;
+        console.error('Server error:', error);
+        res.status(500).json({
+            error: 'Serverfehler bei der Bildverarbeitung',
+            details: error.message
+        });
     }
-}
+});
 
-module.exports = {
-    processImage
-};
+// Server starten
+app.listen(PORT, () => {
+    console.log(`Server läuft auf Port ${PORT}`);
+    console.log(`Upload-Verzeichnis: ${uploadDir}`);
+});
+
+// Aufräumen beim Beenden
+process.on('SIGINT', () => {
+    console.log('Server wird beendet. Räume temporäre Dateien auf...');
+    try {
+        // Verzeichnis löschen, falls es existiert und leer ist
+        if (fs.existsSync(uploadDir)) {
+            const files = fs.readdirSync(uploadDir);
+            files.forEach(file => {
+                fs.unlinkSync(path.join(uploadDir, file));
+            });
+        }
+    } catch (err) {
+        console.error('Fehler beim Aufräumen:', err);
+    }
+    process.exit();
+});

@@ -60,7 +60,7 @@ export const processRectangleSelection = async (imageUrl, coords) => {
             };
 
             img.onerror = () => {
-                reject(new Error('Failed to load image for processing'));
+                reject(new Error('Fehler beim Laden des Bildes zur Verarbeitung'));
             };
 
             img.src = imageUrl;
@@ -70,32 +70,43 @@ export const processRectangleSelection = async (imageUrl, coords) => {
     });
 };
 
-// This function is a placeholder since the actual removal is done server-side
+// Funktion zum Senden eines Bildes an den Server für KI-basierte Hintergrundentfernung
 export const removeBackground = async (imageUrl) => {
     try {
-        // Convert image URL to blob
+        console.log('Starte KI-basierte Hintergrundentfernung');
+
+        // Bild-URL in Blob umwandeln
         const response = await fetch(imageUrl);
         const blob = await response.blob();
 
-        // Create form data
+        // FormData erstellen
         const formData = new FormData();
         formData.append('image', blob);
 
-        // Send to server
-        const serverResponse = await fetch('/api/remove-background', {
+        console.log('Sende Bild an Server...');
+
+        // An Server senden
+        const serverUrl = process.env.NODE_ENV === 'production'
+            ? '/api/remove-background'
+            : 'http://localhost:4991/api/remove-background';
+
+        const serverResponse = await fetch(serverUrl, {
             method: 'POST',
             body: formData
         });
 
         if (!serverResponse.ok) {
-            throw new Error(`Server responded with status: ${serverResponse.status}`);
+            const errorData = await serverResponse.json();
+            throw new Error(`Server-Fehler: ${errorData.error || serverResponse.statusText}`);
         }
 
-        // Get result as blob and convert to object URL
+        console.log('Hintergrund erfolgreich entfernt');
+
+        // Ergebnis als Blob erhalten und in URL umwandeln
         const resultBlob = await serverResponse.blob();
         return URL.createObjectURL(resultBlob);
     } catch (error) {
-        console.error('Background removal error:', error);
+        console.error('Fehler bei der Hintergrundentfernung:', error);
         throw error;
     }
 };
