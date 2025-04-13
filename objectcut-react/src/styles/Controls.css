@@ -1,0 +1,51 @@
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.controls-top, .controls-bottom {
+    display: flex;
+    gap: 15px;
+}
+
+.control-button {
+    background-color: #4A4B58;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.control-button:hover:not(:disabled) {
+    background-color: #5A5B68;
+}
+
+.control-button:active:not(:disabled) {
+    background-color: #3A3B48;
+}
+
+.control-button:disabled {
+    background-color: #3A3B48;
+    color: #7A7B88;
+    cursor: not-allowed;
+}
+
+.extraction-method {
+    background-color: #4A4B58;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.extraction-method:disabled {
+    background-color: #3A3B48;
+    color: #7A7B88;
+    cursor: not-allowed;
+}

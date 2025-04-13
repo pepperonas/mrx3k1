@@ -1,0 +1,37 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #2C2E3B;
+    color: #FFFFFF;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px;
+    position: relative;
+    background-color: #1E1F2A;
+    border: 1px solid #4A4B58;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.drop-hint {
+    color: #5A5B68;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.error-message {
+    background-color: rgba(255, 70, 70, 0.2);
+    color: #FF7070;
+    padding: 10px 20px;
+    margin: 10px 20px;
+    border-radius: 4px;
+    text-align: center;
+}

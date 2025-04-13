@@ -498,13 +498,13 @@ const KaraokePlayer = () => {
             // Erstelle Analyser
             nativeAnalyserRef.current = audioContextRef.current.createAnalyser();
             nativeAnalyserRef.current.fftSize = 2048; // Größerer Wert für genauere Frequenzanalyse
-            nativeAnalyserRef.current.smoothingTimeConstant = 0.8; // Einstellbar für weniger flackern (0-1)
+            nativeAnalyserRef.current.smoothingTimeConstant = 0.6; // Geringere Glättung für schnellere Reaktion (vorher 0.8)
 
             // Verbinde Source mit Analyser
             sourceRef.current.connect(nativeAnalyserRef.current);
             console.log("Audio-Analyse-Pipeline eingerichtet");
 
-            // Start analysis loop
+            // Start analysis loop mit höherer Frequenz (50ms statt 100ms)
             const analyzeInterval = setInterval(() => {
                 if (nativeAnalyserRef.current) {
                     try {
@@ -514,21 +514,18 @@ const KaraokePlayer = () => {
                         // Hole aktuelles Frequenzspektrum
                         nativeAnalyserRef.current.getFloatFrequencyData(dataArray);
 
-                        // Debug-Logging
-                        if (debugMode && timeUpdateCounterRef.current % 20 === 0) {
-                            // Finde Min/Max/Durchschnitt
-                            let min = Infinity;
+                        // Debug-Logging reduzieren
+                        if (debugMode && timeUpdateCounterRef.current % 40 === 0) {
+                            // Reduzierte Debug-Ausgabe für bessere Performance
                             let max = -Infinity;
-                            let sum = 0;
-
-                            for (let i = 0; i < dataArray.length; i++) {
-                                min = Math.min(min, dataArray[i]);
-                                max = Math.max(max, dataArray[i]);
-                                sum += dataArray[i];
+                            let maxIndex = 0;
+                            for (let i = 10; i < dataArray.length; i++) {
+                                if (dataArray[i] > max) {
+                                    max = dataArray[i];
+                                    maxIndex = i;
+                                }
                             }
-
-                            const avg = sum / dataArray.length;
-                            console.log(`Frequenzdaten: Min=${min.toFixed(1)}dB, Max=${max.toFixed(1)}dB, Avg=${avg.toFixed(1)}dB`);
+                            console.log(`Max frequency value: ${max.toFixed(1)}, index: ${maxIndex}`);
                         }
 
                         // Pitch-Erkennung - wird immer aufgerufen, auch wenn kein Ton erkannt wird
@@ -537,13 +534,14 @@ const KaraokePlayer = () => {
                         if (pitch) {
                             setCurrentPitch(pitch);
 
-                            // History aktualisieren
+                            // History aktualisieren - Optimiert für weniger Rendering
                             setPitchHistory(prev => {
-                                const newHistory = [...prev, {time: currentTime, pitch}];
-                                if (newHistory.length > 100) {
-                                    return newHistory.slice(newHistory.length - 100);
+                                // Nur updaten wenn nötig (max 100 Einträge)
+                                if (prev.length >= 100) {
+                                    return [...prev.slice(1), {time: currentTime, pitch}];
+                                } else {
+                                    return [...prev, {time: currentTime, pitch}];
                                 }
-                                return newHistory;
                             });
 
                             // Score aktualisieren
@@ -563,7 +561,7 @@ const KaraokePlayer = () => {
                         console.error("Fehler bei der Frequenzanalyse:", err);
                     }
                 }
-            }, 100);
+            }, 50); // Höhere Aktualisierungsrate: 50ms statt 100ms (20 Updates pro Sekunde)
 
             timeUpdateIntervalRef.current = analyzeInterval;
         } catch (err) {
@@ -615,13 +613,12 @@ const KaraokePlayer = () => {
     const detectPitch = (frequencyData) => {
         if (!frequencyData || frequencyData.length === 0) return null;
 
-        // Finde den dominanten Frequenz-Peak
+        // Optimierte Suche nach dominanter Frequenz
         let maxIndex = 0;
         let maxValue = -Infinity;
+        const startBin = 10; // Ignoriere sehr niedrige Frequenzen (oft Rauschen)
 
-        // Ignoriere sehr niedrige Frequenzen (oft Rauschen)
-        const startBin = 10;
-
+        // Schnellere Schleife ohne zusätzliche Berechnungen im Loop
         for (let i = startBin; i < frequencyData.length; i++) {
             if (frequencyData[i] > maxValue) {
                 maxValue = frequencyData[i];
@@ -629,26 +626,37 @@ const KaraokePlayer = () => {
             }
         }
 
-        // Log für Debugging
-        console.log(`Max frequency value: ${maxValue.toFixed(1)}, index: ${maxIndex}`);
+        // Weniger Debug-Logging für bessere Performance
+        if (debugMode && timeUpdateCounterRef.current % 10 === 0) {
+            console.log(`Max frequency value: ${maxValue.toFixed(1)}, index: ${maxIndex}`);
+        }
 
         // Konvertiere Index zu Frequenz
         const sampleRate = audioContextRef.current ? audioContextRef.current.sampleRate : 44100;
         const nyquist = sampleRate / 2;
         const frequency = maxIndex * nyquist / (frequencyData.length - 1);
 
-        // Angepasster Schwellenwert für Spracherkennung in dB
+        // Angepasster Schwellenwert für Spracherkennung
         const THRESHOLD = -55; // Schwellwert in dB
 
-        if (maxValue > THRESHOLD && frequency > 80) { // Setze eine Mindestfrequenz
-            // Konvertiere Frequenz zu MIDI-Notennummer
-            const noteNumber = 12 * Math.log2(frequency / 440) + 69;
-            console.log(`Erkannter Pitch: ${Math.round(noteNumber)} (Freq: ${frequency.toFixed(1)} Hz)`);
-            return Math.round(noteNumber);
+        if (maxValue > THRESHOLD && frequency > 80) { // Mindestfrequenz 80 Hz
+            // Frequenz zu MIDI-Notennummer
+            const noteNumber = Math.round(12 * Math.log2(frequency / 440) + 69);
+
+            // Weniger Debug-Logging
+            if (debugMode && timeUpdateCounterRef.current % 10 === 0) {
+                console.log(`Erkannter Pitch: ${noteNumber} (Freq: ${frequency.toFixed(1)} Hz)`);
+            }
+
+            return noteNumber;
         }
 
-        console.log(`Kein Pitch erkannt (unter Schwelle ${THRESHOLD} oder zu niedrige Frequenz)`);
-        // Hier DIREKT auf null setzen, um sicherzustellen, dass die Benutzeroberfläche aktualisiert wird
+        // Weniger Debug-Logging
+        if (debugMode && timeUpdateCounterRef.current % 20 === 0) {
+            console.log(`Kein Pitch erkannt (unter Schwelle ${THRESHOLD} oder zu niedrige Frequenz)`);
+        }
+
+        // Direkt auf null setzen, Benutzeroberfläche aktualisieren
         setCurrentPitch(null);
         return null;
     };
@@ -993,19 +1001,34 @@ const KaraokePlayer = () => {
                                     <div className="pitch-stats">
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Dein Pitch:</span>
-                                            <span className="pitch-stat-value"
-                                                  style={{color: getAccuracyColor()}}>
-          {currentPitch || '-'}
-        </span>
+                                            <span
+                                                className="pitch-stat-value"
+                                                style={{
+                                                    color: getAccuracyColor(),
+                                                    transition: 'color 0.1s ease', // Schnellere Farbübergänge
+                                                }}
+                                            >
+                {currentPitch || '-'}
+            </span>
                                         </div>
                                         <div className="pitch-stat-item">
                                             <span className="pitch-stat-label">Ziel Pitch:</span>
-                                            <span className="pitch-stat-value">
-          {targetPitch || '-'}
-        </span>
+                                            <span
+                                                className="pitch-stat-value"
+                                                style={{
+                                                    transition: 'all 0.1s ease' // Schnellere Updates
+                                                }}
+                                            >
+                {targetPitch || '-'}
+            </span>
                                         </div>
-                                        <div className="pitch-accuracy"
-                                             style={{backgroundColor: getAccuracyColor()}}>
+                                        <div
+                                            className="pitch-accuracy"
+                                            style={{
+                                                backgroundColor: getAccuracyColor(),
+                                                transition: 'background-color 0.1s ease' // Schnellere Farbübergänge
+                                            }}
+                                        >
                                             {currentPitch && targetPitch ? (
                                                 Math.abs(currentPitch - targetPitch) <= 2 ? 'Perfekt!' :
                                                     Math.abs(currentPitch - targetPitch) <= 4 ? 'Gut!' :
