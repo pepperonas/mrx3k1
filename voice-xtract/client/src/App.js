@@ -16,9 +16,9 @@ function App() {
 
     const cancelTokenRef = useRef(null);
 
-    // API URL Helper-Funktion
+    // API URL Helper function
     const getApiUrl = (path) => {
-        // Im Produktionsmodus brauchen wir den vollen Pfad mit /voice-xtract
+        // In production mode we need the full path with /voice-xtract
         return process.env.NODE_ENV === 'production'
             ? `/voice-xtract/api${path}`
             : `/api${path}`;
@@ -43,7 +43,7 @@ function App() {
         setUploading(true);
         setProcessing(false);
         setProgress(0);
-        setStatusMessage('');
+        setStatusMessage('Initializing...');
         setError(null);
 
         const formData = new FormData();
@@ -67,11 +67,15 @@ function App() {
 
             setUploading(false);
             setProcessing(true);
+            setProgress(5); // Start with 5% after upload
 
             // Start processing task
             const taskId = uploadResponse.data.taskId;
 
             // Poll for results using the helper function
+            let consecutiveStaleUpdates = 0;
+            let lastProgress = 0;
+
             const pollInterval = setInterval(async () => {
                 try {
                     const statusResponse = await axios.get(getApiUrl(`/status/${taskId}`));
@@ -81,6 +85,7 @@ function App() {
                         clearInterval(pollInterval);
                         setProcessing(false);
                         setStatusMessage('');
+                        setProgress(100);
                         setResults(status.results);
                     } else if (status.state === 'error') {
                         clearInterval(pollInterval);
@@ -88,30 +93,52 @@ function App() {
                         setStatusMessage('');
                         setError(status.error || 'An error occurred during processing');
                     } else if (status.state === 'processing') {
-                        // Fortschritt aktualisieren
-                        setProgress(status.progress || 0);
+                        // Update progress
+                        const newProgress = status.progress || 0;
+                        setProgress(newProgress);
 
-                        // Status-Nachricht basierend auf Fortschritt setzen
-                        if (status.progress < 15) {
-                            setStatusMessage('Lädt Audio...');
-                        } else if (status.progress < 20) {
-                            setStatusMessage('Bereite Audio für Verarbeitung vor...');
-                        } else if (status.progress < 70) {
-                            setStatusMessage('Extrahiere Vocals mit KI-Modell...');
-                        } else if (status.progress < 90) {
-                            setStatusMessage('Optimiere Audioausgabe...');
+                        // Count updates without progress change
+                        if (newProgress === lastProgress) {
+                            consecutiveStaleUpdates++;
                         } else {
-                            setStatusMessage('Fast fertig...');
+                            consecutiveStaleUpdates = 0;
+                            lastProgress = newProgress;
+                        }
+
+                        // If too many updates without change: slightly increase progress
+                        if (consecutiveStaleUpdates > 10 && newProgress < 95) {
+                            const artificialProgress = Math.min(95, newProgress + 1);
+                            setProgress(artificialProgress);
+                        }
+
+                        // Set status message based on progress
+                        if (status.progress < 15) {
+                            setStatusMessage('Loading audio...');
+                        } else if (status.progress < 25) {
+                            setStatusMessage('Preparing audio for processing...');
+                        } else if (status.progress < 45) {
+                            setStatusMessage('Initializing AI model...');
+                        } else if (status.progress < 70) {
+                            setStatusMessage('Extracting vocals with AI model...');
+                        } else if (status.progress < 90) {
+                            setStatusMessage('Optimizing audio output...');
+                        } else {
+                            setStatusMessage('Almost finished...');
                         }
                     }
                 } catch (err) {
-                    clearInterval(pollInterval);
-                    setProcessing(false);
-                    setStatusMessage('');
-                    setError('Failed to check processing status');
-                    console.error(err);
+                    consecutiveStaleUpdates++;
+
+                    // Abort on many polling errors
+                    if (consecutiveStaleUpdates > 30) {
+                        clearInterval(pollInterval);
+                        setProcessing(false);
+                        setStatusMessage('');
+                        setError('Failed to check processing status');
+                        console.error(err);
+                    }
                 }
-            }, 1000); // Häufigeres Polling für flüssigeres Update
+            }, 500); // More frequent polling for smoother updates (every 500ms)
 
         } catch (err) {
             setUploading(false);
@@ -133,13 +160,13 @@ function App() {
     };
 
     const handleDownload = (taskId, type) => {
-        console.log(`Download starten: Task ${taskId}, Typ ${type}`);
+        console.log(`Starting download: Task ${taskId}, Type ${type}`);
 
-        // Richtige URL für die neue Route verwenden
+        // Use correct URL for the new route
         const downloadUrl = getApiUrl(`/download-audio/${taskId}/${type}`);
-        console.log("Download-URL:", downloadUrl);
+        console.log("Download URL:", downloadUrl);
 
-        // Ein neues Fenster öffnen für den Download
+        // Open a new window for the download
         window.open(downloadUrl, '_blank');
     };
 

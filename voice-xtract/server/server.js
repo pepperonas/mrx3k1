@@ -378,6 +378,10 @@ function runPythonScript(inputFile, outputDir, model, format) {
         const taskDir = path.dirname(outputDir);
         const taskId = path.basename(taskDir);
 
+        // Initiale Werte für den Fortschritt
+        let lastProgress = 0;
+        let initialProgressSent = false;
+
         // Task-Info abrufen, wenn vorhanden
         if (tasks.has(taskId)) {
             const task = tasks.get(taskId);
@@ -385,40 +389,61 @@ function runPythonScript(inputFile, outputDir, model, format) {
                 path.join(task.uploadDir, f) === inputFile
             );
             const totalFiles = task.files.length;
-            const fileProgress = fileIndex / totalFiles * 100;
+
+            // Wenn der Upload abgeschlossen ist, starten wir mit mindestens 5%
+            if (!initialProgressSent) {
+                const updatedTask = tasks.get(taskId);
+                updatedTask.progress = Math.max(updatedTask.progress, 5);
+                tasks.set(taskId, updatedTask);
+                initialProgressSent = true;
+
+                // Aktualisiere alle 2 Sekunden den Fortschritt minimal, falls keine Updates kommen
+                const progressInterval = setInterval(() => {
+                    if (tasks.has(taskId)) {
+                        const currentTask = tasks.get(taskId);
+                        // Nur aktualisieren, wenn der Status noch 'processing' ist
+                        if (currentTask.state === 'processing' && currentTask.progress < 95) {
+                            // Erhöhe den Fortschritt leicht, wenn für längere Zeit kein Update kommt
+                            const newProgress = Math.min(95, currentTask.progress + 1);
+                            if (newProgress > currentTask.progress) {
+                                currentTask.progress = newProgress;
+                                tasks.set(taskId, currentTask);
+                            }
+                        } else {
+                            clearInterval(progressInterval);
+                        }
+                    } else {
+                        clearInterval(progressInterval);
+                    }
+                }, 2000);
+            }
 
             pythonProcess.stdout.on('data', (data) => {
                 const output = data.toString();
                 outputData += output;
                 console.log(`Python output: ${output}`);
 
-                // Fortschritt aus der Python-Ausgabe extrahieren (falls vorhanden)
-                // Beispiel: "Progress: 45%" oder "Verarbeite Segmente: 45%"
-                const progressMatch = output.match(/Progress:\s*(\d+)%/) ||
-                    output.match(/Verarbeite Segmente:\s*(\d+)%/) ||
-                    output.match(/(\d+)\/(\d+)/);
+                // Verbesserte Erkennung für Fortschrittsangaben
+                const progressMatches = output.matchAll(/Progress:\s*(\d+)%/g);
+                for (const match of progressMatches) {
+                    const pythonProgress = parseInt(match[1]);
 
-                if (progressMatch) {
-                    let pythonProgress = 0;
+                    // Vermeide Rückschritte im Fortschritt
+                    if (pythonProgress > lastProgress) {
+                        lastProgress = pythonProgress;
 
-                    if (progressMatch[2]) {
-                        // Format "45/100"
-                        pythonProgress = parseInt(progressMatch[1]) / parseInt(progressMatch[2]) * 100;
-                    } else {
-                        // Format "Progress: 45%"
-                        pythonProgress = parseInt(progressMatch[1]);
-                    }
+                        // Gesamtfortschritt berechnen: Anteil für vorherige Dateien + Anteil für aktuelle Datei
+                        const fileContribution = 100 / totalFiles;
+                        const previousFilesProgress = fileIndex * fileContribution;
+                        const currentFileProgress = (pythonProgress / 100) * fileContribution;
+                        const totalProgress = Math.floor(previousFilesProgress + currentFileProgress);
 
-                    // Gesamtfortschritt berechnen: Anteil für vorherige Dateien + Anteil für aktuelle Datei
-                    const fileContribution = 100 / totalFiles;
-                    const previousFilesProgress = fileIndex * fileContribution;
-                    const currentFileProgress = (pythonProgress / 100) * fileContribution;
-
-                    // Aktualisiere Task-Progress
-                    if (tasks.has(taskId)) {
-                        const updatedTask = tasks.get(taskId);
-                        updatedTask.progress = Math.floor(previousFilesProgress + currentFileProgress);
-                        tasks.set(taskId, updatedTask);
+                        // Aktualisiere Task-Progress
+                        if (tasks.has(taskId)) {
+                            const updatedTask = tasks.get(taskId);
+                            updatedTask.progress = Math.max(updatedTask.progress, totalProgress);
+                            tasks.set(taskId, updatedTask);
+                        }
                     }
                 }
             });
@@ -459,6 +484,13 @@ function runPythonScript(inputFile, outputDir, model, format) {
 
             if (!result.vocals && !result.accompaniment) {
                 return reject(new Error('No output files were generated'));
+            }
+
+            // Bei erfolgreichem Abschluss den Fortschritt auf 100% setzen
+            if (tasks.has(taskId)) {
+                const updatedTask = tasks.get(taskId);
+                updatedTask.progress = 100;
+                tasks.set(taskId, updatedTask);
             }
 
             resolve(result);

@@ -76,7 +76,7 @@ function App() {
             <header className="bg-[#2C2E3B] text-white py-4 px-6 shadow-md">
                 <div className="container mx-auto">
                     <h1 className="text-2xl font-bold flex items-center">
-                        <Globe className="mr-2"/> seolytix
+                        <Globe className="mr-2"/> SEOlytix
                     </h1>
                 </div>
             </header>
