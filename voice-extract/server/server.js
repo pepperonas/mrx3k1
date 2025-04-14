@@ -3,8 +3,8 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs-extra');
-const { v4: uuidv4 } = require('uuid');
-const { spawn } = require('child_process');
+const {v4: uuidv4} = require('uuid');
+const {spawn} = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 4992;
@@ -70,8 +70,8 @@ const tasks = new Map();
 // API routes - Verwende einfache /api Pfade
 app.post('/api/upload', upload.array('files', 5), (req, res) => {
     try {
-        const { taskId } = req;
-        const { model, format } = req.body;
+        const {taskId} = req;
+        const {model, format} = req.body;
 
         console.log(`Upload request received for task ${taskId}`);
         console.log(`Files: ${req.files.length}, Model: ${model}, Format: ${format}`);
@@ -110,7 +110,7 @@ app.post('/api/upload', upload.array('files', 5), (req, res) => {
 });
 
 app.get('/api/status/:taskId', (req, res) => {
-    const { taskId } = req.params;
+    const {taskId} = req.params;
 
     console.log(`Status request for task ${taskId}`);
 
@@ -127,36 +127,61 @@ app.get('/api/status/:taskId', (req, res) => {
     return res.status(200).json(taskInfo);
 });
 
-app.get('/api/download/:filepath', (req, res) => {
+app.get('/api/download/:taskId/:fileType', (req, res) => {
     try {
-        // Security check to prevent path traversal
-        const requestedPath = decodeURIComponent(req.params.filepath);
-        console.log(`Download request for: ${requestedPath}`);
+        const {taskId, fileType} = req.params;
+        console.log(`Download request for task ${taskId}, file type: ${fileType}`);
 
-        const normalizedPath = path.normalize(requestedPath);
-
-        if (!normalizedPath.startsWith(OUTPUT_DIR)) {
-            console.log(`Security violation: ${normalizedPath} is outside OUTPUT_DIR`);
-            return res.status(403).json({
-                message: 'Access denied'
-            });
+        // Prüfe, ob die Task existiert
+        if (!tasks.has(taskId)) {
+            console.log(`Task ${taskId} nicht gefunden`);
+            return res.status(404).json({message: 'Task nicht gefunden'});
         }
 
-        // Check if file exists
-        if (!fs.existsSync(normalizedPath)) {
-            console.log(`File not found: ${normalizedPath}`);
-            return res.status(404).json({
-                message: 'File not found'
-            });
+        const task = tasks.get(taskId);
+
+        // Bestimme den Dateipfad basierend auf dem Dateityp
+        let filePath;
+        if (fileType === 'vocals') {
+            // Hier nehmen wir an, dass es nur eine Datei pro Task gibt
+            const filename = task.files[0];
+            const baseName = path.basename(filename, path.extname(filename));
+            filePath = path.join(task.outputDir, baseName, `vocals.${task.format}`);
+        } else if (fileType === 'accompaniment') {
+            const filename = task.files[0];
+            const baseName = path.basename(filename, path.extname(filename));
+            filePath = path.join(task.outputDir, baseName, `accompaniment.${task.format}`);
+        } else {
+            return res.status(400).json({message: 'Ungültiger Dateityp'});
         }
 
-        console.log(`Sending file: ${normalizedPath}`);
-        return res.download(normalizedPath);
+        console.log(`Vollständiger Dateipfad: ${filePath}`);
+        console.log(`Existiert Datei: ${fs.existsSync(filePath)}`);
+
+        // Prüfen, ob die Datei existiert
+        if (!fs.existsSync(filePath)) {
+            console.log(`Datei nicht gefunden: ${filePath}`);
+            return res.status(404).json({message: 'Datei nicht gefunden'});
+        }
+
+        // Content-Type basierend auf Dateiendung setzen
+        if (task.format === 'mp3') {
+            res.setHeader('Content-Type', 'audio/mpeg');
+        } else if (task.format === 'wav') {
+            res.setHeader('Content-Type', 'audio/wav');
+        }
+
+        // Content-Disposition Header für Download setzen
+        const filename = path.basename(filePath);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        console.log(`Sende Datei: ${filePath}`);
+        return res.sendFile(filePath);
 
     } catch (error) {
-        console.error('Download error:', error);
+        console.error('Download-Fehler:', error);
         return res.status(500).json({
-            message: 'Error downloading file',
+            message: 'Fehler beim Herunterladen der Datei',
             error: error.message
         });
     }
@@ -196,7 +221,7 @@ function processTask(taskId) {
 }
 
 async function processFiles(task, taskId) {
-    const { files, uploadDir, outputDir, model, format } = task;
+    const {files, uploadDir, outputDir, model, format} = task;
     const results = {};
     let fileIndex = 0;
 
@@ -225,8 +250,11 @@ async function processFiles(task, taskId) {
             console.log(`Processing completed for ${filename}`);
             console.log(`Results: ${JSON.stringify(result)}`);
 
-            // Store results
-            results[filename] = result;
+            // Store results mit taskId
+            results[filename] = {
+                taskId: taskId,
+                ...result
+            };
 
             fileIndex++;
         } catch (error) {
@@ -317,15 +345,10 @@ function runPythonScript(inputFile, outputDir, model, format) {
             console.log(`- Vocals: ${vocalPath} (exists: ${fs.existsSync(vocalPath)})`);
             console.log(`- Accompaniment: ${accompPath} (exists: ${fs.existsSync(accompPath)})`);
 
-            const result = {};
-
-            if (fs.existsSync(vocalPath)) {
-                result.vocals = vocalPath;
-            }
-
-            if (fs.existsSync(accompPath)) {
-                result.accompaniment = accompPath;
-            }
+            const result = {
+                vocals: fs.existsSync(vocalPath) ? 'vocals' : null,
+                accompaniment: fs.existsSync(accompPath) ? 'accompaniment' : null
+            };
 
             if (Object.keys(result).length === 0) {
                 return reject(new Error('No output files were generated'));

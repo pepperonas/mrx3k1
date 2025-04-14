@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, {useRef, useState} from 'react';
 import axios from 'axios';
-import { useDropzone } from 'react-dropzone';
+import {useDropzone} from 'react-dropzone';
 import './App.css';
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
             : `/api${path}`;
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
+    const {getRootProps, getInputProps} = useDropzone({
         accept: {
             'audio/*': ['.mp3', '.wav', '.flac', '.ogg', '.m4a']
         },
@@ -112,6 +112,48 @@ function App() {
         }
     };
 
+    const handleDownload = (filePath) => {
+        console.log("Download-Pfad:", filePath);
+
+        // Direkter Download statt über Link
+        const downloadUrl = getApiUrl(`/download/${encodeURIComponent(filePath)}`);
+        console.log("Download-URL:", downloadUrl);
+
+        // Führe einen fetch aus und lade die Datei als Blob
+        fetch(downloadUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Erstelle eine URL für den Blob
+                const url = window.URL.createObjectURL(blob);
+
+                // Erstelle ein temporäres a-Element
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+
+                // Setze den Dateinamen aus dem Pfad
+                const fileName = filePath.split('/').pop();
+                a.download = fileName;
+
+                // Füge das Element zum DOM hinzu, klicke es und entferne es wieder
+                document.body.appendChild(a);
+                a.click();
+
+                // Cleanup
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Download fehlgeschlagen:', error);
+                setError(`Fehler beim Herunterladen: ${error.message}`);
+            });
+    };
+
     return (
         <div className="app">
             <header className="header">
@@ -121,7 +163,7 @@ function App() {
 
             <main className="main">
                 <section className="upload-section">
-                    <div {...getRootProps({ className: 'dropzone' })}>
+                    <div {...getRootProps({className: 'dropzone'})}>
                         <input {...getInputProps()} />
                         <p>Drag & drop audio files here, or click to select files</p>
                         <small>Supported formats: MP3, WAV, FLAC, OGG, M4A</small>
@@ -184,7 +226,7 @@ function App() {
                         <div className="progress-bar">
                             <div
                                 className="progress-bar-fill"
-                                style={{ width: `${progress}%` }}
+                                style={{width: `${progress}%`}}
                             ></div>
                         </div>
                         <p>{progress}%</p>
@@ -207,14 +249,20 @@ function App() {
                                     <h4>{file}</h4>
                                     <div className="result-links">
                                         {paths.vocals && (
-                                            <a href={getApiUrl(`/download/${encodeURIComponent(paths.vocals)}`)} download>
+                                            <button
+                                                className="download-button"
+                                                onClick={() => handleDownload(paths.vocals)}
+                                            >
                                                 Download Vocals
-                                            </a>
+                                            </button>
                                         )}
                                         {paths.accompaniment && (
-                                            <a href={getApiUrl(`/download/${encodeURIComponent(paths.accompaniment)}`)} download>
+                                            <button
+                                                className="download-button"
+                                                onClick={() => handleDownload(paths.accompaniment)}
+                                            >
                                                 Download Accompaniment
-                                            </a>
+                                            </button>
                                         )}
                                     </div>
                                 </div>
