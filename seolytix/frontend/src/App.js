@@ -56,6 +56,14 @@ function App() {
         }
     };
 
+    // Event-Handler für Enter-Taste
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !isAnalyzing) {
+            e.preventDefault();
+            analyzeWebsite();
+        }
+    };
+
     // Bestimmt die Farbe basierend auf dem Score
     const getScoreColor = (score) => {
         if (score >= 80) return 'text-green-500';
@@ -84,6 +92,7 @@ function App() {
                                     type="text"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
+                                    onKeyDown={handleKeyDown}
                                     placeholder="https://example.com"
                                     className="w-full p-3 pr-10 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
                                 />

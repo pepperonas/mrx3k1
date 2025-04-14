@@ -66,7 +66,14 @@ const analyzeMetaTitle = ($) => {
  * @returns {Object} Analyse der Meta-Description
  */
 const analyzeMetaDescription = ($) => {
-  const description = $('meta[name="description"]').attr('content') || '';
+  // Nach verschiedenen Formaten von Meta-Descriptions suchen
+  const description =
+      $('meta[name="description"]').attr('content') ||
+      $('meta[property="og:description"]').attr('content') ||
+      $('meta[property="description"]').attr('content') ||
+      $('meta[itemprop="description"]').attr('content') ||
+      '';
+
   const descriptionLength = description.length;
   const exists = descriptionLength > 0;
 
