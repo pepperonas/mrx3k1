@@ -363,7 +363,7 @@ const ClipTune = () => {
             const url = URL.createObjectURL(wavBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'cliptune-export.mp3'; // Geändert von .wav zu .mp3
+            a.download = 'cliptune-export.wav'; // Geändert von .wav zu .mp3
             a.click();
 
             URL.revokeObjectURL(url);
@@ -374,54 +374,91 @@ const ClipTune = () => {
 
     // AudioBuffer zu MP3 konvertieren mit lamejs
     const bufferToMp3 = (audioBuffer) => {
-        const sampleRate = audioBuffer.sampleRate;
+        // In lamejs gibt es Probleme mit MPEGMode, verwenden wir direkte Werte
+        // MONO = 3, STEREO = 0, JOINT_STEREO = 1
+        const MONO = 3;
+        const STEREO = 0;
+
         const numChannels = audioBuffer.numberOfChannels;
-        const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, 128);
+        const sampleRate = audioBuffer.sampleRate;
+        const bitRate = 128;
+
+        // Erstelle den Encoder mit numerischen Werten statt Enums
+        const mp3encoder = new lamejs.Mp3Encoder(
+            numChannels === 1 ? MONO : STEREO,
+            sampleRate,
+            bitRate
+        );
+
         const mp3Data = [];
 
-        // Konvertiere Float32Array zu Int16Array
-        const convert = (samples) => {
-            const int16Samples = new Int16Array(samples.length);
-            for (let i = 0; i < samples.length; i++) {
-                int16Samples[i] = samples[i] < 0 ? samples[i] * 0x8000 : samples[i] * 0x7FFF;
-            }
-            return int16Samples;
-        };
+        // Für bessere Browserkompatibilität
+        const maxSamples = 1152;
 
+        // Konvertiere Float32Array zu Int16Array und erstelle stereo/mono samples
+        const samples = new Int16Array(audioBuffer.length * numChannels);
+
+        // Für jeden Kanal die Samples kopieren und umwandeln
         if (numChannels === 1) {
             // Mono
-            const samples = convert(audioBuffer.getChannelData(0));
-            const sampleBlockSize = 1152;
-
-            for (let i = 0; i < samples.length; i += sampleBlockSize) {
-                const sampleChunk = samples.subarray(i, i + sampleBlockSize);
-                const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
-                if (mp3buf.length > 0) {
-                    mp3Data.push(mp3buf);
-                }
+            const channelData = audioBuffer.getChannelData(0);
+            for (let i = 0; i < channelData.length; i++) {
+                // Float32 (-1.0 bis 1.0) zu Int16 (-32768 bis 32767)
+                const sample = Math.max(-1, Math.min(1, channelData[i]));
+                samples[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
             }
         } else {
-            // Stereo
-            const leftSamples = convert(audioBuffer.getChannelData(0));
-            const rightSamples = convert(audioBuffer.getChannelData(1));
-            const sampleBlockSize = 1152;
+            // Stereo - interleaved für den encoder
+            const leftChannel = audioBuffer.getChannelData(0);
+            const rightChannel = audioBuffer.getChannelData(1);
 
-            for (let i = 0; i < leftSamples.length; i += sampleBlockSize) {
-                const leftChunk = leftSamples.subarray(i, i + sampleBlockSize);
-                const rightChunk = rightSamples.subarray(i, i + sampleBlockSize);
-                const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-                if (mp3buf.length > 0) {
-                    mp3Data.push(mp3buf);
-                }
+            for (let i = 0, j = 0; i < leftChannel.length; i++, j += 2) {
+                // Links und rechts interleaved
+                const leftSample = Math.max(-1, Math.min(1, leftChannel[i]));
+                const rightSample = Math.max(-1, Math.min(1, rightChannel[i]));
+
+                samples[j] = leftSample < 0 ? leftSample * 0x8000 : leftSample * 0x7FFF;
+                samples[j + 1] = rightSample < 0 ? rightSample * 0x8000 : rightSample * 0x7FFF;
             }
         }
 
+        // MP3 kodieren
+        for (let i = 0; i < samples.length; i += maxSamples) {
+            const sampleChunk = samples.subarray(i, i + maxSamples);
+            let mp3buf;
+
+            if (numChannels === 1) {
+                // Mono
+                mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+            } else {
+                // Stereo - müssen die Kanäle trennen
+                const leftChunk = new Int16Array(maxSamples / 2);
+                const rightChunk = new Int16Array(maxSamples / 2);
+
+                // De-interleave für lamejs
+                for (let j = 0, k = 0; j < sampleChunk.length; j += 2, k++) {
+                    if (k < leftChunk.length) {
+                        leftChunk[k] = sampleChunk[j];
+                        rightChunk[k] = sampleChunk[j + 1];
+                    }
+                }
+
+                mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+            }
+
+            if (mp3buf && mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
+            }
+        }
+
+        // Flush und finale MP3-Frames
         const mp3buf = mp3encoder.flush();
-        if (mp3buf.length > 0) {
+        if (mp3buf && mp3buf.length > 0) {
             mp3Data.push(mp3buf);
         }
 
-        return new Blob(mp3Data, {type: 'audio/mp3'});
+        // Erstelle Blob mit korrekt typisiertem mp3-content
+        return new Blob(mp3Data, { type: 'audio/mp3' });
     };
 
     // Convert AudioBuffer to WAV Blob
