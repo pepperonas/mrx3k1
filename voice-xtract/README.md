@@ -77,7 +77,7 @@ brew install ffmpeg
 Create a new Nginx configuration file:
 
 ```bash
-sudo nano /etc/nginx/sites-available/voice-extract
+sudo nano /etc/nginx/sites-available/voice-xtract
 ```
 
 Add the following configuration:
@@ -88,14 +88,14 @@ server {
     server_name yourdomain.com;
     
     # Voice Extract React App
-    location /voice-extract {
-        alias /var/www/html/voice-extract/client/build;
-        try_files $uri $uri/ /voice-extract/index.html;
+    location /voice-xtract {
+        alias /var/www/html/voice-xtract/client/build;
+        try_files $uri $uri/ /voice-xtract/index.html;
         index index.html;
     }
     
     # Voice Extract API Backend
-    location /voice-extract/api/ {
+    location /voice-xtract/api/ {
         proxy_pass http://localhost:4992/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -116,7 +116,7 @@ server {
 Enable the configuration:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/voice-extract /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/voice-xtract /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -155,21 +155,21 @@ module.exports = {
 
 ```bash
 # Local machine
-scp -r client/build/* user@yourdomain.com:/var/www/html/voice-extract/client/build/
+scp -r client/build/* user@yourdomain.com:/var/www/html/voice-xtract/client/build/
 ```
 
 ### 2. Deploy the server files to your server
 
 ```bash
 # Local machine
-scp -r server/* user@yourdomain.com:/var/www/html/voice-extract/server/
+scp -r server/* user@yourdomain.com:/var/www/html/voice-xtract/server/
 ```
 
 ### 3. Set up the required directories on the server
 
 ```bash
 # On the server
-cd /var/www/html/voice-extract/server
+cd /var/www/html/voice-xtract/server
 mkdir -p uploads output temp
 ```
 
@@ -177,7 +177,7 @@ mkdir -p uploads output temp
 
 ```bash
 # On the server
-cd /var/www/html/voice-extract/server
+cd /var/www/html/voice-xtract/server
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup

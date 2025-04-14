@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/voice-xtract/static/css/main.78f4554b.css",
+    "main.js": "/voice-xtract/static/js/main.48a077b6.js",
+    "static/js/453.a7a2526c.chunk.js": "/voice-xtract/static/js/453.a7a2526c.chunk.js",
+    "index.html": "/voice-xtract/index.html",
+    "main.78f4554b.css.map": "/voice-xtract/static/css/main.78f4554b.css.map",
+    "main.48a077b6.js.map": "/voice-xtract/static/js/main.48a077b6.js.map",
+    "453.a7a2526c.chunk.js.map": "/voice-xtract/static/js/453.a7a2526c.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.78f4554b.css",
+    "static/js/main.48a077b6.js"
+  ]
+}

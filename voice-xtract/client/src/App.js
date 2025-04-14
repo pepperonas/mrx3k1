@@ -17,9 +17,9 @@ function App() {
 
     // API URL Helper-Funktion
     const getApiUrl = (path) => {
-        // Im Produktionsmodus brauchen wir den vollen Pfad mit /voice-extract
+        // Im Produktionsmodus brauchen wir den vollen Pfad mit /voice-xtract
         return process.env.NODE_ENV === 'production'
-            ? `/voice-extract/api${path}`
+            ? `/voice-xtract/api${path}`
             : `/api${path}`;
     };
 
