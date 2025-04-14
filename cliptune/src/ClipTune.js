@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import lamejs from 'lamejs';
 
 // Manually define icons
 const PlayIcon = () => (
@@ -350,26 +351,77 @@ const ClipTune = () => {
             source.connect(offlineCtx.destination);
 
             // Start rendering from the selected position
-            const startSample = Math.floor(startMarker * audioBuffer.sampleRate / 1000);
             source.start(0, startMarker / 1000);
 
             // Render audio
             const renderedBuffer = await offlineCtx.startRendering();
 
-            // Convert to WAV
+            // WAV im Browser erstellen
             const wavBlob = bufferToWav(renderedBuffer);
 
-            // Create download link
+            // Download-Link mit MP3-Erweiterung
             const url = URL.createObjectURL(wavBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'cliptune-export.wav';
+            a.download = 'cliptune-export.mp3'; // Geändert von .wav zu .mp3
             a.click();
 
             URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error exporting audio:", error);
         }
+    };
+
+    // AudioBuffer zu MP3 konvertieren mit lamejs
+    const bufferToMp3 = (audioBuffer) => {
+        const sampleRate = audioBuffer.sampleRate;
+        const numChannels = audioBuffer.numberOfChannels;
+        const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, 128);
+        const mp3Data = [];
+
+        // Konvertiere Float32Array zu Int16Array
+        const convert = (samples) => {
+            const int16Samples = new Int16Array(samples.length);
+            for (let i = 0; i < samples.length; i++) {
+                int16Samples[i] = samples[i] < 0 ? samples[i] * 0x8000 : samples[i] * 0x7FFF;
+            }
+            return int16Samples;
+        };
+
+        if (numChannels === 1) {
+            // Mono
+            const samples = convert(audioBuffer.getChannelData(0));
+            const sampleBlockSize = 1152;
+
+            for (let i = 0; i < samples.length; i += sampleBlockSize) {
+                const sampleChunk = samples.subarray(i, i + sampleBlockSize);
+                const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+        } else {
+            // Stereo
+            const leftSamples = convert(audioBuffer.getChannelData(0));
+            const rightSamples = convert(audioBuffer.getChannelData(1));
+            const sampleBlockSize = 1152;
+
+            for (let i = 0; i < leftSamples.length; i += sampleBlockSize) {
+                const leftChunk = leftSamples.subarray(i, i + sampleBlockSize);
+                const rightChunk = rightSamples.subarray(i, i + sampleBlockSize);
+                const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+        }
+
+        const mp3buf = mp3encoder.flush();
+        if (mp3buf.length > 0) {
+            mp3Data.push(mp3buf);
+        }
+
+        return new Blob(mp3Data, {type: 'audio/mp3'});
     };
 
     // Convert AudioBuffer to WAV Blob
