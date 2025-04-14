@@ -5,14 +5,114 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="theme-color" content="#2C2E3B"/>
-    <meta
-            name="description"
-            content="ObjectCut - Extract objects from images with transparency"
-    />
+    <meta name="description" content="ObjectCut - Extract objects from images with transparency"/>
+    <meta name="keywords"
+          content="image editor, background removal, transparency, object extraction, AI, photo editing"/>
+    <meta name="author" content="Martin Pfeffer"/>
+    <meta property="og:title" content="ObjectCut - Image Background Removal Tool"/>
+    <meta property="og:description"
+          content="A powerful tool to extract objects from images with transparency using AI or manual selection."/>
+    <meta property="og:image" content="%PUBLIC_URL%/objectcut.jpg"/>
+    <meta property="og:type" content="website"/>
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:title" content="ObjectCut - Image Background Removal Tool"/>
+    <meta name="twitter:description"
+          content="Extract objects from images with perfect transparency using AI or manual selection."/>
+    <meta name="application-name" content="ObjectCut"/>
+    <meta name="robots" content="index, follow"/>
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #252632;
+            color: #AAAAAA;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            border-top: 1px solid #4A4B58;
+            z-index: 1000;
+        }
+
+        .footer a {
+            color: #56b4e9;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
     <title>ObjectCut</title>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
 <div id="root"></div>
+
+<div class="footer">
+    Made with ❤️ by Martin Pfeffer
+</div>
+<script>
+    // Fix für Drag & Drop in der Hauptanwendung
+    document.addEventListener('DOMContentLoaded', function () {
+        // Warte einen Moment, bis die React-App vollständig geladen ist
+        setTimeout(function () {
+            // Suche nach dem Image-Canvas oder der Drop-Zone
+            const dropContainers = document.querySelectorAll('.canvas-container, .image-canvas-container');
+            const dropHint = document.querySelector('.drop-hint');
+
+            // Verhindere Standard-Drag-Verhalten im Browser
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                document.body.addEventListener(eventName, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            if (dropContainers.length > 0) {
+                dropContainers.forEach(container => {
+                    // Markiere als aktive Drop-Zone beim Darüberziehen
+                    container.addEventListener('dragover', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.style.borderColor = '#56b4e9';
+                        if (dropHint) dropHint.style.color = '#56b4e9';
+                    }, false);
+
+                    // Entferne Markierung beim Verlassen
+                    container.addEventListener('dragleave', function () {
+                        this.style.borderColor = '#4A4B58';
+                        if (dropHint) dropHint.style.color = '';
+                    }, false);
+
+                    // Behandle den Drop-Event
+                    container.addEventListener('drop', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.style.borderColor = '#4A4B58';
+
+                        const dt = e.dataTransfer;
+                        const files = dt.files;
+
+                        if (files.length > 0) {
+                            // Löse einen Change-Event auf dem versteckten Datei-Input aus
+                            const fileInputs = document.querySelectorAll('input[type="file"]');
+                            if (fileInputs.length > 0) {
+                                // Erstelle ein neues FileList-ähnliches Objekt
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(files[0]);
+
+                                // Setze die Dateien und löse das Change-Event aus
+                                fileInputs[0].files = dataTransfer.files;
+                                fileInputs[0].dispatchEvent(new Event('change', {bubbles: true}));
+                            }
+                        }
+                    }, false);
+                });
+            }
+        }, 1000); // Warte 1 Sekunde, bis die React-App vollständig geladen ist
+    });
+</script>
 </body>
 </html>
