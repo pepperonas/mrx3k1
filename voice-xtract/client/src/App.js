@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, {useRef, useState} from 'react';
 import axios from 'axios';
-import { useDropzone } from 'react-dropzone';
+import {useDropzone} from 'react-dropzone';
 import './App.css';
 
 function App() {
@@ -8,6 +8,7 @@ function App() {
     const [uploading, setUploading] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [statusMessage, setStatusMessage] = useState('');
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
     const [model, setModel] = useState('htdemucs');
@@ -23,7 +24,7 @@ function App() {
             : `/api${path}`;
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
+    const {getRootProps, getInputProps} = useDropzone({
         accept: {
             'audio/*': ['.mp3', '.wav', '.flac', '.ogg', '.m4a']
         },
@@ -42,6 +43,7 @@ function App() {
         setUploading(true);
         setProcessing(false);
         setProgress(0);
+        setStatusMessage('');
         setError(null);
 
         const formData = new FormData();
@@ -78,25 +80,43 @@ function App() {
                     if (status.state === 'completed') {
                         clearInterval(pollInterval);
                         setProcessing(false);
+                        setStatusMessage('');
                         setResults(status.results);
                     } else if (status.state === 'error') {
                         clearInterval(pollInterval);
                         setProcessing(false);
+                        setStatusMessage('');
                         setError(status.error || 'An error occurred during processing');
                     } else if (status.state === 'processing') {
+                        // Fortschritt aktualisieren
                         setProgress(status.progress || 0);
+
+                        // Status-Nachricht basierend auf Fortschritt setzen
+                        if (status.progress < 15) {
+                            setStatusMessage('Lädt Audio...');
+                        } else if (status.progress < 20) {
+                            setStatusMessage('Bereite Audio für Verarbeitung vor...');
+                        } else if (status.progress < 70) {
+                            setStatusMessage('Extrahiere Vocals mit KI-Modell...');
+                        } else if (status.progress < 90) {
+                            setStatusMessage('Optimiere Audioausgabe...');
+                        } else {
+                            setStatusMessage('Fast fertig...');
+                        }
                     }
                 } catch (err) {
                     clearInterval(pollInterval);
                     setProcessing(false);
+                    setStatusMessage('');
                     setError('Failed to check processing status');
                     console.error(err);
                 }
-            }, 2000);
+            }, 1000); // Häufigeres Polling für flüssigeres Update
 
         } catch (err) {
             setUploading(false);
             setProcessing(false);
+            setStatusMessage('');
             if (axios.isCancel(err)) {
                 setError('Upload cancelled');
             } else {
@@ -132,7 +152,7 @@ function App() {
 
             <main className="main">
                 <section className="upload-section">
-                    <div {...getRootProps({ className: 'dropzone' })}>
+                    <div {...getRootProps({className: 'dropzone'})}>
                         <input {...getInputProps()} />
                         <p>Drag & drop audio files here, or click to select files</p>
                         <small>Supported formats: MP3, WAV, FLAC, OGG, M4A</small>
@@ -195,10 +215,13 @@ function App() {
                         <div className="progress-bar">
                             <div
                                 className="progress-bar-fill"
-                                style={{ width: `${progress}%` }}
+                                style={{width: `${progress}%`}}
                             ></div>
                         </div>
                         <p>{progress}%</p>
+                        {processing && statusMessage && (
+                            <p className="status-message">{statusMessage}</p>
+                        )}
                     </section>
                 )}
 

@@ -313,3 +313,24 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Fügen Sie folgende CSS-Regel zur App.css hinzu */
+
+.status-message {
+    margin-top: 10px;
+    color: var(--accent-color);
+    font-style: italic;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.8;
+    }
+}

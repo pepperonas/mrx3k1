@@ -374,11 +374,61 @@ function runPythonScript(inputFile, outputDir, model, format) {
         let outputData = '';
         let errorData = '';
 
-        pythonProcess.stdout.on('data', (data) => {
-            const output = data.toString();
-            outputData += output;
-            console.log(`Python output: ${output}`);
-        });
+        // Aktueller Task und Task ID aus der Closure
+        const taskDir = path.dirname(outputDir);
+        const taskId = path.basename(taskDir);
+
+        // Task-Info abrufen, wenn vorhanden
+        if (tasks.has(taskId)) {
+            const task = tasks.get(taskId);
+            const fileIndex = task.files.findIndex(f =>
+                path.join(task.uploadDir, f) === inputFile
+            );
+            const totalFiles = task.files.length;
+            const fileProgress = fileIndex / totalFiles * 100;
+
+            pythonProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                outputData += output;
+                console.log(`Python output: ${output}`);
+
+                // Fortschritt aus der Python-Ausgabe extrahieren (falls vorhanden)
+                // Beispiel: "Progress: 45%" oder "Verarbeite Segmente: 45%"
+                const progressMatch = output.match(/Progress:\s*(\d+)%/) ||
+                    output.match(/Verarbeite Segmente:\s*(\d+)%/) ||
+                    output.match(/(\d+)\/(\d+)/);
+
+                if (progressMatch) {
+                    let pythonProgress = 0;
+
+                    if (progressMatch[2]) {
+                        // Format "45/100"
+                        pythonProgress = parseInt(progressMatch[1]) / parseInt(progressMatch[2]) * 100;
+                    } else {
+                        // Format "Progress: 45%"
+                        pythonProgress = parseInt(progressMatch[1]);
+                    }
+
+                    // Gesamtfortschritt berechnen: Anteil für vorherige Dateien + Anteil für aktuelle Datei
+                    const fileContribution = 100 / totalFiles;
+                    const previousFilesProgress = fileIndex * fileContribution;
+                    const currentFileProgress = (pythonProgress / 100) * fileContribution;
+
+                    // Aktualisiere Task-Progress
+                    if (tasks.has(taskId)) {
+                        const updatedTask = tasks.get(taskId);
+                        updatedTask.progress = Math.floor(previousFilesProgress + currentFileProgress);
+                        tasks.set(taskId, updatedTask);
+                    }
+                }
+            });
+        } else {
+            pythonProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                outputData += output;
+                console.log(`Python output: ${output}`);
+            });
+        }
 
         pythonProcess.stderr.on('data', (data) => {
             const error = data.toString();
@@ -407,7 +457,7 @@ function runPythonScript(inputFile, outputDir, model, format) {
                 accompaniment: fs.existsSync(accompPath) ? 'accompaniment' : null
             };
 
-            if (Object.keys(result).length === 0) {
+            if (!result.vocals && !result.accompaniment) {
                 return reject(new Error('No output files were generated'));
             }
 

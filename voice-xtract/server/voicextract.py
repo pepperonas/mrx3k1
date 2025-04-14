@@ -106,7 +106,9 @@ class VocalExtractor:
 
         try:
             # Audio laden
+            print(f"Progress: 5%")  # Fortschritt melden - Laden gestartet
             wav = AudioFile(input_file).read(channels=self.model.audio_channels, samplerate=self.model.samplerate)
+            print(f"Progress: 10%")  # Fortschritt melden - Laden abgeschlossen
 
             # Prüfen, ob wav bereits ein Tensor ist
             if not isinstance(wav, torch.Tensor):
@@ -120,6 +122,7 @@ class VocalExtractor:
 
             # Zum richtigen Gerät verschieben
             wav = wav.to(self.device)
+            print(f"Progress: 15%")  # Fortschritt melden - Vorbereitung abgeschlossen
 
             print(f"Audio-Shape: {wav.shape}")
 
@@ -150,10 +153,16 @@ class VocalExtractor:
                     start += segment_samples - overlap_samples
 
                 print(f"Audio wird in {len(segments)} Segmenten verarbeitet")
+                print(f"Progress: 20%")  # Fortschritt melden - Segmentierung abgeschlossen
 
-                # Verarbeite jedes Segment
-                for i, (start, end) in enumerate(tqdm.tqdm(segments, desc="Verarbeite Segmente")):
+                # Verarbeite jedes Segment mit Fortschrittsanzeige
+                for i, (start, end) in enumerate(segments):
                     segment = wav[:, :, start:end]
+
+                    # Berechne Fortschritt für dieses Segment (20-70%)
+                    segment_progress = 20 + int((i / len(segments)) * 50)
+                    print(f"Verarbeite Segment {i+1}/{len(segments)}")
+                    print(f"Progress: {segment_progress}%")
 
                     # Trenne Audio
                     with torch.no_grad():
@@ -177,17 +186,29 @@ class VocalExtractor:
                     all_accompaniment.append(segment_accompaniment.cpu())
 
                 # Zusammenfügen der Segmente mit Überblendung
+                print(f"Progress: 70%")  # Fortschritt melden - Verarbeitung abgeschlossen
+                print("Füge Segmente zusammen...")
                 vocal_output = self.crossfade_segments(all_vocals, overlap_samples)
                 accompaniment_output = self.crossfade_segments(all_accompaniment, overlap_samples)
+                print(f"Progress: 80%")  # Fortschritt melden - Zusammenfügen abgeschlossen
 
                 # Speichern der Dateien
+                print("Speichere Vocals...")
                 self.save_audio(vocal_output[0].numpy(), vocal_path, self.model.samplerate, format, bitrate)
-                self.save_audio(accompaniment_output[0].numpy(), accompaniment_path, self.model.samplerate, format,
-                                bitrate)
+                print(f"Progress: 90%")  # Fortschritt melden - Vocals gespeichert
+
+                print("Speichere Begleitung...")
+                self.save_audio(accompaniment_output[0].numpy(), accompaniment_path, self.model.samplerate, format, bitrate)
+                print(f"Progress: 100%")  # Fortschritt melden - Alles gespeichert
             else:
                 # Verarbeite die gesamte Datei auf einmal
+                print(f"Progress: 20%")  # Fortschritt melden - Start der Verarbeitung
+                print("Verarbeite Audiodatei...")
+
                 with torch.no_grad():
                     sources = apply_model(self.model, wav)
+
+                print(f"Progress: 70%")  # Fortschritt melden - Modell angewendet
 
                 # Indizes für demucs sources
                 stem_names = self.model.sources
@@ -197,17 +218,20 @@ class VocalExtractor:
 
                 if vocal_idx != -1:
                     # Vocals speichern
+                    print("Speichere Vocals...")
                     vocals = sources[:, vocal_idx].cpu().numpy()
                     self.save_audio(vocals[0], vocal_path, self.model.samplerate, format, bitrate)
+                    print(f"Progress: 85%")  # Fortschritt melden - Vocals gespeichert
 
                     # Begleitung erstellen (alle Quellen außer vocals)
+                    print("Erstelle und speichere Begleitung...")
                     accompaniment = torch.zeros_like(sources[:, 0])
                     for idx, name in enumerate(stem_names):
                         if idx != vocal_idx:
                             accompaniment += sources[:, idx]
 
-                    self.save_audio(accompaniment[0].cpu().numpy(), accompaniment_path, self.model.samplerate, format,
-                                    bitrate)
+                    self.save_audio(accompaniment[0].cpu().numpy(), accompaniment_path, self.model.samplerate, format, bitrate)
+                    print(f"Progress: 100%")  # Fortschritt melden - Alles gespeichert
                 else:
                     print("Warnung: Keine Vocals-Stem gefunden in den verfügbaren Stems!")
                     return {}
