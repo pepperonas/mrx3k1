@@ -29,7 +29,8 @@ function App() {
 
         try {
             // Backend-API aufrufen
-            const response = await fetch('http://localhost:5010/api/seo/analyze', {
+            const response = await fetch('/seolytix/api/seo/analyze', {
+
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,7 +48,10 @@ function App() {
             setIsAnalyzing(false);
         } catch (error) {
             console.error('Fehler bei der Analyse:', error);
-            setError(`Fehler bei der Analyse: ${error.message}`);
+            const errorMessage = error.message === 'Failed to fetch'
+                ? 'Verbindung zum Server fehlgeschlagen. Bitte prüfe, ob der Backend-Server läuft.'
+                : `Fehler bei der Analyse: ${error.message}`;
+            setError(errorMessage);
             setIsAnalyzing(false);
         }
     };
