@@ -187,6 +187,63 @@ app.get('/api/download/:taskId/:fileType', (req, res) => {
     }
 });
 
+app.get('/api/download-audio/:taskId/:type', (req, res) => {
+    try {
+        const {taskId, type} = req.params;
+        console.log(`Audio Download angefordert: Task ${taskId}, Typ ${type}`);
+
+        if (!tasks.has(taskId)) {
+            return res.status(404).json({message: 'Task nicht gefunden'});
+        }
+
+        const task = tasks.get(taskId);
+
+        if (task.files.length === 0) {
+            return res.status(404).json({message: 'Keine Dateien in diesem Task'});
+        }
+
+        // Das erste Audiofile im Task verwenden
+        const filename = task.files[0];
+        const baseFilename = path.basename(filename, path.extname(filename));
+        const outputDir = path.join(task.outputDir, baseFilename);
+
+        // Pfad zur Audio-Datei bestimmen
+        let audioFile;
+        if (type === 'vocals') {
+            audioFile = path.join(outputDir, `vocals.${task.format}`);
+        } else if (type === 'accompaniment') {
+            audioFile = path.join(outputDir, `accompaniment.${task.format}`);
+        } else {
+            return res.status(400).json({message: 'Ungültiger Audio-Typ'});
+        }
+
+        // Prüfen, ob die Datei existiert
+        if (!fs.existsSync(audioFile)) {
+            return res.status(404).json({message: `${type}-Datei nicht gefunden`});
+        }
+
+        // MIME-Typ setzen
+        if (task.format === 'mp3') {
+            res.setHeader('Content-Type', 'audio/mpeg');
+        } else if (task.format === 'wav') {
+            res.setHeader('Content-Type', 'audio/wav');
+        }
+
+        // Download-Header setzen
+        res.setHeader('Content-Disposition', `attachment; filename="${type}.${task.format}"`);
+
+        // Datei senden
+        return res.sendFile(audioFile);
+
+    } catch (error) {
+        console.error('Download-Fehler:', error);
+        return res.status(500).json({
+            message: 'Fehler beim Herunterladen der Audiodatei',
+            error: error.message
+        });
+    }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     return res.status(200).json({

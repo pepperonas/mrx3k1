@@ -1,6 +1,6 @@
-import React, {useRef, useState} from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import {useDropzone} from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
 import './App.css';
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
             : `/api${path}`;
     };
 
-    const {getRootProps, getInputProps} = useDropzone({
+    const { getRootProps, getInputProps } = useDropzone({
         accept: {
             'audio/*': ['.mp3', '.wav', '.flac', '.ogg', '.m4a']
         },
@@ -112,46 +112,15 @@ function App() {
         }
     };
 
-    const handleDownload = (filePath) => {
-        console.log("Download-Pfad:", filePath);
+    const handleDownload = (taskId, type) => {
+        console.log(`Download starten: Task ${taskId}, Typ ${type}`);
 
-        // Direkter Download statt über Link
-        const downloadUrl = getApiUrl(`/download/${encodeURIComponent(filePath)}`);
+        // Richtige URL für die neue Route verwenden
+        const downloadUrl = getApiUrl(`/download-audio/${taskId}/${type}`);
         console.log("Download-URL:", downloadUrl);
 
-        // Führe einen fetch aus und lade die Datei als Blob
-        fetch(downloadUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                // Erstelle eine URL für den Blob
-                const url = window.URL.createObjectURL(blob);
-
-                // Erstelle ein temporäres a-Element
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-
-                // Setze den Dateinamen aus dem Pfad
-                const fileName = filePath.split('/').pop();
-                a.download = fileName;
-
-                // Füge das Element zum DOM hinzu, klicke es und entferne es wieder
-                document.body.appendChild(a);
-                a.click();
-
-                // Cleanup
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            })
-            .catch(error => {
-                console.error('Download fehlgeschlagen:', error);
-                setError(`Fehler beim Herunterladen: ${error.message}`);
-            });
+        // Ein neues Fenster öffnen für den Download
+        window.open(downloadUrl, '_blank');
     };
 
     return (
@@ -163,7 +132,7 @@ function App() {
 
             <main className="main">
                 <section className="upload-section">
-                    <div {...getRootProps({className: 'dropzone'})}>
+                    <div {...getRootProps({ className: 'dropzone' })}>
                         <input {...getInputProps()} />
                         <p>Drag & drop audio files here, or click to select files</p>
                         <small>Supported formats: MP3, WAV, FLAC, OGG, M4A</small>
@@ -226,7 +195,7 @@ function App() {
                         <div className="progress-bar">
                             <div
                                 className="progress-bar-fill"
-                                style={{width: `${progress}%`}}
+                                style={{ width: `${progress}%` }}
                             ></div>
                         </div>
                         <p>{progress}%</p>
@@ -244,26 +213,22 @@ function App() {
                     <section className="results-section">
                         <h3>Extraction Complete</h3>
                         <div className="results-grid">
-                            {Object.entries(results).map(([file, paths]) => (
+                            {Object.entries(results).map(([file, result]) => (
                                 <div className="result-card" key={file}>
                                     <h4>{file}</h4>
                                     <div className="result-links">
-                                        {paths.vocals && (
-                                            <button
-                                                className="download-button"
-                                                onClick={() => handleDownload(paths.vocals)}
-                                            >
-                                                Download Vocals
-                                            </button>
-                                        )}
-                                        {paths.accompaniment && (
-                                            <button
-                                                className="download-button"
-                                                onClick={() => handleDownload(paths.accompaniment)}
-                                            >
-                                                Download Accompaniment
-                                            </button>
-                                        )}
+                                        <button
+                                            className="download-button"
+                                            onClick={() => handleDownload(result.taskId || result.vocals, 'vocals')}
+                                        >
+                                            Download Vocals
+                                        </button>
+                                        <button
+                                            className="download-button"
+                                            onClick={() => handleDownload(result.taskId || result.accompaniment, 'accompaniment')}
+                                        >
+                                            Download Accompaniment
+                                        </button>
                                     </div>
                                 </div>
                             ))}
