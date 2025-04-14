@@ -3,7 +3,7 @@
 A web application for extracting vocals from music files using state-of-the-art audio source
 separation with the Demucs library.
 
-![VoiceXtract Screenshot](screenshot.jpg)
+![VoiceXtract Screenshot](voice-xtract.png)
 
 ## Features
 
