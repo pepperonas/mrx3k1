@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import PasswordView from './components/PasswordView';
 import OpenerView from './components/OpenerView';
 import DatesView from './components/DatesView';
+import TipsView from './components/TipsView';
 import Toast from './components/Toast';
 import './App.css';
 
@@ -40,6 +41,9 @@ function App() {
             console.log('Passwort korrekt für dates-Ansicht');
             loadDatesData();
             setView('dates');
+        } else if (password === '😍') {
+            console.log('Passwort korrekt für tips-Ansicht');
+            setView('tips');
         } else {
             console.log('Falsches Passwort');
             showToast("Falsches Passwort! 🔒");
@@ -174,6 +178,12 @@ function App() {
             {view === 'dates' && (
                 <DatesView
                     datesData={datesData}
+                    onBack={goBack}
+                />
+            )}
+
+            {view === 'tips' && (
+                <TipsView
                     onBack={goBack}
                 />
             )}

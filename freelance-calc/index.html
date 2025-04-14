@@ -43,7 +43,7 @@
             background-color: var(--secondary);
             padding: 2.5rem;
             border-radius: 16px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             box-shadow: var(--card-shadow);
         }
@@ -56,9 +56,56 @@
             font-size: 1.8rem;
         }
 
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background-color: var(--accent);
+            color: var(--text);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: rgba(79, 157, 166, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
         .form-group {
             margin-bottom: 1.5rem;
             position: relative;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
         }
 
         label {
@@ -161,6 +208,37 @@
             font-weight: 600;
         }
 
+        .section-divider {
+            margin: 2rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .section-divider span {
+            position: relative;
+            background-color: var(--secondary);
+            padding: 0 1rem;
+            color: var(--highlight);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
         @media (max-width: 480px) {
             .calculator {
                 padding: 1.5rem;
@@ -180,123 +258,635 @@
 <body>
 <div class="calculator">
     <h1>Freiberufler Netto-Rechner (2025)</h1>
-    <form id="calculator-form">
-        <div class="form-group">
-            <label for="income">Jährlicher Umsatz (€):</label>
-            <input type="number" id="income" value="80000" min="0" step="1000" required>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="yearly">Jahresumsatz</button>
+        <button class="tab" data-tab="hourly">Stundensatz</button>
+    </div>
+
+    <div id="yearly-tab" class="tab-content active">
+        <form id="yearly-form">
+            <div class="form-group">
+                <label for="income">Jährlicher Umsatz (€):</label>
+                <input type="number" id="income" value="80000" min="0" step="1000" required>
+            </div>
+            <div class="form-group">
+                <label for="expenses">Betriebsausgaben (€):</label>
+                <input type="number" id="expenses" value="10000" min="0" step="1000" required>
+            </div>
+            <div class="form-group">
+                <label for="insurance">Krankenversicherung:</label>
+                <select id="insurance" required>
+                    <option value="gkv">Gesetzliche Krankenversicherung (GKV)</option>
+                    <option value="pkv">Private Krankenversicherung (PKV)</option>
+                </select>
+            </div>
+            <div class="form-group pkv-cost-group" style="display: none;">
+                <label for="pkv-cost">Monatliche PKV-Kosten (€):</label>
+                <input type="number" id="pkv-cost" value="500" min="0" step="50">
+            </div>
+            <button type="submit">Berechnen</button>
+        </form>
+    </div>
+
+    <div id="hourly-tab" class="tab-content">
+        <form id="hourly-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hourly-rate">Stundensatz (€):</label>
+                    <input type="number" id="hourly-rate" value="80" min="0" step="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="daily-hours">Arbeitsstunden pro Tag:</label>
+                    <input type="number" id="daily-hours" value="6" min="0.5" max="24" step="0.5" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="weekly-days">Arbeitstage pro Woche:</label>
+                    <input type="number" id="weekly-days" value="5" min="0.5" max="7" step="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="vacation-days">Urlaubstage pro Jahr:</label>
+                    <input type="number" id="vacation-days" value="25" min="0" max="365" step="1" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sick-days">Krankheitstage pro Jahr:</label>
+                    <input type="number" id="sick-days" value="5" min="0" max="365" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="utilization">Auslastung (%):</label>
+                    <input type="number" id="utilization" value="80" min="1" max="100" step="1" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="hourly-expenses">Betriebsausgaben (€):</label>
+                <input type="number" id="hourly-expenses" value="10000" min="0" step="1000" required>
+            </div>
+            <div class="form-group">
+                <label for="hourly-insurance">Krankenversicherung:</label>
+                <select id="hourly-insurance" required>
+                    <option value="gkv">Gesetzliche Krankenversicherung (GKV)</option>
+                    <option value="pkv">Private Krankenversicherung (PKV)</option>
+                </select>
+            </div>
+            <div class="form-group pkv-cost-group" style="display: none;">
+                <label for="hourly-pkv-cost">Monatliche PKV-Kosten (€):</label>
+                <input type="number" id="hourly-pkv-cost" value="500" min="0" step="50">
+            </div>
+            <button type="submit">Berechnen</button>
+        </form>
+
+        <div class="section-divider">
+            <span>oder</span>
         </div>
-        <div class="form-group">
-            <label for="expenses">Betriebsausgaben (€):</label>
-            <input type="number" id="expenses" value="10000" min="0" step="1000" required>
-        </div>
-        <div class="form-group">
-            <label for="insurance">Krankenversicherung:</label>
-            <select id="insurance" required>
-                <option value="gkv">Gesetzliche Krankenversicherung (GKV)</option>
-                <option value="pkv">Private Krankenversicherung (PKV)</option>
-            </select>
-        </div>
-        <div class="form-group" id="pkv-cost-group" style="display: none;">
-            <label for="pkv-cost">Monatliche PKV-Kosten (€):</label>
-            <input type="number" id="pkv-cost" value="500" min="0" step="50">
-        </div>
-        <button type="submit">Berechnen</button>
-    </form>
+
+        <form id="target-income-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target-income">Gewünschtes Netto-Jahreseinkommen (€):</label>
+                    <input type="number" id="target-income" value="50000" min="0" step="1000" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target-daily-hours">Arbeitsstunden pro Tag:</label>
+                    <input type="number" id="target-daily-hours" value="6" min="0.5" max="24" step="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="target-weekly-days">Arbeitstage pro Woche:</label>
+                    <input type="number" id="target-weekly-days" value="5" min="0.5" max="7" step="0.5" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target-vacation-days">Urlaubstage pro Jahr:</label>
+                    <input type="number" id="target-vacation-days" value="25" min="0" max="365" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="target-sick-days">Krankheitstage pro Jahr:</label>
+                    <input type="number" id="target-sick-days" value="5" min="0" max="365" step="1" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target-utilization">Auslastung (%):</label>
+                    <input type="number" id="target-utilization" value="80" min="1" max="100" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="target-expenses">Betriebsausgaben (€):</label>
+                    <input type="number" id="target-expenses" value="10000" min="0" step="1000" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="target-insurance">Krankenversicherung:</label>
+                <select id="target-insurance" required>
+                    <option value="gkv">Gesetzliche Krankenversicherung (GKV)</option>
+                    <option value="pkv">Private Krankenversicherung (PKV)</option>
+                </select>
+            </div>
+            <div class="form-group pkv-cost-group" style="display: none;">
+                <label for="target-pkv-cost">Monatliche PKV-Kosten (€):</label>
+                <input type="number" id="target-pkv-cost" value="500" min="0" step="50">
+            </div>
+            <button type="submit">Stundensatz berechnen</button>
+        </form>
+    </div>
+
     <div class="result" id="result">
         <h2>Dein Nettoeinkommen</h2>
         <p><span>Gewinn:</span> <span id="profit" class="highlight"></span></p>
         <p><span>Einkommensteuer:</span> <span id="tax" class="highlight"></span></p>
         <p><span>Sozialabgaben:</span> <span id="social" class="highlight"></span></p>
-        <p><span>Nettoeinkommen (jährlich):</span> <span id="net-yearly" class="highlight"></span>
-        </p>
-        <p><span>Nettoeinkommen (monatlich):</span> <span id="net-monthly" class="highlight"></span>
-        </p>
+        <p><span>Nettoeinkommen (jährlich):</span> <span id="net-yearly" class="highlight"></span></p>
+        <p><span>Nettoeinkommen (monatlich):</span> <span id="net-monthly" class="highlight"></span></p>
+        <div id="hourly-result" style="display: none;">
+            <p><span>Fakturierbare Stunden pro Jahr:</span> <span id="billable-hours" class="highlight"></span></p>
+            <p><span>Umsatz (jährlich):</span> <span id="calculated-income" class="highlight"></span></p>
+        </div>
+        <div id="target-result" style="display: none;">
+            <p><span>Benötigter Stundensatz:</span> <span id="required-rate" class="highlight"></span></p>
+            <p><span>Fakturierbare Stunden pro Jahr:</span> <span id="target-billable-hours" class="highlight"></span></p>
+            <p><span>Umsatz (jährlich):</span> <span id="target-calculated-income" class="highlight"></span></p>
+        </div>
     </div>
 </div>
 
 <script>
-    const form = document.getElementById('calculator-form');
-    const insuranceSelect = document.getElementById('insurance');
-    const pkvCostGroup = document.getElementById('pkv-cost-group');
-    const resultDiv = document.getElementById('result');
-
-    // Zeige/Fade PKV-Kosten bei Auswahl
-    insuranceSelect.addEventListener('change', () => {
-        pkvCostGroup.style.display = insuranceSelect.value === 'pkv' ? 'block' : 'none';
-    });
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        // Eingaben holen
-        const income = parseFloat(document.getElementById('income').value);
-        const expenses = parseFloat(document.getElementById('expenses').value);
-        const insurance = document.getElementById('insurance').value;
-        const pkvCost = insurance === 'pkv' ? parseFloat(document.getElementById('pkv-cost').value) * 12 : 0;
-
-        // Validierung
-        if (isNaN(income) || isNaN(expenses) || (insurance === 'pkv' && isNaN(pkvCost))) {
-            alert('Bitte fülle alle Felder korrekt aus.');
-            return;
-        }
-        if (expenses > income) {
-            alert('Betriebsausgaben dürfen den Umsatz nicht übersteigen.');
-            return;
-        }
-
-        // Berechnungen
-        // Schritt 1: Gewinn
-        const profit = income - expenses;
-
-        // Schritt 2: Einkommensteuer (vereinfacht für 2025)
-        let taxableIncome = profit;
-        const grundfreibetrag = 12084;
-        let tax = 0;
-
-        if (taxableIncome > grundfreibetrag) {
-            if (taxableIncome <= 22960) {
-                tax = (taxableIncome - grundfreibetrag) * 0.14;
-            } else if (taxableIncome <= 62530) {
-                tax = (22960 - grundfreibetrag) * 0.14 + (taxableIncome - 22960) * 0.30;
-            } else {
-                tax = (22960 - grundfreibetrag) * 0.14 + (62530 - 22960) * 0.30 + (taxableIncome - 62530) * 0.42;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Debug-Logging für Diagnose
+        window.logDebugInfo = function(message) {
+            if (window.localStorage.getItem('debug') === 'true') {
+                console.log('[DEBUG]', message);
             }
+        };
+
+        // Debug-Mode aktivieren mit localStorage.setItem('debug', 'true')
+
+        // Fehlermeldung anzeigen mit mehr Details
+        function showError(message, details = '') {
+            alert(message);
+            window.logDebugInfo('Fehler: ' + message + (details ? '\nDetails: ' + details : ''));
         }
-        tax = Math.round(tax);
 
-        // Schritt 3: Sozialabgaben
-        let socialContributions = 0;
-        const maxBeitragsbemessung = 64350;
+        // Tab-Funktionalität
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-        if (insurance === 'gkv') {
-            // GKV: 14.6% KV + 3.4% PV (kinderlos) + 1% Zusatzbeitrag
-            const gkvRate = 0.146 + 0.034 + 0.01;
-            const gkvBase = Math.min(profit, maxBeitragsbemessung);
-            socialContributions += gkvBase * gkvRate;
-            // Rentenversicherung: 18.6%
-            socialContributions += gkvBase * 0.186;
-        } else {
-            // PKV: Fixe Kosten
-            socialContributions += pkvCost;
-            // Rentenversicherung: 18.6%
-            const rvBase = Math.min(profit, maxBeitragsbemessung);
-            socialContributions += rvBase * 0.186;
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+
+                // Aktive Tab-Klasse aktualisieren
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Tab-Inhalte anzeigen/ausblenden
+                tabContents.forEach(content => {
+                    if (content.id === `${targetTab}-tab`) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+
+                // Ergebnisbereich ausblenden
+                const resultElement = document.getElementById('result');
+                if (resultElement) {
+                    resultElement.style.display = 'none';
+                }
+            });
+        });
+
+        // PKV-Kosten-Felder ein-/ausblenden
+        const insuranceSelects = document.querySelectorAll('#insurance, #hourly-insurance, #target-insurance');
+
+        insuranceSelects.forEach(select => {
+            // Initial prüfen und entsprechend anzeigen
+            const formId = select.id;
+            let pkvGroup;
+
+            if (formId === 'insurance') {
+                pkvGroup = document.querySelector('#yearly-form .pkv-cost-group');
+            } else if (formId === 'hourly-insurance') {
+                pkvGroup = document.querySelector('#hourly-form .pkv-cost-group');
+            } else if (formId === 'target-insurance') {
+                pkvGroup = document.querySelector('#target-income-form .pkv-cost-group');
+            }
+
+            if (pkvGroup) {
+                pkvGroup.style.display = select.value === 'pkv' ? 'block' : 'none';
+            }
+
+            // Event-Listener für zukünftige Änderungen
+            select.addEventListener('change', function() {
+                const formId = this.id;
+                let pkvGroup;
+
+                if (formId === 'insurance') {
+                    pkvGroup = document.querySelector('#yearly-form .pkv-cost-group');
+                } else if (formId === 'hourly-insurance') {
+                    pkvGroup = document.querySelector('#hourly-form .pkv-cost-group');
+                } else if (formId === 'target-insurance') {
+                    pkvGroup = document.querySelector('#target-income-form .pkv-cost-group');
+                }
+
+                if (pkvGroup) {
+                    pkvGroup.style.display = this.value === 'pkv' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Formular-Validierung
+        function validateForm(formValues) {
+            // Prüfen, ob alle Werte numerisch und definiert sind
+            for (const key in formValues) {
+                // Insurance ist ein String und wird separat geprüft
+                if (key === 'insurance') continue;
+
+                // PKV-Kosten können 0 sein, wenn "gkv" ausgewählt ist
+                if (key === 'pkvCost' && formValues.insurance === 'gkv') continue;
+
+                if (isNaN(formValues[key])) {
+                    console.log('Ungültiger Wert für', key, formValues[key]);
+                    return { valid: false, message: 'Bitte fülle alle Felder korrekt aus.' };
+                }
+            }
+
+            // Prüfen ob insurance ein gültiger Wert ist
+            if (formValues.insurance !== 'gkv' && formValues.insurance !== 'pkv') {
+                console.log('Ungültiger Wert für insurance:', formValues.insurance);
+                return { valid: false, message: 'Bitte wähle eine gültige Krankenversicherung aus.' };
+            }
+
+            // Spezielle Validierung für PKV-Kosten
+            if (formValues.insurance === 'pkv' && (isNaN(formValues.pkvCost) || formValues.pkvCost <= 0)) {
+                return { valid: false, message: 'Bitte gib einen gültigen Wert für die PKV-Kosten ein.' };
+            }
+
+            if (formValues.hasOwnProperty('expenses') && formValues.hasOwnProperty('income')) {
+                if (formValues.expenses > formValues.income) {
+                    return { valid: false, message: 'Betriebsausgaben dürfen den Umsatz nicht übersteigen.' };
+                }
+            }
+
+            if (formValues.hasOwnProperty('weeklyDays') && (formValues.weeklyDays < 0.5 || formValues.weeklyDays > 7)) {
+                return { valid: false, message: 'Arbeitstage pro Woche müssen zwischen 0.5 und 7 liegen.' };
+            }
+
+            if (formValues.hasOwnProperty('dailyHours') && (formValues.dailyHours < 0.5 || formValues.dailyHours > 24)) {
+                return { valid: false, message: 'Arbeitsstunden pro Tag müssen zwischen 0.5 und 24 liegen.' };
+            }
+
+            if (formValues.hasOwnProperty('utilization') && (formValues.utilization < 1 || formValues.utilization > 100)) {
+                return { valid: false, message: 'Auslastung muss zwischen 1% und 100% liegen.' };
+            }
+
+            return { valid: true };
         }
-        socialContributions = Math.round(socialContributions);
 
-        // Schritt 4: Nettoeinkommen
-        const netYearly = profit - tax - socialContributions;
-        const netMonthly = netYearly / 12;
+        // Berechnung der Einkommensteuer
+        function calculateTax(taxableIncome) {
+            const grundfreibetrag = 12084;
+            let tax = 0;
 
-        // Ergebnisse anzeigen
-        document.getElementById('profit').textContent = `${profit.toLocaleString('de-DE')} €`;
-        document.getElementById('tax').textContent = `${tax.toLocaleString('de-DE')} €`;
-        document.getElementById('social').textContent = `${socialContributions.toLocaleString('de-DE')} €`;
-        document.getElementById('net-yearly').textContent = `${netYearly.toLocaleString('de-DE')} €`;
-        document.getElementById('net-monthly').textContent = `${netMonthly.toFixed(2).replace('.', ',')} €`;
+            if (taxableIncome > grundfreibetrag) {
+                if (taxableIncome <= 22960) {
+                    tax = (taxableIncome - grundfreibetrag) * 0.14;
+                } else if (taxableIncome <= 62530) {
+                    tax = (22960 - grundfreibetrag) * 0.14 + (taxableIncome - 22960) * 0.30;
+                } else {
+                    tax = (22960 - grundfreibetrag) * 0.14 + (62530 - 22960) * 0.30 + (taxableIncome - 62530) * 0.42;
+                }
+            }
 
-        // Mit Animation anzeigen
-        resultDiv.style.display = 'block';
+            return Math.round(tax);
+        }
+
+        // Berechnung der Sozialabgaben
+        function calculateSocialContributions(profit, insurance, pkvCost) {
+            let socialContributions = 0;
+            const maxBeitragsbemessung = 64350;
+
+            if (insurance === 'gkv') {
+                // GKV: 14.6% KV + 3.4% PV (kinderlos) + 1% Zusatzbeitrag
+                const gkvRate = 0.146 + 0.034 + 0.01;
+                const gkvBase = Math.min(profit, maxBeitragsbemessung);
+                socialContributions += gkvBase * gkvRate;
+                // Rentenversicherung: 18.6%
+                socialContributions += gkvBase * 0.186;
+            } else {
+                // PKV: Fixe Kosten
+                socialContributions += pkvCost;
+                // Rentenversicherung: 18.6%
+                const rvBase = Math.min(profit, maxBeitragsbemessung);
+                socialContributions += rvBase * 0.186;
+            }
+
+            return Math.round(socialContributions);
+        }
+
+        // Berechnung des Nettoeinkommens
+        function calculateNetIncome(profit, tax, socialContributions) {
+            return profit - tax - socialContributions;
+        }
+
+        // Berechnung der faktorierbaren Stunden
+        function calculateBillableHours(dailyHours, weeklyDays, vacationDays, sickDays, utilization) {
+            // Prüfen auf gültige Werte und sicherstellen, dass keine Berechnung mit 0 erfolgt
+            if (dailyHours <= 0 || weeklyDays <= 0 || utilization <= 0) {
+                return 0;
+            }
+
+            // Anzahl der Arbeitstage pro Jahr (ohne Wochenenden)
+            const workingDaysPerYear = weeklyDays * 52;
+
+            // Abzüglich Urlaubs- und Krankheitstage
+            // Sicherstellen, dass keine negativen Werte verwendet werden
+            const actualWorkingDays = Math.max(0, workingDaysPerYear - vacationDays - sickDays);
+
+            // Gesamtstunden pro Jahr
+            const totalHoursPerYear = actualWorkingDays * dailyHours;
+
+            // Fakturierbare Stunden (basierend auf Auslastung)
+            return totalHoursPerYear * (utilization / 100);
+        }
+
+        // Anzeigen der Ergebnisse
+        function displayResults(results, hourlyData = null, targetData = null) {
+            document.getElementById('profit').textContent = `${results.profit.toLocaleString('de-DE')} €`;
+            document.getElementById('tax').textContent = `${results.tax.toLocaleString('de-DE')} €`;
+            document.getElementById('social').textContent = `${results.socialContributions.toLocaleString('de-DE')} €`;
+            document.getElementById('net-yearly').textContent = `${results.netYearly.toLocaleString('de-DE')} €`;
+            document.getElementById('net-monthly').textContent = `${results.netMonthly.toFixed(2).replace('.', ',')} €`;
+
+            // Hourly-spezifische Ergebnisse
+            const hourlyResultSection = document.getElementById('hourly-result');
+            if (hourlyData) {
+                document.getElementById('billable-hours').textContent = `${hourlyData.billableHours.toFixed(1)} Stunden`;
+                document.getElementById('calculated-income').textContent = `${hourlyData.income.toLocaleString('de-DE')} €`;
+                hourlyResultSection.style.display = 'block';
+            } else {
+                hourlyResultSection.style.display = 'none';
+            }
+
+            // Target-spezifische Ergebnisse
+            const targetResultSection = document.getElementById('target-result');
+            if (targetData) {
+                document.getElementById('required-rate').textContent = `${targetData.requiredRate.toFixed(2).replace('.', ',')} €`;
+                document.getElementById('target-billable-hours').textContent = `${targetData.billableHours.toFixed(1)} Stunden`;
+                document.getElementById('target-calculated-income').textContent = `${targetData.income.toLocaleString('de-DE')} €`;
+                targetResultSection.style.display = 'block';
+            } else {
+                targetResultSection.style.display = 'none';
+            }
+
+            // Ergebnisbereich anzeigen
+            document.getElementById('result').style.display = 'block';
+        }
+
+        // Jahresformular verarbeiten
+        function processYearlyForm() {
+            // Eingaben holen
+            const formValues = {
+                income: parseFloat(document.getElementById('income').value),
+                expenses: parseFloat(document.getElementById('expenses').value),
+                insurance: document.getElementById('insurance').value,
+                pkvCost: 0
+            };
+
+            // Prüfen, ob gültige Versicherungsoption gewählt wurde
+            if (formValues.insurance !== 'gkv' && formValues.insurance !== 'pkv') {
+                alert('Bitte wähle eine gültige Krankenversicherung aus.');
+                return;
+            }
+
+            // PKV-Kosten nur hinzufügen, wenn PKV ausgewählt ist
+            if (formValues.insurance === 'pkv') {
+                formValues.pkvCost = parseFloat(document.getElementById('pkv-cost').value) * 12;
+            }
+
+            // Validierung
+            const validation = validateForm(formValues);
+            if (!validation.valid) {
+                showError(validation.message, JSON.stringify(formValues));
+                return;
+            }
+
+            // Berechnungen
+            const profit = formValues.income - formValues.expenses;
+            const tax = calculateTax(profit);
+            const socialContributions = calculateSocialContributions(profit, formValues.insurance, formValues.pkvCost);
+            const netYearly = calculateNetIncome(profit, tax, socialContributions);
+            const netMonthly = netYearly / 12;
+
+            // Ergebnisse anzeigen
+            displayResults({
+                profit,
+                tax,
+                socialContributions,
+                netYearly,
+                netMonthly
+            });
+        }
+
+        // Stundensatz-Formular verarbeiten
+        function processHourlyForm() {
+            // Eingaben holen
+            const formValues = {
+                hourlyRate: parseFloat(document.getElementById('hourly-rate').value),
+                dailyHours: parseFloat(document.getElementById('daily-hours').value),
+                weeklyDays: parseFloat(document.getElementById('weekly-days').value),
+                vacationDays: parseFloat(document.getElementById('vacation-days').value),
+                sickDays: parseFloat(document.getElementById('sick-days').value),
+                utilization: parseFloat(document.getElementById('utilization').value),
+                expenses: parseFloat(document.getElementById('hourly-expenses').value),
+                insurance: document.getElementById('hourly-insurance').value,
+                pkvCost: 0
+            };
+
+            // Prüfen, ob gültige Versicherungsoption gewählt wurde
+            if (formValues.insurance !== 'gkv' && formValues.insurance !== 'pkv') {
+                alert('Bitte wähle eine gültige Krankenversicherung aus.');
+                return;
+            }
+
+            // PKV-Kosten nur hinzufügen, wenn PKV ausgewählt ist
+            if (formValues.insurance === 'pkv') {
+                formValues.pkvCost = parseFloat(document.getElementById('hourly-pkv-cost').value) * 12;
+            }
+
+            // Validierung
+            const validation = validateForm(formValues);
+            if (!validation.valid) {
+                showError(validation.message, JSON.stringify(formValues));
+                return;
+            }
+
+            // Fakturierbare Stunden berechnen
+            const billableHours = calculateBillableHours(
+                formValues.dailyHours,
+                formValues.weeklyDays,
+                formValues.vacationDays,
+                formValues.sickDays,
+                formValues.utilization
+            );
+
+            // Prüfen, ob billableHours gültig ist
+            if (billableHours <= 0) {
+                showError('Die berechneten fakturierbaren Stunden sind ungültig. Bitte überprüfe deine Eingaben zu Arbeitszeiten und Auslastung.',
+                    `billableHours: ${billableHours}, dailyHours: ${formValues.dailyHours}, weeklyDays: ${formValues.weeklyDays}, utilization: ${formValues.utilization}`);
+                return;
+            }
+
+            // Jahresumsatz berechnen
+            const income = billableHours * formValues.hourlyRate;
+
+            // Weitere Berechnungen
+            const profit = income - formValues.expenses;
+            const tax = calculateTax(profit);
+            const socialContributions = calculateSocialContributions(profit, formValues.insurance, formValues.pkvCost);
+            const netYearly = calculateNetIncome(profit, tax, socialContributions);
+            const netMonthly = netYearly / 12;
+
+            // Ergebnisse anzeigen
+            displayResults({
+                profit,
+                tax,
+                socialContributions,
+                netYearly,
+                netMonthly
+            }, {
+                billableHours,
+                income
+            });
+        }
+
+        // Ziel-Einkommen-Formular verarbeiten
+        function processTargetForm() {
+            // Eingaben holen
+            const formValues = {
+                targetIncome: parseFloat(document.getElementById('target-income').value),
+                dailyHours: parseFloat(document.getElementById('target-daily-hours').value),
+                weeklyDays: parseFloat(document.getElementById('target-weekly-days').value),
+                vacationDays: parseFloat(document.getElementById('target-vacation-days').value),
+                sickDays: parseFloat(document.getElementById('target-sick-days').value),
+                utilization: parseFloat(document.getElementById('target-utilization').value),
+                expenses: parseFloat(document.getElementById('target-expenses').value),
+                insurance: document.getElementById('target-insurance').value,
+                pkvCost: 0
+            };
+
+            // Prüfen, ob gültige Versicherungsoption gewählt wurde
+            if (formValues.insurance !== 'gkv' && formValues.insurance !== 'pkv') {
+                alert('Bitte wähle eine gültige Krankenversicherung aus.');
+                return;
+            }
+
+            // PKV-Kosten nur hinzufügen, wenn PKV ausgewählt ist
+            if (formValues.insurance === 'pkv') {
+                formValues.pkvCost = parseFloat(document.getElementById('target-pkv-cost').value) * 12;
+            }
+
+            // Validierung
+            const validation = validateForm(formValues);
+            if (!validation.valid) {
+                showError(validation.message, JSON.stringify(formValues));
+                return;
+            }
+
+            // Fakturierbare Stunden berechnen
+            const billableHours = calculateBillableHours(
+                formValues.dailyHours,
+                formValues.weeklyDays,
+                formValues.vacationDays,
+                formValues.sickDays,
+                formValues.utilization
+            );
+
+            // Prüfen, ob billableHours gültig ist
+            if (billableHours <= 0) {
+                showError('Die berechneten fakturierbaren Stunden sind ungültig. Bitte überprüfe deine Eingaben zu Arbeitszeiten und Auslastung.',
+                    `billableHours: ${billableHours}, dailyHours: ${formValues.dailyHours}, weeklyDays: ${formValues.weeklyDays}, utilization: ${formValues.utilization}`);
+                return;
+            }
+
+            // Benötigten Stundensatz berechnen durch Iteration
+            let requiredRate = 10; // Startpunkt für die Iteration
+            let netYearly = 0;
+            let income = 0;
+            let profit = 0;
+            let tax = 0;
+            let socialContributions = 0;
+
+            // Iteratives Annähern an den Zielwert
+            const step = 0.5;
+            const maxIterations = 1000;
+            let iterations = 0;
+
+            // Sicherstellen, dass das Zieleinkommen positiv ist
+            const targetIncome = Math.max(1, formValues.targetIncome);
+
+            while (netYearly < targetIncome && iterations < maxIterations) {
+                requiredRate += step;
+                iterations++;
+
+                income = billableHours * requiredRate;
+                profit = income - formValues.expenses;
+                tax = calculateTax(profit);
+                socialContributions = calculateSocialContributions(profit, formValues.insurance, formValues.pkvCost);
+                netYearly = calculateNetIncome(profit, tax, socialContributions);
+            }
+
+            // Überprüfen, ob die Berechnung erfolgreich war
+            if (iterations >= maxIterations) {
+                showError('Der benötigte Stundensatz ist zu hoch für eine genaue Berechnung. Bitte überprüfe deine Eingabeparameter.',
+                    `targetIncome: ${targetIncome}, billableHours: ${billableHours}, maxRate: ${requiredRate}`);
+                return;
+            }
+
+            const netMonthly = netYearly / 12;
+
+            // Ergebnisse anzeigen
+            displayResults({
+                profit,
+                tax,
+                socialContributions,
+                netYearly,
+                netMonthly
+            }, null, {
+                requiredRate,
+                billableHours,
+                income
+            });
+        }
+
+        // Formular-Event-Listener
+        const yearlyForm = document.getElementById('yearly-form');
+        if (yearlyForm) {
+            yearlyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                processYearlyForm();
+            });
+        }
+
+        const hourlyForm = document.getElementById('hourly-form');
+        if (hourlyForm) {
+            hourlyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                processHourlyForm();
+            });
+        }
+
+        const targetForm = document.getElementById('target-income-form');
+        if (targetForm) {
+            targetForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                processTargetForm();
+            });
+        }
     });
 </script>
 </body>

@@ -131,6 +131,11 @@ const server = http.createServer((req, res) => {
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');
                     res.end(JSON.stringify({ success: true, type: 'dates' }));
+                } else if (password === '😍') {
+                    console.log('Passwort korrekt für: tips');
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ success: true, type: 'tips' }));
                 } else {
                     console.log('Falsches Passwort');
                     res.statusCode = 200;

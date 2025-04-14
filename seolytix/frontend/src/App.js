@@ -1,13 +1,57 @@
-// src/App.js - Hauptkomponente für seolytix
+// src/App.js - Hauptkomponente für seolytix mit ChatGPT-Integration
 
-import React, {useState} from 'react';
-import {AlertCircle, Clock, FileText, Globe, Search, Smartphone} from 'lucide-react';
+import React, {useState, useEffect} from 'react';
+import {AlertCircle, Clock, FileText, Globe, Search, Smartphone, Sparkles, Key, Code} from 'lucide-react';
 
 function App() {
     const [url, setUrl] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [results, setResults] = useState(null);
     const [error, setError] = useState('');
+    const [apiKey, setApiKey] = useState('');
+    const [showApiKey, setShowApiKey] = useState(false);
+    const [suggestions, setSuggestions] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    // API-Key beim Laden der App aus dem localStorage abrufen
+    useEffect(() => {
+        const savedKey = localStorage.getItem('seoApiKey');
+        if (savedKey) {
+            try {
+                // Einfache Verschlüsselung durch Base64-Decodierung
+                const decodedKey = atob(savedKey);
+                setApiKey(decodedKey);
+            } catch (e) {
+                console.error('Fehler beim Laden des API-Keys:', e);
+                localStorage.removeItem('seoApiKey');
+            }
+        }
+    }, []);
+
+    // API-Key ändern und speichern
+    const handleApiKeyChange = (e) => {
+        const newKey = e.target.value;
+        setApiKey(newKey);
+
+        // Nur speichern, wenn der Schlüssel einen Wert hat
+        if (newKey) {
+            try {
+                // Einfache Verschlüsselung durch Base64-Codierung
+                const encodedKey = btoa(newKey);
+                localStorage.setItem('seoApiKey', encodedKey);
+            } catch (e) {
+                console.error('Fehler beim Speichern des API-Keys:', e);
+            }
+        } else {
+            localStorage.removeItem('seoApiKey');
+        }
+    };
+
+    // API-Key löschen
+    const clearApiKey = () => {
+        setApiKey('');
+        localStorage.removeItem('seoApiKey');
+    };
 
     // Analysiert eine Website über die Backend-API
     const analyzeWebsite = async () => {
@@ -26,11 +70,11 @@ function App() {
 
         setError('');
         setIsAnalyzing(true);
+        setSuggestions(null);
 
         try {
             // Backend-API aufrufen
             const response = await fetch('/seolytix/api/seo/analyze', {
-
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,6 +113,164 @@ function App() {
         if (score >= 80) return 'text-green-500';
         if (score >= 60) return 'text-yellow-500';
         return 'text-red-500';
+    };
+
+    // Generiert SEO-Vorschläge mit ChatGPT API
+    const generateSuggestions = async () => {
+        if (!apiKey) {
+            setError('Bitte geben Sie einen ChatGPT API-Key ein');
+            return;
+        }
+
+        if (!results) {
+            setError('Bitte analysieren Sie zuerst die Website');
+            return;
+        }
+
+        setError('');
+        setIsGenerating(true);
+
+        try {
+            const prompt = createChatGPTPrompt(results);
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "system",
+                            content: "Du bist ein SEO-Experte, der klare, spezifische und implementierbare Verbesserungsvorschläge für Websites macht. Antworte im JSON-Format."
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Fehler bei der API-Anfrage');
+            }
+
+            const data = await response.json();
+
+            // Response parsen (als JSON)
+            try {
+                const content = data.choices[0].message.content;
+                // JSON aus der Antwort extrahieren
+                const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) ||
+                    content.match(/{[\s\S]*}/);
+
+                const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content;
+                const suggestionsData = JSON.parse(jsonStr);
+                setSuggestions(suggestionsData);
+            } catch (parseError) {
+                console.error('Fehler beim Parsen der Antwort:', parseError);
+                setSuggestions({
+                    rawResponse: data.choices[0].message.content,
+                    error: 'Konnte Antwort nicht als JSON parsen'
+                });
+            }
+        } catch (error) {
+            console.error('Fehler bei der Generierung von Vorschlägen:', error);
+            setError(`Fehler bei der Generierung von Vorschlägen: ${error.message}`);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    // Erstellt den Prompt für ChatGPT basierend auf den Analyseergebnissen
+    const createChatGPTPrompt = (results) => {
+        return `
+Ich brauche SEO-Verbesserungsvorschläge für die Website ${results.url}.
+
+Die aktuelle SEO-Analyse zeigt folgende Ergebnisse:
+
+1. Meta Title:
+   - Vorhanden: ${results.metaTitle.exists ? 'Ja' : 'Nein'}
+   - Aktueller Titel: "${results.metaTitle.title}"
+   - Länge: ${results.metaTitle.length} Zeichen
+   - Score: ${results.metaTitle.score}/100
+   - Bewertung: "${results.metaTitle.message}"
+
+2. Meta Description:
+   - Vorhanden: ${results.metaDescription.exists ? 'Ja' : 'Nein'}
+   - Aktuelle Beschreibung: "${results.metaDescription.description}"
+   - Länge: ${results.metaDescription.length} Zeichen
+   - Score: ${results.metaDescription.score}/100
+   - Bewertung: "${results.metaDescription.message}"
+
+3. Überschriften:
+   - H1: ${results.headings.h1Count}, H2: ${results.headings.h2Count}, H3: ${results.headings.h3Count}
+   - Score: ${results.headings.score}/100
+   - Bewertung: "${results.headings.message}"
+   - H1-Elemente: ${JSON.stringify(results.headings.h1Elements)}
+
+4. Bilder:
+   - Anzahl: ${results.images.totalImages}
+   - Mit Alt-Text: ${results.images.withAlt}/${results.images.totalImages}
+   - Score: ${results.images.score}/100
+   - Bewertung: "${results.images.message}"
+
+5. Inhalt:
+   - Wortanzahl: ${results.contentAnalysis.wordCount}
+   - Score: ${results.contentAnalysis.score}/100
+   - Bewertung: "${results.contentAnalysis.message}"
+   - Top-Keywords: ${JSON.stringify(results.contentAnalysis.topKeywords ? results.contentAnalysis.topKeywords.slice(0, 5) : [])}
+
+6. Ladezeit:
+   - Zeit: ${results.loadSpeed.time}s
+   - Score: ${results.loadSpeed.score}/100
+   - Bewertung: "${results.loadSpeed.message}"
+
+7. Mobile Optimierung:
+   - Score: ${results.mobileOptimization.score}/100
+   - Bewertung: "${results.mobileOptimization.message}"
+
+Bitte erstelle einen umfassenden SEO-Verbesserungsvorschlag im folgenden JSON-Format:
+
+\`\`\`json
+{
+  "metaTags": {
+    "title": "Vorgeschlagener Meta-Title (50-60 Zeichen)",
+    "description": "Vorgeschlagene Meta-Description (150-160 Zeichen)",
+    "additionalTags": [
+      {
+        "name": "Name des zusätzlichen Meta-Tags (z.B. keywords, robots)",
+        "content": "Vorgeschlagener Inhalt"
+      }
+    ]
+  },
+  "headings": {
+    "h1Suggestion": "Vorgeschlagene H1-Überschrift",
+    "headingStructure": "Vorschlag zur Verbesserung der Überschriftenstruktur"
+  },
+  "content": {
+    "suggestions": "Vorschläge zur Verbesserung des Inhalts",
+    "keywordOptimization": "Vorschläge zur Keyword-Optimierung"
+  },
+  "technical": {
+    "codeSnippets": [
+      {
+        "description": "Beschreibung des Code-Snippets",
+        "code": "HTML/JavaScript/CSS-Code zur Verbesserung der SEO"
+      }
+    ],
+    "performanceTips": "Tipps zur Verbesserung der Performance"
+  }
+}
+\`\`\`
+
+Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fehlen oder unzureichend sind, erstelle optimierte Versionen.
+`;
     };
 
     return (
@@ -120,11 +322,74 @@ function App() {
                         )}
                     </div>
 
+                    {/* ChatGPT API Key Eingabe */}
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-md font-semibold text-[#2C2E3B] flex items-center">
+                                <Key size={18} className="mr-2"/> ChatGPT API-Schlüssel für SEO-Verbesserungen
+                            </h3>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => setShowApiKey(!showApiKey)}
+                                    className="text-xs text-[#2C2E3B] underline"
+                                >
+                                    {showApiKey ? "Verbergen" : "Anzeigen"}
+                                </button>
+                                {apiKey && (
+                                    <button
+                                        onClick={clearApiKey}
+                                        className="text-xs text-red-500 underline"
+                                    >
+                                        Löschen
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type={showApiKey ? "text" : "password"}
+                                value={apiKey}
+                                onChange={handleApiKeyChange}
+                                placeholder="sk-..."
+                                className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
+                            />
+                            {apiKey && (
+                                <div className="absolute top-0 right-0 h-full flex items-center pr-3">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex mt-3">
+                            <button
+                                onClick={generateSuggestions}
+                                disabled={isGenerating || !results || !apiKey}
+                                className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-lg hover:bg-opacity-90 flex items-center w-full justify-center ${(isGenerating || !results || !apiKey) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {isGenerating ? (
+                                    <>Generiere SEO-Vorschläge<span className="ml-2 animate-pulse">...</span></>
+                                ) : (
+                                    <>SEO verbessern <Sparkles size={18} className="ml-2"/></>
+                                )}
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            Ihr API-Schlüssel wird sicher im Browser gespeichert und niemals auf dem Server gespeichert.
+                        </p>
+                    </div>
+
                     {isAnalyzing && (
                         <div className="text-center py-12">
                             <div
                                 className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C2E3B] mb-4"></div>
                             <p className="text-gray-600">Analysiere Website SEO...</p>
+                        </div>
+                    )}
+
+                    {isGenerating && (
+                        <div className="text-center py-12">
+                            <div
+                                className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C2E3B] mb-4"></div>
+                            <p className="text-gray-600">Generiere SEO-Verbesserungsvorschläge mit ChatGPT...</p>
                         </div>
                     )}
 
@@ -280,6 +545,164 @@ function App() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* ChatGPT SEO Suggestions */}
+                    {suggestions && !isGenerating && (
+                        <div className="mt-8">
+                            <h3 className="text-lg font-semibold text-[#2C2E3B] flex items-center mb-4">
+                                <Sparkles className="mr-2" size={20}/> SEO-Verbesserungsvorschläge
+                            </h3>
+
+                            {/* Suggestions for Meta Tags */}
+                            {suggestions.metaTags && (
+                                <div className="mb-6 bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2C2E3B] mb-3">Meta Tags</h4>
+
+                                    {suggestions.metaTags.title && (
+                                        <div className="mb-3">
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Title Tag</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code className="text-sm break-words">{suggestions.metaTags.title}</code>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {suggestions.metaTags.title.length} Zeichen (optimal: 50-60)
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {suggestions.metaTags.description && (
+                                        <div className="mb-3">
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Meta Description</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code className="text-sm break-words">{suggestions.metaTags.description}</code>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {suggestions.metaTags.description.length} Zeichen (optimal: 150-160)
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {suggestions.metaTags.additionalTags && suggestions.metaTags.additionalTags.length > 0 && (
+                                        <div>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">Zusätzliche Meta-Tags</h5>
+                                            {suggestions.metaTags.additionalTags.map((tag, index) => (
+                                                <div key={index} className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mb-2">
+                                                    <div className="text-sm">
+                                                        <span className="font-medium">{tag.name}:</span> {tag.content}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-3">
+                                        <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">HTML-Implementierung</h5>
+                                        <div className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
+                                            <pre className="text-xs"><code>{`<head>
+  <title>${suggestions.metaTags.title || ''}</title>
+  <meta name="description" content="${suggestions.metaTags.description || ''}" />
+  ${suggestions.metaTags.additionalTags ? suggestions.metaTags.additionalTags.map(tag =>
+                                                `  <meta name="${tag.name}" content="${tag.content}" />`
+                                            ).join('\n') : ''}
+</head>`}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Suggestions for Headings */}
+                            {suggestions.headings && (
+                                <div className="mb-6 bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2C2E3B] mb-3">Überschriften</h4>
+
+                                    {suggestions.headings.h1Suggestion && (
+                                        <div className="mb-3">
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">H1-Vorschlag</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code className="text-sm">{suggestions.headings.h1Suggestion}</code>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {suggestions.headings.headingStructure && (
+                                        <div>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Strukturverbesserung</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <p className="text-sm">{suggestions.headings.headingStructure}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Suggestions for Content */}
+                            {suggestions.content && (
+                                <div className="mb-6 bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2C2E3B] mb-3">Inhaltsoptimierung</h4>
+
+                                    {suggestions.content.suggestions && (
+                                        <div className="mb-3">
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Inhaltsvorschläge</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <p className="text-sm">{suggestions.content.suggestions}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {suggestions.content.keywordOptimization && (
+                                        <div>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Keyword-Optimierung</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <p className="text-sm">{suggestions.content.keywordOptimization}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Technical SEO Suggestions */}
+                            {suggestions.technical && (
+                                <div className="bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2C2E3B] mb-3 flex items-center">
+                                        <Code className="mr-2" size={18}/> Technische Optimierungen
+                                    </h4>
+
+                                    {suggestions.technical.codeSnippets && suggestions.technical.codeSnippets.length > 0 && (
+                                        <div className="mb-3">
+                                            <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">Code-Snippets</h5>
+                                            {suggestions.technical.codeSnippets.map((snippet, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-sm mb-1">{snippet.description}</p>
+                                                    <div className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
+                                                        <pre className="text-xs"><code>{snippet.code}</code></pre>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {suggestions.technical.performanceTips && (
+                                        <div>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Performance-Tipps</h5>
+                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <p className="text-sm">{suggestions.technical.performanceTips}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Raw response fallback */}
+                            {suggestions.rawResponse && (
+                                <div className="bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2C2E3B] mb-3">ChatGPT-Antwort</h4>
+                                    <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1 max-h-96 overflow-y-auto">
+                                        <pre className="text-xs whitespace-pre-wrap">{suggestions.rawResponse}</pre>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
