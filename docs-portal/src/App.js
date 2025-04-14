@@ -8,8 +8,8 @@ import {
     Home,
     Menu,
     Moon,
-    Sun,
-    Search
+    Search,
+    Sun
 } from 'lucide-react';
 
 // TextScramble Effekt für Überschriften
@@ -120,6 +120,14 @@ const documentsData = [
         name: 'IT-Security',
         files: [
             {
+                "id": "bsi-standards",
+                "name": "BSI Standards",
+                "path": "it-security/bsi-standards-uebersicht.html",
+                "description": "Übersicht der BSI-Standards für IT-Sicherheit, die Richtlinien und Best Practices für Organisationen beschreiben.",
+                "category": "Standards",
+                "tags": ["bsi", "standards", "sicherheit", "richtlinien"]
+            },
+            {
                 id: 'rsa-v1',
                 name: 'RSA-Verschlüsselung V1',
                 path: 'it-security/rsa-erklaerung-v1.html',
@@ -144,6 +152,7 @@ const documentsData = [
 const documentSources = {
     'james-bond': 'ai/james-bond-data.html',
     'seo-checklist': 'development/seo-checklist.html',
+    'bsi-standards': 'it-security/bsi-standards-uebersicht.html',
     'rsa-v1': 'it-security/rsa-erklaerung-v1.html',
     'rsa-v2': 'it-security/rsa-erklaerung-v2.html'
 };
@@ -283,7 +292,8 @@ const DocsPortal = () => {
                     </h1>
                 </div>
                 <div className="header-right">
-                    <button className="theme-button" onClick={toggleTheme} aria-label="Toggle theme">
+                    <button className="theme-button" onClick={toggleTheme}
+                            aria-label="Toggle theme">
                         {darkMode ? <Sun size={20}/> : <Moon size={20}/>}
                     </button>
                 </div>
