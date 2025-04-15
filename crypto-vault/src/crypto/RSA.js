@@ -264,10 +264,10 @@ export function RSAEncryption() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                <h3 className="text-lg font-semibold mb-4">RSA Verschlüsselung</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">RSA Verschlüsselung</h3>
 
                 <div className="mb-6">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                         RSA ist ein asymmetrisches Verschlüsselungsverfahren, das mit zwei
                         Schlüsseln arbeitet: einem öffentlichen zum
                         Verschlüsseln und einem privaten zum Entschlüsseln. RSA eignet sich
@@ -279,13 +279,13 @@ export function RSAEncryption() {
                 <div className="flex space-x-4 mb-4">
                     <button
                         onClick={() => setMode('encrypt')}
-                        className={`px-4 py-2 rounded-md ${mode === 'encrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md ${mode === 'encrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Verschlüsseln (mit öffentlichem Schlüssel)
                     </button>
                     <button
                         onClick={() => setMode('decrypt')}
-                        className={`px-4 py-2 rounded-md ${mode === 'decrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md ${mode === 'decrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Entschlüsseln (mit privatem Schlüssel)
                     </button>
@@ -293,32 +293,32 @@ export function RSAEncryption() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block mb-2 font-medium">
+                        <label className="block mb-2 font-medium dark:text-gray-200">
                             {mode === 'encrypt' ? 'Zu verschlüsselnder Text' : 'Zu entschlüsselnder Text (Base64)'}
                         </label>
                         <textarea
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                            className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                             placeholder={mode === 'encrypt' ? 'Text eingeben...' : 'Verschlüsselten Text eingeben...'}
                         />
                     </div>
 
                     <div>
-                        <label className="block mb-2 font-medium">Ergebnis</label>
+                        <label className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
                         <div className="relative">
-              <textarea
-                  value={outputText}
-                  readOnly
-                  className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-              />
+                          <textarea
+                              value={outputText}
+                              readOnly
+                              className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                          />
                             {outputText && (
                                 <button
                                     onClick={() => copyToClipboard(outputText)}
-                                    className="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300"
+                                    className="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                     title="In Zwischenablage kopieren"
                                 >
-                                    <Copy size={16}/>
+                                    <Copy size={16} className="dark:text-gray-200"/>
                                 </button>
                             )}
                         </div>
@@ -327,7 +327,7 @@ export function RSAEncryption() {
 
                 <div className="mt-6">
                     <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">Schlüsselpaar</h4>
+                        <h4 className="font-medium dark:text-gray-100">Schlüsselpaar</h4>
                         <button
                             onClick={() => setShowAdvanced(!showAdvanced)}
                             className="text-blue-600 dark:text-blue-400 text-sm"
@@ -341,11 +341,11 @@ export function RSAEncryption() {
                             className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                             <div className="mb-4">
                                 <label
-                                    className="block mb-2 text-sm font-medium">Schlüsselgröße:</label>
+                                    className="block mb-2 text-sm font-medium dark:text-gray-200">Schlüsselgröße:</label>
                                 <select
                                     value={keySize}
                                     onChange={(e) => setKeySize(Number(e.target.value))}
-                                    className="p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 w-full"
+                                    className="p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 w-full"
                                     disabled={keyPair !== null}
                                 >
                                     <option value={1024}>1024 Bit (weniger sicher, schneller)
@@ -358,51 +358,51 @@ export function RSAEncryption() {
                             {keyPair && (
                                 <>
                                     <div className="mb-4">
-                                        <label className="block mb-1 text-sm font-medium">Öffentlicher
+                                        <label className="block mb-1 text-sm font-medium dark:text-gray-200">Öffentlicher
                                             Schlüssel:</label>
                                         <div className="relative">
-                      <textarea
-                          value={keyPair.publicKey}
-                          readOnly
-                          rows={3}
-                          className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-xs font-mono"
-                      />
+                                          <textarea
+                                              value={keyPair.publicKey}
+                                              readOnly
+                                              rows={3}
+                                              className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
+                                          />
                                             <div className="absolute top-2 right-2 flex">
                                                 <button
                                                     onClick={() => copyToClipboard(keyPair.publicKey)}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 mr-1"
+                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 mr-1"
                                                     title="In Zwischenablage kopieren"
                                                 >
-                                                    <Copy size={14}/>
+                                                    <Copy size={14} className="dark:text-gray-200"/>
                                                 </button>
                                                 <button
                                                     onClick={() => exportKeys('public')}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300"
+                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                                     title="Als .pem-Datei exportieren"
                                                 >
-                                                    <Download size={14}/>
+                                                    <Download size={14} className="dark:text-gray-200"/>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block mb-1 text-sm font-medium">Privater
+                                        <label className="block mb-1 text-sm font-medium dark:text-gray-200">Privater
                                             Schlüssel:</label>
                                         <div className="relative">
-                      <textarea
-                          value="*** Privater Schlüssel (aus Sicherheitsgründen ausgeblendet) ***"
-                          readOnly
-                          rows={3}
-                          className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-xs font-mono"
-                      />
+                                          <textarea
+                                              value="*** Privater Schlüssel (aus Sicherheitsgründen ausgeblendet) ***"
+                                              readOnly
+                                              rows={3}
+                                              className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
+                                          />
                                             <div className="absolute top-2 right-2">
                                                 <button
                                                     onClick={() => exportKeys('private')}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300"
+                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                                     title="Als .pem-Datei exportieren"
                                                 >
-                                                    <Download size={14}/>
+                                                    <Download size={14} className="dark:text-gray-200"/>
                                                 </button>
                                             </div>
                                         </div>
@@ -464,14 +464,14 @@ export function RSAEncryption() {
 
             {/* Gespeicherte Schlüsselpaare */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold mb-4">Gespeicherte Schlüsselpaare</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Gespeicherte Schlüsselpaare</h3>
 
                 <div className="flex mb-4">
                     <input
                         type="text"
                         value={keyPairName}
                         onChange={(e) => setKeyPairName(e.target.value)}
-                        className="flex-1 p-2 border rounded-l-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                        className="flex-1 p-2 border rounded-l-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                         placeholder="Schlüsselpaarname"
                         disabled={!keyPair}
                     />
@@ -490,7 +490,7 @@ export function RSAEncryption() {
                         {savedKeyPairs.map(keyPair => (
                             <div key={keyPair.id} className="p-3 flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium">{keyPair.name}</p>
+                                    <p className="font-medium dark:text-gray-100">{keyPair.name}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {keyPair.keySize || 2048} Bit • Erstellt
                                         am {new Date(keyPair.createdAt).toLocaleString()}
@@ -499,7 +499,7 @@ export function RSAEncryption() {
                                 <div>
                                     <button
                                         onClick={() => loadKeyPair(keyPair)}
-                                        className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md mr-2"
+                                        className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md mr-2 hover:bg-gray-300 dark:hover:bg-gray-600"
                                     >
                                         Laden
                                     </button>

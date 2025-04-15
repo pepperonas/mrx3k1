@@ -93,10 +93,10 @@ export function CaesarCipher() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold mb-4">Caesar Verschlüsselung</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Caesar Verschlüsselung</h3>
 
                 <div className="mb-6">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                         Die Caesar-Verschlüsselung ist eine der ältesten und einfachsten
                         Verschlüsselungstechniken.
                         Sie funktioniert durch Verschieben jedes Buchstabens im Alphabet um eine
@@ -104,8 +104,8 @@ export function CaesarCipher() {
                         Die Methode ist nach Julius Caesar benannt, der sie für seine private
                         Korrespondenz verwendete.
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        <strong>Wichtiger Hinweis:</strong> Die Caesar-Verschlüsselung ist sehr
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <strong className="dark:text-white">Wichtiger Hinweis:</strong> Die Caesar-Verschlüsselung ist sehr
                         einfach zu knacken und sollte
                         nicht für sensible Daten verwendet werden. Sie dient hier hauptsächlich zu
                         Demonstrationszwecken.
@@ -115,51 +115,51 @@ export function CaesarCipher() {
                 <div className="flex space-x-4 mb-4">
                     <button
                         onClick={() => setMode('encrypt')}
-                        className={`px-4 py-2 rounded-md ${mode === 'encrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md ${mode === 'encrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Verschlüsseln
                     </button>
                     <button
                         onClick={() => setMode('decrypt')}
-                        className={`px-4 py-2 rounded-md ${mode === 'decrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                        className={`px-4 py-2 rounded-md ${mode === 'decrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Entschlüsseln
                     </button>
                     <button
                         onClick={bruteForce}
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded-md flex items-center"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md flex items-center"
                     >
-                        <RotateCw size={16} className="mr-1"/>
+                        <RotateCw size={16} className="mr-1 dark:text-gray-200"/>
                         Brute Force
                     </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block mb-2 font-medium">Eingabetext</label>
+                        <label className="block mb-2 font-medium dark:text-gray-200">Eingabetext</label>
                         <textarea
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                            className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                             placeholder="Text eingeben..."
                         />
                     </div>
 
                     <div>
-                        <label className="block mb-2 font-medium">Ergebnis</label>
+                        <label className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
                         <div className="relative">
-              <textarea
-                  value={outputText}
-                  readOnly
-                  className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-              />
+                          <textarea
+                              value={outputText}
+                              readOnly
+                              className="w-full h-32 p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                          />
                             {outputText && (
                                 <button
                                     onClick={() => copyToClipboard(outputText)}
-                                    className="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300"
+                                    className="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                     title="In Zwischenablage kopieren"
                                 >
-                                    <Copy size={16}/>
+                                    <Copy size={16} className="dark:text-gray-200"/>
                                 </button>
                             )}
                         </div>
@@ -167,7 +167,7 @@ export function CaesarCipher() {
                 </div>
 
                 <div className="mt-6">
-                    <label className="block mb-2 font-medium">Verschiebung (Shift)</label>
+                    <label className="block mb-2 font-medium dark:text-gray-200">Verschiebung (Shift)</label>
                     <div className="flex items-center">
                         <input
                             type="range"
@@ -189,18 +189,18 @@ export function CaesarCipher() {
                                         setShift(value);
                                     }
                                 }}
-                                className="w-16 p-2 border rounded-md text-center bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                                className="w-16 p-2 border rounded-md text-center bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                             />
                             <button
                                 onClick={generateRandomShift}
-                                className="ml-2 p-2 bg-gray-200 dark:bg-gray-700 rounded-md"
+                                className="ml-2 p-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
                                 title="Zufälligen Wert generieren"
                             >
-                                <RefreshCw size={16}/>
+                                <RefreshCw size={16} className="dark:text-gray-200"/>
                             </button>
                         </div>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
                         Bei der Caesar-Verschlüsselung werden Buchstaben um einen festen Wert
                         (hier: {shift}) im Alphabet verschoben.
                         Beispiel (Shift {shift}): A → {String.fromCharCode(65 + shift % 26)}, B
@@ -233,9 +233,9 @@ export function CaesarCipher() {
 
                 <div
                     className="mt-6 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                    <h4 className="font-medium mb-2">Wissenswertes zur Caesar-Verschlüsselung</h4>
+                    <h4 className="font-medium mb-2 dark:text-gray-100">Wissenswertes zur Caesar-Verschlüsselung</h4>
                     <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
-                        <li>• Die Caesar-Verschlüsselung ist eine <strong>monoalphabetische
+                        <li>• Die Caesar-Verschlüsselung ist eine <strong className="dark:text-white">monoalphabetische
                             Substitutionschiffre</strong>, bei der jeder Buchstabe durch einen
                             anderen ersetzt wird, der eine bestimmte Anzahl von Positionen später im
                             Alphabet folgt.
