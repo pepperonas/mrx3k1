@@ -395,7 +395,7 @@ function App() {
             )}
 
             <footer className="bg-gray-800 p-4 text-center text-gray-400 text-sm">
-                <p>© 2025 Security Research Tool - For Educational Purposes Only</p>
+                <p>Build 🔒 by Martin Pfeffer</p>
             </footer>
         </div>
     );
