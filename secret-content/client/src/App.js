@@ -29,24 +29,61 @@ function App() {
     };
 
     // Passwort prüfen
-    const checkPassword = (password) => {
-        console.log('Passwort-Check:', password);
+    const checkPassword = async (password) => {
+        console.log('Überprüfe Passwort...');
+        setLoading(true);
 
-        // Lokale Überprüfung statt Server-Request
-        if (password === '💋') {
-            console.log('Passwort korrekt für opener-Ansicht');
-            loadOpenerData();
-            setView('opener');
-        } else if (password === '😘') {
-            console.log('Passwort korrekt für dates-Ansicht');
-            loadDatesData();
-            setView('dates');
-        } else if (password === '😍') {
-            console.log('Passwort korrekt für tips-Ansicht');
-            setView('tips');
-        } else {
-            console.log('Falsches Passwort');
-            showToast("Falsches Passwort! 🔒");
+        try {
+            // API-Anfrage zur Passwortprüfung
+            const apiUrl = '/secret-content/api/checkPassword';
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password }),
+            });
+
+            const result = await response.json();
+
+            // Rate-Limit-Fehler
+            if (response.status === 429) {
+                console.log('Rate-Limit überschritten');
+                showToast(result.message || "Zu viele Versuche. Bitte warten Sie.");
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            if (result.success) {
+                console.log(`Passwort korrekt für: ${result.type}`);
+
+                if (result.type === 'opener') {
+                    loadOpenerData();
+                    setView('opener');
+                } else if (result.type === 'dates') {
+                    loadDatesData();
+                    setView('dates');
+                } else if (result.type === 'tips') {
+                    setView('tips');
+                }
+            } else {
+                console.log('Falsches Passwort');
+
+                // Zeige verbleibende Versuche an, wenn verfügbar
+                if (result.message) {
+                    showToast(result.message);
+                } else {
+                    showToast("Falsches Passwort! 🔒");
+                }
+            }
+        } catch (error) {
+            logError('Fehler bei der Passwortüberprüfung:', error);
+            showToast("Fehler bei der Überprüfung. Versuche es später erneut.");
+        } finally {
+            setLoading(false);
         }
     };
 
