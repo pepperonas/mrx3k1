@@ -1,19 +1,32 @@
 #!/bin/bash
 
+# CryptoVault - Vollständiges Installationsskript
+# Erstellt eine React-App mit Verschlüsselungsfunktionen (AES, RSA, Caesar)
+
+echo "=========================================="
+echo "   CryptoVault Installation"
+echo "   Verschlüsselungs-App"
+echo "=========================================="
+
 # Erstelle ein neues React-Projekt
-echo "Erstelle ein neues React-Projekt..."
+echo ""
+echo "[1/8] Erstelle ein neues React-Projekt..."
 npx create-react-app crypto-vault
 cd crypto-vault
 
 # Installiere zusätzliche Abhängigkeiten
-echo "Installiere Abhängigkeiten..."
+echo ""
+echo "[2/8] Installiere Abhängigkeiten..."
 npm install lucide-react tailwindcss autoprefixer postcss
 
 # Initialisiere Tailwind CSS
+echo ""
+echo "[3/8] Konfiguriere Tailwind CSS..."
 npx tailwindcss init -p
 
 # Erstelle Ordnerstruktur
-echo "Erstelle Ordnerstruktur..."
+echo ""
+echo "[4/8] Erstelle Ordnerstruktur..."
 mkdir -p src/crypto
 
 # Erstelle die Tailwind-Konfiguration
@@ -34,7 +47,8 @@ module.exports = {
 }" > tailwind.config.js
 
 # Erstelle die Hauptkomponente
-echo "Erstelle Hauptkomponente..."
+echo ""
+echo "[5/8] Erstelle Hauptkomponente und Algorithmen..."
 echo "import React, { useState, useEffect } from 'react';
 import { Lock, Key, Shield, Menu, X, Save, ChevronRight } from 'lucide-react';
 
@@ -162,7 +176,6 @@ export default function CryptoVault() {
 }" > src/CryptoVault.js
 
 # Erstelle die AES-Komponente
-echo "Erstelle AES-Komponente..."
 echo "import React, { useState, useEffect } from 'react';
 import { Copy, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
@@ -518,7 +531,6 @@ export function AESEncryption() {
 }" > src/crypto/AES.js
 
 # Erstelle die RSA-Komponente
-echo "Erstelle RSA-Komponente..."
 echo "import React, { useState, useEffect } from 'react';
 import { Copy, RefreshCw, Download, Upload, Key } from 'lucide-react';
 
@@ -1033,7 +1045,6 @@ export function RSAEncryption() {
 }" > src/crypto/RSA.js
 
 # Erstelle die Caesar-Komponente
-echo "Erstelle Caesar-Komponente..."
 echo "import React, { useState } from 'react';
 import { Copy, RefreshCw, RotateCw } from 'lucide-react';
 
@@ -1273,7 +1284,8 @@ export function CaesarCipher() {
 }" > src/crypto/Caesar.js
 
 # Erstelle die Index.css-Datei
-echo "Erstelle Index.css..."
+echo ""
+echo "[6/8] Erstelle Stylesheets und Basisdateien..."
 echo "@tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1370,7 +1382,6 @@ input[type=\"range\"]::-moz-range-thumb {
 }" > src/index.css
 
 # Erstelle die Index.js-Datei
-echo "Erstelle Index.js..."
 echo "import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -1384,7 +1395,8 @@ root.render(
 );" > src/index.js
 
 # Erstelle README.md
-echo "Erstelle README.md..."
+echo ""
+echo "[7/8] Erstelle Dokumentation und Hilfsskripte..."
 echo "# CryptoVault
 
 Eine moderne React-Anwendung zur sicheren Verschlüsselung und Entschlüsselung von Daten mit verschiedenen Algorithmen.
@@ -1421,4 +1433,168 @@ Die Anwendung öffnet sich automatisch im Browser unter [http://localhost:3000](
 AES ist ein symmetrischer Verschlüsselungsalgorithmus, der den früheren Standard DES ersetzt hat. Die Implementierung verwendet:
 
 - AES-GCM-Modus mit Initialization Vector (IV)
-- Unterstützung für 128, 192 und 256 Bit Schlüss
+- Unterstützung für 128, 192 und 256 Bit Schlüssellängen
+- Automatische Schlüsselgenerierung
+- Lokale Speicherung von Schlüsseln
+
+### RSA (Rivest–Shamir–Adleman)
+
+RSA ist ein asymmetrisches Kryptosystem, das mit zwei Schlüsseln arbeitet:
+
+- Ein öffentlicher Schlüssel für die Verschlüsselung
+- Ein privater Schlüssel für die Entschlüsselung
+- Unterstützung für 1024, 2048 und 4096 Bit Schlüssellängen
+- Export von Schlüsseln im PEM-Format
+
+### Caesar-Verschlüsselung
+
+Die Caesar-Verschlüsselung ist eine der ältesten und einfachsten Verschlüsselungstechniken:
+
+- Verschiebung von Buchstaben im Alphabet um einen bestimmten Wert
+- Brute-Force-Funktion zum Anzeigen aller möglichen Entschlüsselungen
+- Hauptsächlich zu Demonstrationszwecken
+
+## Sicherheit
+
+Die Anwendung verwendet die Web Crypto API für kryptografische Operationen und speichert Schlüssel nur lokal im Browser (localStorage). Der private RSA-Schlüssel wird niemals übertragen und kann als Datei exportiert werden.
+
+## Technologien
+
+- React.js
+- Tailwind CSS
+- Web Crypto API
+- localStorage für die Schlüsselverwaltung" > README.md
+
+# Erstelle App.js (leere Datei - wird nicht verwendet, aber verhindert Warnungen)
+echo "// App.js wird nicht verwendet - CryptoVault.js ist die Hauptkomponente" > src/App.js
+
+# Erstelle ein Skript zum Starten des Projekts
+echo '#!/bin/bash
+cd "$(dirname "$0")"
+npm start' > start.sh
+chmod +x start.sh
+
+# Erstelle ein Skript zum Bauen des Projekts
+echo '#!/bin/bash
+cd "$(dirname "$0")"
+npm run build' > build.sh
+chmod +x build.sh
+
+# Lösche die Standard-Dateien, die nicht benötigt werden
+rm -f src/App.css src/App.test.js src/logo.svg src/reportWebVitals.js src/setupTests.js
+
+# Erstelle eine Beispiel .env Datei
+echo "# CryptoVault Umgebungsvariablen
+REACT_APP_VERSION=1.0.0
+# Diese Datei kann für Konfigurationseinstellungen verwendet werden, falls benötigt" > .env
+
+# Aktualisiere öffentliches HTML-Template
+echo "<!DOCTYPE html>
+<html lang=\"de\">
+  <head>
+    <meta charset=\"utf-8\" />
+    <link rel=\"icon\" href=\"%PUBLIC_URL%/favicon.ico\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+    <meta name=\"theme-color\" content=\"#2C2E3B\" />
+    <meta
+      name=\"description\"
+      content=\"CryptoVault - Sicheres Verschlüsseln und Entschlüsseln von Daten\"
+    />
+    <link rel=\"apple-touch-icon\" href=\"%PUBLIC_URL%/logo192.png\" />
+    <link rel=\"manifest\" href=\"%PUBLIC_URL%/manifest.json\" />
+    <title>CryptoVault</title>
+  </head>
+  <body>
+    <noscript>JavaScript muss aktiviert sein, um CryptoVault zu verwenden.</noscript>
+    <div id=\"root\"></div>
+  </body>
+</html>" > public/index.html
+
+# Aktualisiere manifest.json
+echo "{
+  \"short_name\": \"CryptoVault\",
+  \"name\": \"CryptoVault - Sichere Verschlüsselung\",
+  \"icons\": [
+    {
+      \"src\": \"favicon.ico\",
+      \"sizes\": \"64x64 32x32 24x24 16x16\",
+      \"type\": \"image/x-icon\"
+    },
+    {
+      \"src\": \"logo192.png\",
+      \"type\": \"image/png\",
+      \"sizes\": \"192x192\"
+    },
+    {
+      \"src\": \"logo512.png\",
+      \"type\": \"image/png\",
+      \"sizes\": \"512x512\"
+    }
+  ],
+  \"start_url\": \".\",
+  \"display\": \"standalone\",
+  \"theme_color\": \"#2C2E3B\",
+  \"background_color\": \"#ffffff\"
+}" > public/manifest.json
+
+# Erstelle einfache Logos (falls ImageMagick verfügbar)
+echo ""
+echo "[8/8] Erstelle App-Icons und finale Anpassungen..."
+if command -v convert >/dev/null 2>&1; then
+  echo "- Erstelle Logos mit ImageMagick..."
+  # Erstelle Favicon
+  convert -size 64x64 xc:#2C2E3B -font Arial -pointsize 40 -gravity center -fill white -annotate 0 "CV" public/favicon.ico || echo "- Konnte Favicon nicht erstellen. Ignoriere..."
+  # Erstelle App-Icons
+  convert -size 192x192 xc:#2C2E3B -font Arial -pointsize 100 -gravity center -fill white -annotate 0 "CV" public/logo192.png || echo "- Konnte logo192.png nicht erstellen. Ignoriere..."
+  convert -size 512x512 xc:#2C2E3B -font Arial -pointsize 260 -gravity center -fill white -annotate 0 "CV" public/logo512.png || echo "- Konnte logo512.png nicht erstellen. Ignoriere..."
+else
+  echo "- ImageMagick nicht gefunden. Logos werden nicht erstellt."
+fi
+
+# Erstelle .gitignore
+echo "# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*" > .gitignore
+
+# Abschluss-Meldung
+echo ""
+echo "=========================================================="
+echo "✅ CryptoVault wurde erfolgreich erstellt!"
+echo "=========================================================="
+echo ""
+echo "Die Projektstruktur wurde im Verzeichnis 'crypto-vault' erstellt."
+echo ""
+echo "Um die App zu starten:"
+echo "  cd crypto-vault"
+echo "  npm start"
+echo ""
+echo "Oder einfach das Start-Skript ausführen:"
+echo "  ./start.sh"
+echo ""
+echo "Die App wird dann unter http://localhost:3000 verfügbar sein."
+echo ""
+echo "Für eine Produktionsversion:"
+echo "  ./build.sh"
+echo ""
+echo "Viel Spaß mit CryptoVault! 🔐"
+echo "=========================================================="

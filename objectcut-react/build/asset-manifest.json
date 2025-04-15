@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/objectcut-react/static/css/main.a09d8c9e.css",
+    "main.js": "/objectcut-react/static/js/main.a788e808.js",
+    "index.html": "/objectcut-react/index.html",
+    "main.a09d8c9e.css.map": "/objectcut-react/static/css/main.a09d8c9e.css.map",
+    "main.a788e808.js.map": "/objectcut-react/static/js/main.a788e808.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a09d8c9e.css",
+    "static/js/main.a788e808.js"
+  ]
+}

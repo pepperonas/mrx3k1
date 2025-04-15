@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Schönes Scrollbar-Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Weitere Styling-Anpassungen */
+.dark textarea,
+.dark input[type="text"],
+.dark input[type="number"],
+.dark select {
+  color: #e2e8f0;
+}
+
+/* Focus Styling */
+textarea:focus,
+input:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+}
+
+/* Verbesserte Slider-Darstellung für alle Browser */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.dark input[type="range"] {
+  background: #4a5568;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #4299e1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #4299e1;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
