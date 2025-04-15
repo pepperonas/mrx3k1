@@ -168,13 +168,13 @@ export function RSAEncryption() {
             ? '-----BEGIN PUBLIC KEY-----\n'
             : '-----BEGIN PRIVATE KEY-----\n';
         const pemFooter = type === 'public'
-            ? '-----END PUBLIC KEY-----'
-            : '-----END PRIVATE KEY-----';
+            ? '\n-----END PUBLIC KEY-----'
+            : '\n-----END PRIVATE KEY-----';
 
         // Base64 in 64-Zeichen-Zeilen aufteilen
         let formattedKey = '';
         for (let i = 0; i < key.length; i += 64) {
-            formattedKey += key.slice(i, i + 64) + '';
+            formattedKey += key.slice(i, i + 64) + '\n';
         }
 
         const pemContent = pemHeader + formattedKey + pemFooter;

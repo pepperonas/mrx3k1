@@ -92,3 +92,43 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: none;
 }
+
+// Änderungen in index.css hinzufügen um die Lesbarkeit im Dark Mode zu verbessern
+
+     /* Verbesserte Textkontraste im Dark Mode */
+   .dark .bg-gray-800 {
+     background-color: #1a202c; /* Dunklerer Hintergrund */
+   }
+
+.dark .text-gray-200 {
+  color: #edf2f7; /* Hellerer Text */
+}
+
+.dark .text-gray-400 {
+  color: #cbd5e0; /* Hellerer Sekundärtext */
+}
+
+/* Verbesserter Kontrast für Input-Felder */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #2d3748; /* Dunklerer Hintergrund */
+  border-color: #4a5568; /* Deutlichere Ränder */
+  color: #f7fafc; /* Hellerer Text */
+}
+
+/* Bessere Sichtbarkeit für Buttons */
+.dark button.bg-blue-600 {
+  background-color: #3182ce; /* Helleres Blau */
+}
+
+.dark button.bg-blue-600:hover {
+  background-color: #4299e1; /* Noch helleres Blau beim Hover */
+}
+
+/* Bessere Sichtbarkeit für den Light Mode Toggle */
+.dark .ml-auto button {
+  background-color: #edf2f7; /* Weißer Button */
+  color: #1a202c; /* Schwarzer Text */
+  font-weight: 600; /* Fett */
+}
