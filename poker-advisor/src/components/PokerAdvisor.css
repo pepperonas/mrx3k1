@@ -1,0 +1,223 @@
+.poker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background-color: #1a1b26;
+  color: #c0caf5;
+  min-height: 100vh;
+  font-family: sans-serif;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #7aa2f7;
+}
+
+.section {
+  width: 100%;
+  max-width: 28rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background-color: #2C2E3B;
+  color: #c0caf5;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tab:hover {
+  background-color: #3d59a1;
+}
+
+.tab.active {
+  background-color: #3d59a1;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: #a9b1d6;
+}
+
+.selected-info {
+  margin-bottom: 0.5rem;
+  color: #9aa5ce;
+}
+
+.positions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.position-button {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #2C2E3B;
+  color: #c0caf5;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.position-button:hover {
+  background-color: #3d59a1;
+}
+
+.position-button.active {
+  background-color: #3d59a1;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.suit-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.suit-label {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.suit-label.red {
+  color: #f7768e;
+}
+
+.card-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+
+.card-button {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background-color: #2C2E3B;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.card-button:hover {
+  background-color: #4e4f61;
+}
+
+.card-button.selected {
+  background-color: #3d59a1;
+}
+
+.card-button.red {
+  color: #f7768e;
+}
+
+.card-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.analyze-button {
+  padding: 0.5rem 1.5rem;
+  background-color: #3d59a1;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-bottom: 1.5rem;
+}
+
+.analyze-button:hover {
+  background-color: #5171d2;
+}
+
+.result-container {
+  width: 100%;
+  max-width: 28rem;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  background-color: #2C2E3B;
+  border: 1px solid #414868;
+}
+
+.result-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #a9b1d6;
+}
+
+.decision {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.decision.raise {
+  color: #9ece6a;
+}
+
+.decision.call {
+  color: #e0af68;
+}
+
+.decision.fold {
+  color: #f7768e;
+}
+
+.explanation {
+  margin-bottom: 0.5rem;
+  color: #a9b1d6;
+}
+
+.confidence-bar {
+  width: 100%;
+  background-color: #414868;
+  border-radius: 9999px;
+  height: 0.625rem;
+}
+
+.confidence-level {
+  height: 0.625rem;
+  border-radius: 9999px;
+}
+
+.confidence-level.high {
+  background-color: #9ece6a;
+}
+
+.confidence-level.medium {
+  background-color: #e0af68;
+}
+
+.confidence-level.low {
+  background-color: #f7768e;
+}
+
+.confidence-text {
+  text-align: right;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  color: #9aa5ce;
+}
