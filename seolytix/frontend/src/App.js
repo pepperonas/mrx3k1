@@ -10,7 +10,8 @@ import {
     Search,
     Smartphone,
     Sparkles,
-    Users
+    Users,
+    FileCheck // Icon für Sitemap
 } from 'lucide-react';
 
 // Komponenten importieren
@@ -108,6 +109,20 @@ function App() {
 
             if (!data.success) {
                 throw new Error(data.message || 'Fehler bei der Analyse');
+            }
+
+            // Fallback für Sitemap-Daten, falls sie fehlen
+            if (!data.data.sitemap) {
+                data.data.sitemap = {
+                    exists: false,
+                    score: 30,
+                    message: 'Keine Sitemap gefunden. Eine Sitemap hilft Suchmaschinen, Ihre Website besser zu verstehen.',
+                    details: {
+                        sitemapUrl: null,
+                        urlCount: 0,
+                        isSitemapIndex: false
+                    }
+                };
             }
 
             // Historischen Score speichern
@@ -220,6 +235,12 @@ function App() {
 
     // Erstellt den Prompt für ChatGPT basierend auf den Analyseergebnissen
     const createChatGPTPrompt = (results) => {
+        const sitemapInfo = results.sitemap ? `
+8. Sitemap:
+   - Vorhanden: ${results.sitemap.exists ? 'Ja' : 'Nein'}
+   - Score: ${results.sitemap.score}/100
+   - Bewertung: "${results.sitemap.message}"` : '';
+
         return `
 Ich brauche SEO-Verbesserungsvorschläge für die Website ${results.url}.
 
@@ -265,6 +286,7 @@ Die aktuelle SEO-Analyse zeigt folgende Ergebnisse:
 7. Mobile Optimierung:
    - Score: ${results.mobileOptimization.score}/100
    - Bewertung: "${results.mobileOptimization.message}"
+${sitemapInfo}
 
 Bitte erstelle einen umfassenden SEO-Verbesserungsvorschlag im folgenden JSON-Format:
 
@@ -354,8 +376,7 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                 {mainFeatureTab === 'seo' && (
                     <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-6">
                         <div className="mb-6">
-                            <h2 className="text-xl font-semibold mb-4 text-[#2C2E3B]">Website
-                                SEO analysieren</h2>
+                            <h2 className="text-xl font-semibold mb-4 text-[#2C2E3B]">Website SEO analysieren</h2>
                             <div className="flex">
                                 <div className="relative flex-grow">
                                     <input
@@ -377,8 +398,7 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-r-lg hover:bg-opacity-90 flex items-center ${isAnalyzing ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
                                     {isAnalyzing ? (
-                                        <>Analysiere<span
-                                            className="ml-2 animate-pulse">...</span></>
+                                        <>Analysiere<span className="ml-2 animate-pulse">...</span></>
                                     ) : (
                                         <>Analysieren <Search size={18} className="ml-2"/></>
                                     )}
@@ -410,8 +430,7 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                             <div className="text-center py-12">
                                 <div
                                     className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C2E3B] mb-4"></div>
-                                <p className="text-gray-600">Generiere
-                                    SEO-Verbesserungsvorschläge mit
+                                <p className="text-gray-600">Generiere SEO-Verbesserungsvorschläge mit
                                     ChatGPT...</p>
                             </div>
                         )}
@@ -611,34 +630,30 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Sitemap */}
-                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                            <div className="flex items-start">
-                                                <FileText className="text-[#2C2E3B] mr-3 mt-1"
-                                                          size={20}/>
-                                                <div>
-                                                    <div
-                                                        className="flex items-center justify-between w-full">
-                                                        <h4 className="font-medium text-[#2C2E3B]">Sitemap</h4>
-                                                        <span
-                                                            className={`font-medium ${getScoreColor(results.sitemap.score)}`}>
-                    {results.sitemap.score}/100
-                </span>
+                                            {/* Sitemap - NEU */}
+                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                <div className="flex items-start">
+                                                    <FileCheck className="text-[#2C2E3B] mr-3 mt-1" size={20}/>
+                                                    <div>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <h4 className="font-medium text-[#2C2E3B]">Sitemap</h4>
+                                                            <span className={`font-medium ${getScoreColor(results.sitemap.score)}`}>
+                                                                {results.sitemap.score}/100
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-600 mt-1">{results.sitemap.message}</p>
+                                                        {results.sitemap.exists && (
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                {results.sitemap.details.isSitemapIndex
+                                                                    ? `Sitemap-Index mit ${results.sitemap.details.childSitemapCount} Sitemaps`
+                                                                    : `${results.sitemap.details.urlCount} URLs in der Sitemap`}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                    <p className="text-sm text-gray-600 mt-1">{results.sitemap.message}</p>
-                                                    {results.sitemap.exists && (
-                                                        <p className="text-xs text-gray-500 mt-1">
-                                                            {results.sitemap.details.isSitemapIndex
-                                                                ? `Sitemap-Index mit ${results.sitemap.details.childSitemapCount} Sitemaps`
-                                                                : `${results.sitemap.details.urlCount} URLs in der Sitemap`}
-                                                        </p>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-
 
                                         {/* KI-Empfehlungen Button */}
                                         <div className="flex mt-6">
