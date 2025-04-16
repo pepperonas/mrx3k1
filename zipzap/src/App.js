@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
@@ -20,8 +20,8 @@ function App() {
 
     // API Base URL - uses relative path for production and full URL for localhost
     const API_BASE_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:4996'
-        : '';
+        ? 'http://localhost:4997'
+        : '/zipzap';
 
     // Constants for rate limiting
     const MAX_ATTEMPTS = 5;
@@ -94,7 +94,7 @@ function App() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({password}),
             });
 
             if (!response.ok) {
@@ -296,7 +296,7 @@ function App() {
                             <div className="w-full bg-gray-700 rounded-full h-2.5">
                                 <div
                                     className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-                                    style={{ width: generationComplete ? "100%" : "75%" }}
+                                    style={{width: generationComplete ? "100%" : "75%"}}
                                 ></div>
                             </div>
                         </div>
@@ -316,7 +316,8 @@ function App() {
                             </div>
                         </div>
 
-                        <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
+                        <div
+                            className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
                             <button
                                 onClick={createNewZipBomb}
                                 className="flex-1 py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg"
@@ -355,11 +356,13 @@ function App() {
 
             {/* Password Modal */}
             {showPasswordModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                     <div className="bg-gray-800 rounded-lg p-6 shadow-xl w-full max-w-md">
                         <h2 className="text-xl font-semibold mb-4">Password Required</h2>
                         <p className="mb-4 text-gray-300">
-                            The extracted size will be over 100MB. Please enter the verification password to continue.
+                            The extracted size will be over 100MB. Please enter the verification
+                            password to continue.
                         </p>
 
                         <div className="mb-4">
@@ -371,11 +374,13 @@ function App() {
                                 disabled={blocked}
                                 className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
                             />
-                            {passwordError && <p className="mt-2 text-red-400 text-sm">{passwordError}</p>}
+                            {passwordError &&
+                                <p className="mt-2 text-red-400 text-sm">{passwordError}</p>}
 
                             {blocked && (
                                 <div className="mt-2 text-yellow-400 text-sm">
-                                    Account locked. Try again in {Math.floor(blockTimeRemaining / 60)}:{blockTimeRemaining % 60 < 10 ? '0' : ''}{blockTimeRemaining % 60}
+                                    Account locked. Try again
+                                    in {Math.floor(blockTimeRemaining / 60)}:{blockTimeRemaining % 60 < 10 ? '0' : ''}{blockTimeRemaining % 60}
                                 </div>
                             )}
                         </div>

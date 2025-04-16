@@ -2,11 +2,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
-const PORT = process.env.PORT || 4996;
+const {exec} = require('child_process');
+const PORT = process.env.PORT || 4997;
 
 // Rate-Limiting and Brute-Force Protection
 const ipAttempts = new Map(); // IP -> {attempts: number, lastAttempt: timestamp, blocked: boolean}
+console.log('Resetting all login attempts at server start.');
 const MAX_ATTEMPTS = 5;       // Maximum number of failed attempts
 const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes block in milliseconds
 const ATTEMPT_RESET = 60 * 60 * 1000;  // Reset after 1 hour without attempts
@@ -103,74 +104,74 @@ function registerSuccessfulAttempt(ip) {
 // Generate a zip bomb using the Python script
 function generateZipBomb(options) {
     return new Promise((resolve, reject) => {
-        const { size, levels, outputDir } = options;
+        const {size, levels, outputDir} = options;
 
-        // Stelle sicher, dass das Ausgabeverzeichnis existiert
+        // Ensure that the output directory exists
         try {
-            fs.mkdirSync(outputDir, { recursive: true });
-            console.log(`Ausgabeverzeichnis erstellt/überprüft: ${outputDir}`);
+            fs.mkdirSync(outputDir, {recursive: true});
+            console.log(`Output directory created/verified: ${outputDir}`);
         } catch (err) {
-            console.error(`Fehler beim Erstellen des Ausgabeverzeichnisses: ${err.message}`);
+            console.error(`Error creating output directory: ${err.message}`);
         }
 
-        // Absolute Pfade verwenden
+        // Use absolute paths
         const scriptPath = path.resolve(__dirname, '..', 'ZipBombGenerator.py');
         const absoluteOutputDir = path.resolve(__dirname, '..', outputDir);
 
-        // Korrektes Python-Kommando je nach Betriebssystem
+        // Correct Python command depending on the operating system
         const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
 
-        // Befehl mit Anführungszeichen um Pfade
+        // Command with quotes around paths
         const command = `${pythonCommand} "${scriptPath}" --size ${size} --levels ${levels} --output "${absoluteOutputDir}" --force`;
 
-        console.log(`Python Skript: ${scriptPath}`);
-        console.log(`Ausgabeverzeichnis: ${absoluteOutputDir}`);
-        console.log(`Vollständiger Befehl: ${command}`);
+        console.log(`Python script: ${scriptPath}`);
+        console.log(`Output directory: ${absoluteOutputDir}`);
+        console.log(`Complete command: ${command}`);
 
-        // Direktes Überprüfen, ob das Skript existiert
+        // Direct check if the script exists
         if (!fs.existsSync(scriptPath)) {
-            console.error(`Python-Skript nicht gefunden: ${scriptPath}`);
-            return reject(new Error('Python-Skript nicht gefunden'));
+            console.error(`Python script not found: ${scriptPath}`);
+            return reject(new Error('Python script not found'));
         }
-        console.log(`Skript existiert: Ja`);
+        console.log(`Script exists: Yes`);
 
-        // Führe das Python-Skript aus
-        console.log(`Führe Befehl aus: ${command}`);
+        // Execute the Python script
+        console.log(`Executing command: ${command}`);
         exec(command, (error, stdout, stderr) => {
-            console.log("Python Ausgabe:", stdout);
+            console.log("Python output:", stdout);
 
             if (stderr && stderr.trim() !== '') {
-                console.error("Python Fehler:", stderr);
+                console.error("Python error:", stderr);
             }
 
             if (error) {
-                console.error(`Fehler beim Ausführen des Python-Skripts: ${error.message}`);
-                return reject(new Error('Zip-Bombe konnte nicht generiert werden'));
+                console.error(`Error executing Python script: ${error.message}`);
+                return reject(new Error('Could not generate zip bomb'));
             }
 
-            // Erwarteter Dateiname
+            // Expected filename
             const expectedFilename = `zipzap_bomb_${size}MB_${levels}levels.zip`;
             const expectedFilePath = path.join(absoluteOutputDir, expectedFilename);
 
-            console.log(`Prüfe Datei: ${expectedFilePath}`);
+            console.log(`Checking file: ${expectedFilePath}`);
 
-            // Kurze Verzögerung, um sicherzustellen, dass die Datei fertig geschrieben ist
+            // Short delay to ensure the file has finished writing
             setTimeout(() => {
                 const fileExists = fs.existsSync(expectedFilePath);
-                console.log(`Datei existiert: ${fileExists}`);
+                console.log(`File exists: ${fileExists}`);
 
                 if (fileExists) {
-                    // Dateigröße prüfen um sicherzustellen, dass es keine leere Datei ist
+                    // Check file size to ensure it's not an empty file
                     const stats = fs.statSync(expectedFilePath);
-                    console.log(`Dateigröße: ${stats.size} Bytes`);
+                    console.log(`File size: ${stats.size} Bytes`);
 
                     if (stats.size > 0) {
-                        // Erfolg! Gib den Pfad zurück
-                        console.log(`Zip-Bombe erfolgreich generiert: ${expectedFilePath}`);
+                        // Success! Return the path
+                        console.log(`Zip bomb successfully generated: ${expectedFilePath}`);
 
-                        // Extrahiere den Erfolgstext aus der Python-Ausgabe für die Antwort
+                        // Extract success text from Python output for response
                         const successLines = stdout.split('\n').filter(line => line.includes('Success!'));
-                        const successMessage = successLines.length > 0 ? successLines[0] : 'Zip-Bombe erfolgreich erstellt';
+                        const successMessage = successLines.length > 0 ? successLines[0] : 'Zip bomb successfully created';
 
                         resolve({
                             filePath: expectedFilePath,
@@ -178,21 +179,21 @@ function generateZipBomb(options) {
                             downloadUrl: `/api/download?file=${encodeURIComponent(expectedFilename)}&dir=${encodeURIComponent(outputDir)}`
                         });
                     } else {
-                        console.error('Zip-Datei ist leer (0 Bytes)');
-                        reject(new Error('Generierte Zip-Datei ist leer'));
+                        console.error('Zip file is empty (0 Bytes)');
+                        reject(new Error('Generated zip file is empty'));
                     }
                 } else {
-                    // Versuche alle Dateien im Verzeichnis zu listen, um zu sehen, was dort ist
+                    // Try to list all files in the directory to see what's there
                     try {
                         const files = fs.readdirSync(absoluteOutputDir);
-                        console.log(`Dateien im Ausgabeverzeichnis: ${files.join(', ') || 'Keine Dateien gefunden'}`);
+                        console.log(`Files in output directory: ${files.join(', ') || 'No files found'}`);
                     } catch (e) {
-                        console.error(`Konnte Ausgabeverzeichnis nicht lesen: ${e.message}`);
+                        console.error(`Could not read output directory: ${e.message}`);
                     }
 
-                    reject(new Error('Zip-Datei wurde nicht gefunden nach der Generierung'));
+                    reject(new Error('Zip file not found after generation'));
                 }
-            }, 1000); // 1 Sekunde Verzögerung, um sicherzustellen, dass die Datei fertig geschrieben ist
+            }, 1000); // 1 second delay to ensure the file has finished writing
         });
     });
 }
@@ -248,6 +249,11 @@ const server = http.createServer((req, res) => {
                 const {password} = data;
                 console.log('Password check requested');
 
+                console.log('Password received:', password);
+                console.log('Type of password:', typeof password);
+                console.log('Length of password:', password.length);
+                console.log('Character codes:', Array.from(password).map(c => c.charCodeAt(0)));
+
                 if (password === '1337') {
                     console.log('Password correct');
                     registerSuccessfulAttempt(ip);
@@ -294,7 +300,7 @@ const server = http.createServer((req, res) => {
                 const data = JSON.parse(body);
                 console.log('Generate zip bomb request:', data);
 
-                const { fileSize, levels, outputDir = 'zipzap_output' } = data;
+                const {fileSize, levels, outputDir = 'zipzap_output'} = data;
                 const size = parseInt(fileSize) || 10;
                 const nestingLevels = parseInt(levels) || 1;
 
