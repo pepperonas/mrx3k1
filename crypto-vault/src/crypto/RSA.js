@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {Copy, Download, Key, RefreshCw, Upload} from 'lucide-react';
+import React, {useEffect, useState, useRef} from 'react';
+import {Copy, Download, Key, RefreshCw, Upload, Save, FileText} from 'lucide-react';
 
 // RSA-Komponente für CryptoVault
 export function RSAEncryption() {
@@ -18,6 +18,10 @@ export function RSAEncryption() {
     const [useExternalKey, setUseExternalKey] = useState(false);
     const [externalKeyLoaded, setExternalKeyLoaded] = useState(false);
     const [externalKeyObj, setExternalKeyObj] = useState(null);
+
+    // Refs für Datei-Upload
+    const importFileRef = useRef(null);
+    const importPemFileRef = useRef(null);
 
     // Lade gespeicherte Schlüssel beim Start
     useEffect(() => {
@@ -248,6 +252,125 @@ export function RSAEncryption() {
         URL.revokeObjectURL(url);
     };
 
+    // Exportiere alle Schlüsselpaare als JSON
+    const exportAllKeys = () => {
+        if (savedKeyPairs.length === 0) {
+            setError('Keine Schlüsselpaare zum Exportieren vorhanden');
+            return;
+        }
+
+        // Schlüsselpaare in JSON umwandeln
+        const keyPairsData = JSON.stringify(savedKeyPairs, null, 2);
+
+        // Download-Link erstellen
+        const blob = new Blob([keyPairsData], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cryptovault_rsa_keys.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        setInfo('Alle Schlüsselpaare wurden erfolgreich exportiert');
+        setTimeout(() => setInfo(''), 3000);
+    };
+
+    // Datei-Upload-Handler für JSON-Import
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            try {
+                const content = e.target.result;
+                const importedKeys = JSON.parse(content);
+
+                // Validierung der importierten Daten
+                if (!Array.isArray(importedKeys)) {
+                    throw new Error('Ungültiges Dateiformat. Erwartet ein Array von Schlüsselpaaren.');
+                }
+
+                // Prüfe, ob jeder Schlüssel die erforderlichen Eigenschaften hat
+                importedKeys.forEach(key => {
+                    if (!key.id || !key.name || !key.publicKey || !key.privateKey || !key.createdAt) {
+                        throw new Error('Ungültiges Schlüsselpaar-Format in der Datei.');
+                    }
+                });
+
+                // Importierte Schlüssel zu vorhandenen hinzufügen, Duplikate vermeiden
+                const existingIds = new Set(savedKeyPairs.map(key => key.id));
+                const newKeys = importedKeys.filter(key => !existingIds.has(key.id));
+
+                if (newKeys.length === 0) {
+                    setInfo('Keine neuen Schlüsselpaare zum Importieren gefunden');
+                } else {
+                    const updatedKeyPairs = [...savedKeyPairs, ...newKeys];
+                    localStorage.setItem('rsaKeyPairs', JSON.stringify(updatedKeyPairs));
+                    setSavedKeyPairs(updatedKeyPairs);
+                    setInfo(`${newKeys.length} Schlüsselpaare erfolgreich importiert`);
+                }
+
+                setTimeout(() => setInfo(''), 3000);
+            } catch (err) {
+                setError(`Fehler beim Importieren der Schlüsselpaare: ${err.message}`);
+                console.error(err);
+            }
+
+            // Zurücksetzen des Datei-Inputs
+            event.target.value = null;
+        };
+
+        reader.onerror = () => {
+            setError('Fehler beim Lesen der Datei');
+            // Zurücksetzen des Datei-Inputs
+            event.target.value = null;
+        };
+
+        reader.readAsText(file);
+    };
+
+    // Datei-Upload-Handler für PEM-Import
+    const handlePemFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            try {
+                const content = e.target.result;
+
+                // Prüfen, ob es sich um einen öffentlichen oder privaten Schlüssel handelt
+                if (content.includes('-----BEGIN PUBLIC KEY-----')) {
+                    setExternalPublicKey(content);
+                    importExternalPublicKey(); // Importiere den Schlüssel direkt
+                } else if (content.includes('-----BEGIN PRIVATE KEY-----')) {
+                    setError('Private Schlüssel können nicht als externe Schlüssel verwendet werden. Bitte importieren Sie einen öffentlichen Schlüssel.');
+                } else {
+                    setError('Die Datei enthält keinen gültigen PEM-Schlüssel.');
+                }
+            } catch (err) {
+                setError(`Fehler beim Importieren des Schlüssels: ${err.message}`);
+                console.error(err);
+            }
+
+            // Zurücksetzen des Datei-Inputs
+            event.target.value = null;
+        };
+
+        reader.onerror = () => {
+            setError('Fehler beim Lesen der Datei');
+            // Zurücksetzen des Datei-Inputs
+            event.target.value = null;
+        };
+
+        reader.readAsText(file);
+    };
+
     // Ver- oder Entschlüsseln mit RSA
     const processText = async () => {
         try {
@@ -336,8 +459,7 @@ export function RSAEncryption() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">RSA
-                    Verschlüsselung</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">RSA Verschlüsselung</h3>
 
                 <div className="mb-6">
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
@@ -370,8 +492,7 @@ export function RSAEncryption() {
                 </div>
 
                 {mode === 'encrypt' && (
-                    <div
-                        className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <div className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                         <div className="flex items-center mb-2">
                             <input
                                 type="checkbox"
@@ -380,19 +501,17 @@ export function RSAEncryption() {
                                 onChange={(e) => setUseExternalKey(e.target.checked)}
                                 className="mr-2"
                             />
-                            <label htmlFor="useExternalKey"
-                                   className="font-medium dark:text-gray-200">
+                            <label htmlFor="useExternalKey" className="font-medium dark:text-gray-200">
                                 Mit fremdem öffentlichen Schlüssel verschlüsseln
                             </label>
                         </div>
 
                         {useExternalKey && (
                             <div className="mt-2">
-                                <label
-                                    className="block mb-1 text-sm font-medium dark:text-gray-200">
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">
                                     Öffentlicher Schlüssel (PEM oder Base64):
                                 </label>
-                                <div className="flex">
+                                <div className="flex mb-2">
                                     <textarea
                                         value={externalPublicKey}
                                         onChange={(e) => setExternalPublicKey(e.target.value)}
@@ -405,10 +524,29 @@ export function RSAEncryption() {
                                         disabled={!externalPublicKey.trim()}
                                         className="px-3 bg-blue-600 text-white rounded-r-md flex items-center justify-center"
                                     >
-                                        <Upload size={18} className="mr-1"/>
+                                        <Upload size={18} className="mr-1" />
                                         Importieren
                                     </button>
                                 </div>
+
+                                {/* PEM-Datei hochladen */}
+                                <div className="flex items-center">
+                                    <button
+                                        onClick={() => importPemFileRef.current.click()}
+                                        className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md flex items-center text-sm"
+                                    >
+                                        <FileText size={16} className="mr-1" />
+                                        PEM-Datei importieren
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={importPemFileRef}
+                                        onChange={handlePemFileUpload}
+                                        accept=".pem,.key,.cert"
+                                        style={{ display: 'none' }}
+                                    />
+                                </div>
+
                                 {externalKeyLoaded && (
                                     <p className="mt-1 text-xs text-green-600 dark:text-green-400">
                                         Externer öffentlicher Schlüssel wurde geladen ✓
@@ -433,8 +571,7 @@ export function RSAEncryption() {
                     </div>
 
                     <div>
-                        <label
-                            className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
+                        <label className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
                         <div className="relative">
                           <textarea
                               value={outputText}
@@ -488,8 +625,7 @@ export function RSAEncryption() {
                                 {keyPair && (
                                     <>
                                         <div className="mb-4">
-                                            <label
-                                                className="block mb-1 text-sm font-medium dark:text-gray-200">Öffentlicher
+                                            <label className="block mb-1 text-sm font-medium dark:text-gray-200">Öffentlicher
                                                 Schlüssel:</label>
                                             <div className="relative">
                                               <textarea
@@ -504,24 +640,21 @@ export function RSAEncryption() {
                                                         className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 mr-1"
                                                         title="In Zwischenablage kopieren"
                                                     >
-                                                        <Copy size={14}
-                                                              className="dark:text-gray-200"/>
+                                                        <Copy size={14} className="dark:text-gray-200"/>
                                                     </button>
                                                     <button
                                                         onClick={() => exportKeys('public')}
                                                         className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                                         title="Als .pem-Datei exportieren"
                                                     >
-                                                        <Download size={14}
-                                                                  className="dark:text-gray-200"/>
+                                                        <Download size={14} className="dark:text-gray-200"/>
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label
-                                                className="block mb-1 text-sm font-medium dark:text-gray-200">Privater
+                                            <label className="block mb-1 text-sm font-medium dark:text-gray-200">Privater
                                                 Schlüssel:</label>
                                             <div className="relative">
                                               <textarea
@@ -536,8 +669,7 @@ export function RSAEncryption() {
                                                         className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                                                         title="Als .pem-Datei exportieren"
                                                     >
-                                                        <Download size={14}
-                                                                  className="dark:text-gray-200"/>
+                                                        <Download size={14} className="dark:text-gray-200"/>
                                                     </button>
                                                 </div>
                                             </div>
@@ -601,8 +733,36 @@ export function RSAEncryption() {
             {/* Gespeicherte Schlüsselpaare - nur anzeigen, wenn nicht im externen Schlüssel-Modus */}
             {!useExternalKey && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Gespeicherte
-                        Schlüsselpaare</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold dark:text-gray-100">Gespeicherte Schlüsselpaare</h3>
+
+                        {/* Export/Import Buttons */}
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={exportAllKeys}
+                                disabled={savedKeyPairs.length === 0}
+                                className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center text-sm ${savedKeyPairs.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <Save size={16} className="mr-1" />
+                                Alle exportieren
+                            </button>
+
+                            <button
+                                onClick={() => importFileRef.current.click()}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center text-sm"
+                            >
+                                <Upload size={16} className="mr-1" />
+                                Importieren
+                            </button>
+                            <input
+                                type="file"
+                                ref={importFileRef}
+                                onChange={handleFileUpload}
+                                accept=".json"
+                                style={{ display: 'none' }}
+                            />
+                        </div>
+                    </div>
 
                     <div className="flex mb-4">
                         <input
@@ -626,8 +786,7 @@ export function RSAEncryption() {
                         <div
                             className="border rounded-md divide-y dark:divide-gray-700 dark:border-gray-700">
                             {savedKeyPairs.map(keyPair => (
-                                <div key={keyPair.id}
-                                     className="p-3 flex items-center justify-between">
+                                <div key={keyPair.id} className="p-3 flex items-center justify-between">
                                     <div>
                                         <p className="font-medium dark:text-gray-100">{keyPair.name}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
