@@ -1,4 +1,4 @@
-// src/ContentGenerator.js - Komponente für die Generierung von SEO-optimierten Inhalten
+// src/ContentGenerator.js - Komponente für die Generierung und Verbesserung von SEO-optimierten Inhalten
 
 import React, {useState} from 'react';
 import {
@@ -12,7 +12,8 @@ import {
     MessageSquare,
     Send,
     Sliders,
-    Sparkles
+    Sparkles,
+    Link2
 } from 'lucide-react';
 
 const ContentGenerator = ({apiKey, apiUrl, onError}) => {
@@ -29,6 +30,10 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
     const [error, setError] = useState('');
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
+    const [mode, setMode] = useState('create'); // 'create' oder 'improve'
+    const [existingContentUrl, setExistingContentUrl] = useState('');
+    const [isImporting, setIsImporting] = useState(false);
+    const [importedContent, setImportedContent] = useState('');
 
     // Content-Typen und Tonalitäten für Auswahlmenüs
     const contentTypes = [
@@ -62,10 +67,77 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
         'Technisch versierte Personen'
     ];
 
-    // Content generieren
+    // Bestehenden Content von URL importieren
+    const importContentFromUrl = async () => {
+        if (!existingContentUrl.trim()) {
+            setError('Bitte geben Sie eine URL ein');
+            return;
+        }
+
+        try {
+            setIsImporting(true);
+            setError('');
+
+            // URL formatieren, falls noch kein Protokoll angegeben ist
+            let formattedUrl = existingContentUrl;
+            if (!existingContentUrl.startsWith('http://') && !existingContentUrl.startsWith('https://')) {
+                formattedUrl = 'https://' + existingContentUrl;
+                setExistingContentUrl(formattedUrl);
+            }
+
+            // In einer realen Implementierung würde hier ein Backend-Call erfolgen
+            // um den Content von der URL zu holen und zu parsen
+            const mockResponse = await new Promise(resolve => {
+                setTimeout(() => {
+                    resolve({
+                        success: true,
+                        data: {
+                            title: "Beispiel-Titel von " + formattedUrl,
+                            content: "Hier ist ein Beispiel-Content von der URL " + formattedUrl + ". In einer echten Implementierung würde der tatsächliche Content der Webseite extrahiert werden. Dies könnte mehrere Absätze, Überschriften und andere Strukturelemente enthalten, die dann für die Verbesserung analysiert würden.",
+                            keywords: ["beispiel", "demonstration", "content-analyse"],
+                            metaTags: {
+                                description: "Eine Beispiel-Meta-Description für Demonstrationszwecke."
+                            }
+                        }
+                    });
+                }, 1500);
+            });
+
+            if (mockResponse.success) {
+                // Content in die Form einfüllen
+                setTopic(mockResponse.data.title);
+                setImportedContent(mockResponse.data.content);
+
+                if (mockResponse.data.keywords && mockResponse.data.keywords.length > 0) {
+                    setKeywords(mockResponse.data.keywords.join(', '));
+                }
+
+                // Bestehenden Content in outline setzen zur Verbesserung
+                setOutline(mockResponse.data.content);
+            } else {
+                throw new Error(mockResponse.message || 'Fehler beim Importieren des Contents');
+            }
+        } catch (error) {
+            console.error('Fehler beim Content-Import:', error);
+            setError(`Fehler beim Importieren des Contents: ${error.message}`);
+
+            if (onError) {
+                onError(error.message);
+            }
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    // Content generieren oder verbessern
     const generateContent = async () => {
-        if (!topic.trim()) {
+        if (mode === 'create' && !topic.trim()) {
             setError('Bitte geben Sie ein Thema ein');
+            return;
+        }
+
+        if (mode === 'improve' && !importedContent && !outline.trim()) {
+            setError('Bitte importieren Sie zuerst Content oder geben Sie Text ein');
             return;
         }
 
@@ -96,11 +168,13 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                 outline: outline.trim() || null,
                 includeFAQ,
                 includeHeadings: true,
-                metaDescription: true
+                metaDescription: true,
+                mode: mode,
+                existingContent: importedContent || outline
             };
 
-            // API-Anfrage senden
-            const response = await fetch(`${apiUrl}/api/content/generate`, {
+            // API-Anfrage senden (für echte Implementierung)
+            const response = await fetch(`${apiUrl}/api/content/${mode === 'create' ? 'generate' : 'improve'}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -185,16 +259,93 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                 {/* Content-Generierung Formular */}
                 {!generatedContent && (
                     <div>
+                        {/* Modus-Auswahl */}
+                        <div className="mb-6">
+                            <div className="flex space-x-4">
+                                <button
+                                    className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center ${mode === 'create' ? 'bg-[#2C2E3B] text-white' : 'bg-gray-100 text-gray-700'}`}
+                                    onClick={() => setMode('create')}
+                                >
+                                    <Sparkles size={18} className="mr-2" />
+                                    Neuen Content erstellen
+                                </button>
+                                <button
+                                    className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center ${mode === 'improve' ? 'bg-[#2C2E3B] text-white' : 'bg-gray-100 text-gray-700'}`}
+                                    onClick={() => setMode('improve')}
+                                >
+                                    <Edit3 size={18} className="mr-2" />
+                                    Bestehenden Content verbessern
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* URL-Import für Content-Verbesserung */}
+                        {mode === 'improve' && (
+                            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                                <h3 className="text-md font-semibold text-[#2C2E3B] mb-3 flex items-center">
+                                    <Link2 size={18} className="mr-2"/> Content von URL importieren
+                                </h3>
+
+                                <div className="flex mb-4">
+                                    <div className="relative flex-grow">
+                                        <input
+                                            type="text"
+                                            value={existingContentUrl}
+                                            onChange={(e) => setExistingContentUrl(e.target.value)}
+                                            placeholder="https://example.com/page-to-improve"
+                                            className="w-full p-3 pr-10 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
+                                            disabled={isImporting}
+                                        />
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                            <Link2 size={18}/>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={importContentFromUrl}
+                                        disabled={isImporting || !existingContentUrl.trim()}
+                                        className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-r-lg hover:bg-opacity-90 flex items-center ${(isImporting || !existingContentUrl.trim()) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isImporting ? (
+                                            <>Importiere<span className="ml-2 animate-pulse">...</span></>
+                                        ) : (
+                                            <>Importieren</>
+                                        )}
+                                    </button>
+                                </div>
+
+                                <p className="text-sm text-gray-600">
+                                    Geben Sie die URL einer bestehenden Seite ein, deren Content Sie verbessern möchten.
+                                    Der Content wird analysiert und für die Verbesserung vorbereitet.
+                                </p>
+
+                                {importedContent && (
+                                    <div className="mt-4 p-3 bg-white border border-gray-200 rounded-lg">
+                                        <div className="flex justify-between mb-2">
+                                            <h4 className="text-sm font-medium">Importierter Content</h4>
+                                            <span className="text-xs text-gray-500">
+                                                {importedContent.split(' ').length} Wörter
+                                            </span>
+                                        </div>
+                                        <div className="max-h-40 overflow-y-auto text-sm">
+                                            {importedContent}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Haupteinstellungen */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Thema/Titel *
+                                {mode === 'create' ? 'Thema/Titel *' : 'Thema/Titel (Optional für Verbesserung)'}
                             </label>
                             <input
                                 type="text"
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
-                                placeholder="z.B. Die 10 besten SEO-Strategien für kleine Unternehmen"
+                                placeholder={mode === 'create'
+                                    ? "z.B. Die 10 besten SEO-Strategien für kleine Unternehmen"
+                                    : "Titel beibehalten oder neuen Vorschlagen"}
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
                             />
                         </div>
@@ -232,13 +383,11 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Tonalität
                                 </label>
-                                <select>
+                                <select
                                     value={tone}
                                     onChange={(e) => setTone(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-lg
-                                    focus:outline-none focus:ring-2 focus:ring-[#2C2E3B]
-                                    focus:border-transparent"
-                                    >
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
+                                >
                                     {toneOptions.map((option, index) => (
                                         <option key={index} value={option}>{option}</option>
                                     ))}
@@ -296,18 +445,23 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                             <div className="bg-gray-50 p-4 rounded-lg mb-6">
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Gliederung (optional)
+                                        {mode === 'create' ? 'Gliederung (optional)' : 'Bearbeiten Sie den Content (optional)'}
                                     </label>
                                     <textarea
                                         value={outline}
                                         onChange={(e) => setOutline(e.target.value)}
-                                        placeholder="1. Einleitung&#10;2. Hauptteil&#10;   2.1 Unterpunkt&#10;3. Fazit"
-                                        rows="5"
+                                        placeholder={mode === 'create' ?
+                                            "1. Einleitung\n2. Hauptteil\n   2.1 Unterpunkt\n3. Fazit" :
+                                            "Sie können den importierten Content hier direkt bearbeiten oder Anpassungen vornehmen."
+                                        }
+                                        rows="8"
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
                                     ></textarea>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Geben Sie eine Gliederung vor, um die Struktur des Inhalts
-                                        zu steuern.
+                                        {mode === 'create' ?
+                                            "Geben Sie eine Gliederung vor, um die Struktur des Inhalts zu steuern." :
+                                            "Bearbeiten Sie den importierten Content nach Ihren Wünschen. Die KI wird auf Basis Ihrer Änderungen optimieren."
+                                        }
                                     </p>
                                 </div>
 
@@ -346,14 +500,14 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                         <div className="flex justify-center">
                             <button
                                 onClick={generateContent}
-                                disabled={isGenerating || !topic.trim() || !apiKey}
-                                className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-lg hover:bg-opacity-90 flex items-center ${(isGenerating || !topic.trim() || !apiKey) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                disabled={isGenerating || (mode === 'create' && !topic.trim()) || !apiKey || (mode === 'improve' && !importedContent && !outline.trim())}
+                                className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-lg hover:bg-opacity-90 flex items-center ${(isGenerating || (mode === 'create' && !topic.trim()) || !apiKey || (mode === 'improve' && !importedContent && !outline.trim())) ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isGenerating ? (
-                                    <>Content generieren<span
+                                    <>Content {mode === 'create' ? 'generieren' : 'verbessern'}<span
                                         className="ml-2 animate-pulse">...</span></>
                                 ) : (
-                                    <>Content generieren <Sparkles size={18} className="ml-2"/></>
+                                    <>Content {mode === 'create' ? 'generieren' : 'verbessern'} <Sparkles size={18} className="ml-2"/></>
                                 )}
                             </button>
                         </div>
@@ -365,7 +519,7 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold text-[#2C2E3B] flex items-center">
-                                <Sparkles className="mr-2" size={18}/> Generierter Content
+                                <Sparkles className="mr-2" size={18}/> {generatedContent.improvement ? 'Verbesserter Content' : 'Generierter Content'}
                             </h3>
 
                             <div className="flex items-center space-x-2">
@@ -405,23 +559,20 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                                     {generatedContent.keywords.map((keyword, index) => (
                                         <span key={index}
                                               className="px-2 py-0.5 bg-gray-200 rounded text-xs">
-                      {keyword}
-                    </span>
+                                            {keyword}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
                             <div className="text-sm text-gray-600 mb-2">
-                                <span
-                                    className="font-medium">Typ:</span> {generatedContent.contentType}
+                                <span className="font-medium">Typ:</span> {generatedContent.contentType}
                             </div>
                             <div className="text-sm text-gray-600">
-                                <span
-                                    className="font-medium">Wortanzahl:</span> ~{generatedContent.wordCount} ({formatReadingTime(generatedContent.wordCount)})
+                                <span className="font-medium">Wortanzahl:</span> ~{generatedContent.wordCount} ({formatReadingTime(generatedContent.wordCount)})
                             </div>
                         </div>
 
-                        <div
-                            className="bg-white border border-gray-200 rounded-lg p-4 mb-6 max-h-96 overflow-y-auto whitespace-pre-wrap markdown">
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 max-h-96 overflow-y-auto whitespace-pre-wrap markdown">
                             {generatedContent.content}
                         </div>
 
@@ -430,7 +581,7 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                                 onClick={() => setGeneratedContent(null)}
                                 className="px-6 py-3 bg-[#2C2E3B] text-white rounded-lg hover:bg-opacity-90 flex items-center"
                             >
-                                Neuen Content generieren <Sparkles size={18} className="ml-2"/>
+                                {generatedContent.improvement ? 'Content erneut verbessern' : 'Neuen Content generieren'} <Sparkles size={18} className="ml-2"/>
                             </button>
                         </div>
                     </div>
@@ -451,7 +602,7 @@ const ContentGenerator = ({apiKey, apiUrl, onError}) => {
                                 <Edit3 size={16} className="mr-2"/> Content bearbeiten
                             </div>
                             <p className="text-sm text-gray-600">
-                                Bearbeiten Sie den generierten Content mit einem visuellen Editor
+                                Bearbeiten Sie den {generatedContent.improvement ? 'verbesserten' : 'generierten'} Content mit einem visuellen Editor
                             </p>
                         </div>
 

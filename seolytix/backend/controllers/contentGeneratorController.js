@@ -127,3 +127,69 @@ exports.generateContentIdeas = async (req, res) => {
         });
     }
 };
+
+/**
+ * Verbessert bestehenden Content mit KI
+ * @param {Object} req - Express Request Objekt
+ * @param {Object} res - Express Response Objekt
+ */
+exports.improveContent = async (req, res) => {
+    try {
+        const { apiKey, contentRequest } = req.body;
+
+        // Prüfen, ob API-Key vorhanden ist
+        if (!apiKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'API-Key erforderlich'
+            });
+        }
+
+        // Prüfen, ob Content-Request und existingContent vorhanden sind
+        if (!contentRequest || !contentRequest.existingContent) {
+            return res.status(400).json({
+                success: false,
+                message: 'Bestehender Content ist erforderlich'
+            });
+        }
+
+        // Begrenzung der Wortanzahl für Performance und Kosten
+        const maxWordCount = 2000;
+        if (contentRequest.wordCount && contentRequest.wordCount > maxWordCount) {
+            contentRequest.wordCount = maxWordCount;
+        }
+
+        // Content verbessern (Service-Methode aufrufen)
+        const improvedContent = await contentGeneratorService.improveContent(apiKey, contentRequest);
+
+        // Erfolgreiche Antwort zurückgeben
+        res.status(200).json({
+            success: true,
+            data: improvedContent
+        });
+
+    } catch (error) {
+        console.error('Fehler bei der Content-Verbesserung:', error);
+
+        // Strukturierte Fehlerantwort
+        let errorMessage = 'Fehler bei der Content-Verbesserung';
+        let errorDetails = {};
+
+        if (error.response) {
+            // OpenAI API hat mit einem Fehlercode geantwortet
+            errorMessage = error.response.data.error?.message || 'API-Fehler';
+            errorDetails = error.response.data;
+        } else if (error.request) {
+            // Keine Antwort erhalten
+            errorMessage = 'Keine Antwort von der API erhalten';
+        } else {
+            errorMessage = error.message;
+        }
+
+        res.status(500).json({
+            success: false,
+            message: errorMessage,
+            error: errorDetails
+        });
+    }
+};
