@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../Player.css';
 
 const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyricsDisplayRef }) => {
-    // Konfiguration für sichtbare Zeilen
+    // Konfigurationswerte
     const VISIBLE_RANGE = {
-        past: 5,     // Vergangene Lyrics
-        future: 5    // Zukünftige Lyrics
+        past: 1,     // Zeige mehr vergangene Lyrics an
+        future: 3    // Zeige weniger zukünftige Lyrics für besseren Fokus
     };
 
     // States
@@ -27,9 +27,8 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
     const indexStabilizationRef = useRef(null);
     const lastActivelyricRef = useRef(null);
     const animationTimerRef = useRef(null);
-    const centeringTimeoutRef = useRef(null);
 
-    // Debug-Logger
+    // Debug-Logger mit eigener Farbe
     const logDebug = (message, data) => {
         if (debugMode) {
             console.log(
@@ -81,13 +80,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
 
             const endTime = lyric.hasOwnProperty('endTime') ? parseFloat(lyric.endTime) : null;
 
-            // Mit endTime
+            // Fall 1: Mit endTime
             if (endTime !== null && !isNaN(endTime)) {
                 if (time >= startTime && time < endTime) {
                     return i;
                 }
             }
-            // Bis zum nächsten Lyric
+            // Fall 2: Bis zum nächsten Lyric
             else if (i < lyrics.length - 1) {
                 const nextLyric = lyrics[i + 1];
                 if (nextLyric && nextLyric.hasOwnProperty('startTime')) {
@@ -97,13 +96,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     }
                 }
             }
-            // Letzter Lyric
+            // Fall 3: Letzter Lyric
             else if (i === lyrics.length - 1 && time >= startTime) {
                 return i;
             }
         }
 
-        // Spezialfälle
+        // Spezialfälle - vor erstem oder nach letztem Lyric
         if (lyrics.length > 0) {
             const firstStartTime = parseFloat(lyrics[0].startTime);
             if (!isNaN(firstStartTime) && time < firstStartTime) {
@@ -132,7 +131,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
         const now = Date.now();
 
         if (scrollDifference > 20 && now - lastScrollTimeRef.current > 300) {
-            logDebug(`Manuelles Scrollen erkannt: ${scrollDifference}px`);
+            logDebug(`Manuelles Scrollen erkannt: Differenz ${scrollDifference}px`);
             setManualScrollDetected(true);
             setAutoScrollEnabled(false);
 
@@ -144,9 +143,6 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                 logDebug("Auto-Scroll nach Inaktivität wieder aktiviert");
                 setManualScrollDetected(false);
                 setAutoScrollEnabled(true);
-
-                // Nach Wiederaktivierung neu zentrieren
-                centerActiveLyric();
             }, 5000);
         }
 
@@ -163,7 +159,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
 
         const calculatedIndex = calculateCurrentLyricIndex(currentTime);
 
-        // Optimierte Prüfung auf Änderungen
+        // Prüfen auf Änderungen und Index-Stabilität
         if (calculatedIndex === currentLyricIndex) {
             setStableCurrentIndex(calculatedIndex);
             lastStableIndexRef.current = calculatedIndex;
@@ -180,7 +176,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
             }
 
             indexStabilizationRef.current = setTimeout(() => {
-                // Animation auslösen bei Wechsel
+                // Lyric-Wechsel Animation auslösen
                 if (lastStableIndexRef.current !== calculatedIndex && lastStableIndexRef.current !== -1) {
                     triggerLyricChangeAnimation();
                 }
@@ -207,7 +203,6 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
             if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
             if (indexStabilizationRef.current) clearTimeout(indexStabilizationRef.current);
             if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
-            if (centeringTimeoutRef.current) clearTimeout(centeringTimeoutRef.current);
         };
     }, []);
 
@@ -234,7 +229,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
         const effectiveIndex = stableCurrentIndex;
 
         if (effectiveIndex < 0) {
-            const initialLyrics = lyrics.slice(0, VISIBLE_RANGE.future + VISIBLE_RANGE.past).map((lyric, idx) => ({
+            const initialLyrics = lyrics.slice(0, VISIBLE_RANGE.future + 1).map((lyric, idx) => ({
                 ...lyric,
                 actualIndex: idx
             }));
@@ -243,7 +238,6 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
             return;
         }
 
-        // Symmetrischer Bereich um aktiven Lyric
         const startIndex = Math.max(0, effectiveIndex - VISIBLE_RANGE.past);
         const endIndex = Math.min(lyrics.length, effectiveIndex + VISIBLE_RANGE.future + 1);
 
@@ -254,70 +248,75 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
 
         setVisibleLyrics(newVisibleLyrics);
         setShowPastIndicator(startIndex > 0);
-
-        // Nach Update neu zentrieren
-        centerActiveLyric(true);
     }, [lyrics, stableCurrentIndex, VISIBLE_RANGE.future, VISIBLE_RANGE.past]);
 
-    // Funktion zum perfekten Zentrieren der aktiven Zeile
-    const centerActiveLyric = (withDelay = false) => {
-        if (!autoScrollEnabled || manualScrollDetected) return;
+    // Smooth Scrolling zu aktiven Lyrics
+    useEffect(() => {
+        if (stableCurrentIndex < 0 || !autoScrollEnabled || manualScrollDetected || animatingLyrics) return;
 
         const container = lyricsDisplayRef?.current || internalLyricsContainerRef.current;
         if (!container) return;
 
-        if (centeringTimeoutRef.current) {
-            clearTimeout(centeringTimeoutRef.current);
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
         }
 
-        const executeCentering = () => {
+        scrollTimeoutRef.current = setTimeout(() => {
             const activeLyric = container.querySelector('.lyric-line.active');
             if (!activeLyric) return;
 
-            // Berechnung für perfekte Zentrierung
-            const containerHeight = container.clientHeight;
-            const lyricHeight = activeLyric.offsetHeight;
-            const targetPosition = activeLyric.offsetTop - (containerHeight / 2) + (lyricHeight / 2);
+            if (lastActivelyricRef.current === activeLyric) {
+                return;
+            }
 
-            container.scrollTo({
-                top: targetPosition,
-                behavior: 'smooth'
-            });
+            lastActivelyricRef.current = activeLyric;
 
-            logDebug(`Zentriere aktive Zeile: "${activeLyric.textContent.trim()}"`);
-        };
+            const containerRect = container.getBoundingClientRect();
+            const lyricRect = activeLyric.getBoundingClientRect();
 
-        if (withDelay) {
-            centeringTimeoutRef.current = setTimeout(executeCentering, 150);
-        } else {
-            executeCentering();
-        }
-    };
+            const isFullyVisible = (
+                lyricRect.top >= containerRect.top &&
+                lyricRect.bottom <= containerRect.bottom
+            );
 
-    // Effekt zum Zentrieren bei Index-Änderung
-    useEffect(() => {
-        if (stableCurrentIndex < 0 || !autoScrollEnabled || manualScrollDetected) return;
-        centerActiveLyric(true);
-    }, [stableCurrentIndex, autoScrollEnabled, manualScrollDetected]);
+            const isPartiallyVisible = (
+                (lyricRect.top < containerRect.top && lyricRect.bottom > containerRect.top) ||
+                (lyricRect.bottom > containerRect.bottom && lyricRect.top < containerRect.bottom)
+            );
 
-    // Animationen beim Wechsel der Lyrics
+            if (!isFullyVisible) {
+                const containerHeight = container.clientHeight;
+                const targetPosition = activeLyric.offsetTop - (containerHeight * 0.4);
+
+                container.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }, 150);
+    }, [stableCurrentIndex, autoScrollEnabled, manualScrollDetected, animatingLyrics]);
+
+    // Funktion zum Auslösen von Animationen beim Wechsel der Lyrics
     const triggerLyricChangeAnimation = () => {
+        // Verhindern von überlappenden Animationen
         if (animatingLyrics) return;
 
+        // Zufälligen Animationstyp auswählen für Abwechslung
         const animations = ['pulse', 'wave', 'sparkle', 'bounce'];
         const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
 
         setAnimatingLyrics(true);
         setCurrentAnimation(randomAnimation);
 
+        // Animation nach Abschluss zurücksetzen
         animationTimerRef.current = setTimeout(() => {
             setAnimatingLyrics(false);
             setCurrentAnimation(null);
-        }, 1500);
+        }, 1500); // Länger als die Animation dauert
     };
 
-    // Zufällige Partikel für Effekte
-    const generateParticles = (count = 15) => {
+    // Zufällige Partikel für Effekte generieren
+    const generateParticles = (count = 20) => {
         return Array.from({ length: count }).map((_, i) => {
             const size = Math.random() * 5 + 2;
             const xPos = Math.random() * 100;
@@ -331,6 +330,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
     // Partikel für die aktive Zeile
     const activeParticles = useRef(generateParticles()).current;
 
+    // Hauptrendering-Funktion
     return (
         <div
             className={`lyrics-display ${animatingLyrics ? `animation-${currentAnimation}` : ''}`}
@@ -342,19 +342,17 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
             {/* Debug-Anzeige */}
             {debugMode && (
                 <div className="lyrics-debug-panel">
-                    <div>Zeit: {currentTime.toFixed(2)}s</div>
-                    <div>Index: {currentLyricIndex} / Stabil: {stableCurrentIndex}</div>
+                    <div>Current Time: {currentTime.toFixed(2)}s</div>
+                    <div>External Index: {currentLyricIndex}</div>
+                    <div>Stable Index: {stableCurrentIndex}</div>
                     <div>Auto-Scroll: {autoScrollEnabled ? 'Aktiv' : 'Aus'}</div>
+                    <div>Animation: {animatingLyrics ? currentAnimation : 'keine'}</div>
                 </div>
             )}
 
             {/* Auto-Scroll Button */}
             <div className="auto-scroll-toggle"
-                 onClick={() => {
-                     const newValue = !autoScrollEnabled;
-                     setAutoScrollEnabled(newValue);
-                     if (newValue) centerActiveLyric();
-                 }}>
+                 onClick={() => setAutoScrollEnabled(!autoScrollEnabled)}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
                      strokeLinejoin="round">
@@ -372,7 +370,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                 </svg>
             </div>
 
-            {/* Past Indicator */}
+            {/* Vergangene Lyrics Indikator */}
             {showPastIndicator && (
                 <div className="past-indicator">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -384,10 +382,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                 </div>
             )}
 
-            {/* Top Spacing für Zentrierung */}
-            <div className="centering-space-top"></div>
-
-            {/* Lyrics */}
+            {/* Lyrics-Container mit 3D-Perspektive */}
             <div className="visible-lyrics">
                 {visibleLyrics.map((lyric) => {
                     const isActive = lyric.actualIndex === stableCurrentIndex;
@@ -396,9 +391,11 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     const isTimeRelevant = currentTime >= lyric.startTime &&
                         (lyric.endTime ? currentTime < lyric.endTime : true);
                     const progress = calculateProgress(lyric, lyric.actualIndex);
+
+                    // Position relativ zum aktuellen Lyric bestimmen für 3D-Effekt
                     const positionIndex = lyric.actualIndex - stableCurrentIndex;
 
-                    // CSS-Klassen
+                    // Dynamische Klassen
                     const classes = [
                         'lyric-line',
                         isActive ? 'active' : '',
@@ -406,14 +403,14 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                         isFuture ? 'future' : '',
                         positionIndex === 1 ? 'next-line' : '',
                         positionIndex === -1 ? 'previous-line' : '',
-                        debugMode ? 'debug-line' : '',
+                        debugMode ? 'debug-line' : ''
                     ].filter(Boolean).join(' ');
 
-                    // 3D-Effekte
+                    // Distanz vom aktiven Lyric für 3D-Effekt
                     const depthStyle = {
                         transform: isActive
-                            ? 'translateZ(30px) scale(1.05)'
-                            : `translateZ(${-Math.abs(positionIndex) * 8}px) scale(${1 - Math.abs(positionIndex) * 0.04})`,
+                            ? 'translateZ(20px) scale(1.05)'
+                            : `translateZ(${-Math.abs(positionIndex) * 5}px) scale(${1 - Math.abs(positionIndex) * 0.03})`,
                         opacity: isActive
                             ? 1
                             : Math.max(0.3, 1 - Math.abs(positionIndex) * 0.15),
@@ -429,7 +426,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                             style={depthStyle}
                             data-index={lyric.actualIndex}
                         >
-                            {/* Partikel-Effekt */}
+                            {/* Partikel-Effekt für aktive Zeile */}
                             {isActive && (
                                 <div className="particle-container">
                                     {activeParticles.map(p => (
@@ -449,12 +446,14 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                                 </div>
                             )}
 
-                            {/* Glüheffekt */}
+                            {/* Glühender Hintergrund für aktive Zeile */}
                             {isActive && <div className="active-glow" />}
 
                             {/* Lyric Text */}
                             <div className="lyric-content">
-                                <span className="lyric-text">{lyric.text}</span>
+                                <span className="lyric-text">
+                                    {lyric.text}
+                                </span>
                             </div>
 
                             {/* Fortschrittsbalken */}
@@ -464,6 +463,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                                     width: isTimeRelevant ? `${progress}%` : '0%'
                                 }}
                             >
+                                {/* Leuchtender Indikator am Ende des Fortschrittsbalkens */}
                                 {isActive && progress > 0 && (
                                     <div className="progress-indicator" />
                                 )}
@@ -476,10 +476,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                                 </div>
                             )}
 
-                            {/* Debug-Info */}
+                            {/* Debug-Informationen */}
                             {debugMode && (
                                 <div className="debug-info">
-                                    {lyric.startTime.toFixed(2)}s - {lyric.endTime ? lyric.endTime.toFixed(2) : 'N/A'}s
+                                    Zeit: {lyric.startTime.toFixed(2)}s -
+                                    {lyric.endTime ? lyric.endTime.toFixed(2) : 'N/A'}s |
+                                    Position: {positionIndex} |
+                                    Fortschritt: {progress.toFixed(0)}%
                                 </div>
                             )}
                         </div>
@@ -487,20 +490,15 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                 })}
             </div>
 
-            {/* Bottom Spacing für Zentrierung */}
-            <div className="centering-space-bottom"></div>
-
-            {/* Styling */}
+            {/* Dynamische Styles für Animationen und Effekte */}
             <style>
                 {`
-                /* Container */
+                /* === Basis-Container === */
                 .lyrics-display {
                     position: relative;
                     max-height: 20rem;
                     overflow-y: auto !important;
                     padding: 1.5rem;
-                    padding-top: 0;
-                    padding-bottom: 0;
                     background-color: rgba(44, 46, 59, 0.95);
                     border-radius: 1rem;
                     box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.3), 
@@ -510,16 +508,10 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     transition: all 0.3s ease;
                     perspective: 1000px;
                     transform-style: preserve-3d;
+                    backface-visibility: hidden;
                 }
                 
-                /* Zur Zentrierung */
-                .centering-space-top, 
-                .centering-space-bottom {
-                    height: calc(50vh - 17rem);
-                    min-height: 150px;
-                }
-                
-                /* Scrollbar */
+                /* Scrollbar anpassen */
                 .lyrics-display::-webkit-scrollbar {
                     width: 0.375rem;
                 }
@@ -535,16 +527,19 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     box-shadow: inset 0 0 5px rgba(139, 92, 246, 0.3);
                 }
                 
-                /* 3D-Container */
+                .lyrics-display::-webkit-scrollbar-thumb:hover {
+                    background-color: rgba(139, 92, 246, 0.9);
+                }
+                
+                /* Container für den 3D-Effekt */
                 .visible-lyrics {
                     position: relative;
                     transform-style: preserve-3d;
                     perspective: 1200px;
                     transform: translateZ(0);
-                    padding: 1rem 0;
                 }
                 
-                /* Lyric-Zeilen Basis */
+                /* === Lyric Zeilen === */
                 .lyric-line {
                     position: relative;
                     border-radius: 1rem;
@@ -556,6 +551,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     transform-style: preserve-3d;
                     transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
                     transform-origin: center center;
+                    backface-visibility: hidden;
                     background: linear-gradient(
                         135deg, 
                         rgba(40, 42, 55, 0.9),
@@ -569,13 +565,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     z-index: 1;
                 }
 
-                /* Hover-Effekt */
+                /* Hover-Effekt für alle Zeilen */
                 .lyric-line:hover {
                     transform: translateY(-2px) translateZ(15px) !important;
                     box-shadow: 0 7px 20px -5px rgba(0, 0, 0, 0.3);
                 }
 
-                /* Aktive Zeile */
+                /* Aktive Lyric-Zeile */
                 .lyric-line.active {
                     color: white;
                     font-weight: 600;
@@ -591,11 +587,9 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                         0 10px 20px -5px rgba(0, 0, 0, 0.4),
                         inset 0 0 20px rgba(139, 92, 246, 0.1);
                     z-index: 2;
-                    margin-top: 1rem;
-                    margin-bottom: 1.5rem;
                 }
 
-                /* Glow-Effekt */
+                /* Glühender Hintergrund für aktive Zeile */
                 .active-glow {
                     position: absolute;
                     top: 0;
@@ -612,13 +606,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     z-index: -1;
                 }
 
-                /* Vergangene Zeilen */
+                /* Vergangene Lyrics */
                 .lyric-line.past {
                     color: rgba(148, 163, 184, 0.7);
                     opacity: 0.7;
                 }
 
-                /* Benachbarte Zeilen */
+                /* Nächste/Vorherige Zeile (direkt benachbart zur aktiven) */
                 .lyric-line.next-line,
                 .lyric-line.previous-line {
                     color: rgba(255, 255, 255, 0.7);
@@ -635,12 +629,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     color: rgba(203, 213, 225, 0.8);
                 }
 
-                /* Text-Styling */
+                /* Lyric-Inhalt */
                 .lyric-content {
                     position: relative;
                     z-index: 2;
                 }
 
+                /* Textformatierung für aktiven Lyric */
                 .lyric-line.active .lyric-text {
                     display: inline-block;
                     color: white;
@@ -668,6 +663,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
                 }
 
+                /* Aktiver Fortschrittsbalken */
                 .lyric-progress-bar.active-progress {
                     height: 8px;
                     background: linear-gradient(
@@ -678,7 +674,7 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     box-shadow: 0 0 15px rgba(139, 92, 246, 0.7);
                 }
 
-                /* Fortschrittsindikator */
+                /* Leuchtender Indikator am Ende des Fortschrittsbalkens */
                 .progress-indicator {
                     position: absolute;
                     right: 0;
@@ -737,6 +733,13 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                 .auto-scroll-toggle:hover {
                     transform: scale(1.1);
                     opacity: 1;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+                }
+
+                .auto-scroll-toggle svg {
+                    width: 20px;
+                    height: 20px;
+                    color: white;
                 }
 
                 /* Vergangene Lyrics Indikator */
@@ -780,9 +783,10 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     z-index: 50;
                     font-family: monospace;
                     border: 1px solid rgba(139, 92, 246, 0.5);
+                    pointer-events: none;
                 }
 
-                /* Partikel */
+                /* Partikel-Container und Partikel */
                 .particle-container {
                     position: absolute;
                     top: 0;
@@ -808,7 +812,8 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     pointer-events: none;
                 }
 
-                /* Animationen */
+                /* === Animationen === */
+                /* Pulsieren für aktiven Text */
                 @keyframes text-pulse {
                     0% {
                         text-shadow: 
@@ -823,27 +828,44 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     }
                 }
 
+                /* Pulsieren für den Hintergrund */
                 @keyframes pulse-glow {
-                    0% { opacity: 0.5; }
-                    100% { opacity: 0.9; }
+                    0% {
+                        opacity: 0.5;
+                    }
+                    100% {
+                        opacity: 0.9;
+                    }
                 }
 
+                /* Pulsieren für den Fortschrittsindikator */
                 @keyframes indicator-pulse {
                     0% {
                         transform: translateY(-50%) scale(1);
-                        box-shadow: 0 0 5px rgba(255, 255, 255, 0.7), 0 0 10px rgba(139, 92, 246, 0.7);
+                        box-shadow: 
+                            0 0 5px rgba(255, 255, 255, 0.7),
+                            0 0 10px rgba(139, 92, 246, 0.7);
                     }
                     100% {
                         transform: translateY(-50%) scale(1.3);
-                        box-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 15px rgba(139, 92, 246, 0.9);
+                        box-shadow: 
+                            0 0 8px rgba(255, 255, 255, 0.9),
+                            0 0 15px rgba(139, 92, 246, 0.9),
+                            0 0 20px rgba(139, 92, 246, 0.7);
                     }
                 }
 
+                /* Fade-Animation für Prozentanzeige */
                 @keyframes percent-fade {
-                    0% { opacity: 0.8; }
-                    100% { opacity: 1; }
+                    0% {
+                        opacity: 0.8;
+                    }
+                    100% {
+                        opacity: 1;
+                    }
                 }
 
+                /* Schwebende Animation für Partikel */
                 @keyframes float-particle {
                     0% {
                         transform: translateY(0) translateX(0) scale(1);
@@ -859,24 +881,28 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     }
                 }
 
+                /* Schwebende Animation für Indikator */
                 @keyframes float {
                     0% { transform: translateY(0); }
                     50% { transform: translateY(-3px); }
                     100% { transform: translateY(0); }
                 }
 
+                /* Fade-In-Animation */
                 @keyframes fade-in {
                     from { opacity: 0; }
                     to { opacity: 1; }
                 }
 
-                /* Lyric-Wechsel Animationen */
+                /* === Animations für Lyric-Wechsel === */
+                /* Pulse-Animation */
                 @keyframes pulse-animation {
                     0% { transform: scale(1); }
                     50% { transform: scale(1.05); }
                     100% { transform: scale(1); }
                 }
 
+                /* Wave-Animation */
                 @keyframes wave-animation {
                     0% { transform: translateX(0); }
                     25% { transform: translateX(-5px); }
@@ -884,19 +910,21 @@ const LyricsDisplay = ({ lyrics, currentLyricIndex, currentTime, debugMode, lyri
                     100% { transform: translateX(0); }
                 }
 
+                /* Sparkle-Animation */
                 @keyframes sparkle-animation {
                     0% { filter: brightness(1); }
                     50% { filter: brightness(1.3); }
                     100% { filter: brightness(1); }
                 }
 
+                /* Bounce-Animation */
                 @keyframes bounce-animation {
                     0% { transform: translateY(0); }
                     50% { transform: translateY(-10px); }
                     100% { transform: translateY(0); }
                 }
 
-                /* Animationsklassen */
+                /* Animation-Klassen anwenden */
                 .lyrics-display.animation-pulse .lyric-line.active {
                     animation: pulse-animation 0.5s ease;
                 }

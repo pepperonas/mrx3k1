@@ -1,7 +1,17 @@
 // src/App.js - Hauptkomponente für seolytix mit ChatGPT-Integration
 
-import React, {useState, useEffect} from 'react';
-import {AlertCircle, Clock, FileText, Globe, Search, Smartphone, Sparkles, Key, Code} from 'lucide-react';
+import React, {useEffect, useState} from 'react';
+import {
+    AlertCircle,
+    Clock,
+    Code,
+    FileText,
+    Globe,
+    Key,
+    Search,
+    Smartphone,
+    Sparkles
+} from 'lucide-react';
 
 function App() {
     const [url, setUrl] = useState('');
@@ -60,26 +70,28 @@ function App() {
             return;
         }
 
-        // URL-Format validieren
-        try {
-            new URL(url);
-        } catch (e) {
-            setError('Ungültige URL. Bitte geben Sie eine vollständige URL ein (z.B. https://example.com)');
-            return;
-        }
-
         setError('');
         setIsAnalyzing(true);
         setSuggestions(null);
 
+        // URL formatieren, falls noch kein Protokoll angegeben ist
+        let formattedUrl = url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            formattedUrl = 'https://' + url;
+            setUrl(formattedUrl); // Aktualisiert die URL in der Eingabe
+        }
+
         try {
+            // URL-Format validieren
+            new URL(formattedUrl);
+
             // Backend-API aufrufen
             const response = await fetch('/seolytix/api/seo/analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({url}),
+                body: JSON.stringify({url: formattedUrl}),
             });
 
             const data = await response.json();
@@ -104,7 +116,17 @@ function App() {
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !isAnalyzing) {
             e.preventDefault();
-            analyzeWebsite();
+
+            // Überprüfen und Ergänzen des URL-Protokolls
+            if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                const formattedUrl = 'https://' + url;
+                setUrl(formattedUrl);
+                // Wir übergeben die formatierte URL direkt an analyzeWebsite,
+                // anstatt zu warten bis React state aktualisiert
+                setTimeout(() => analyzeWebsite(), 0);
+            } else {
+                analyzeWebsite();
+            }
         }
     };
 
@@ -326,7 +348,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="text-md font-semibold text-[#2C2E3B] flex items-center">
-                                <Key size={18} className="mr-2"/> ChatGPT API-Schlüssel für SEO-Verbesserungen
+                                <Key size={18} className="mr-2"/> ChatGPT API-Schlüssel für
+                                SEO-Verbesserungen
                             </h3>
                             <div className="flex items-center space-x-2">
                                 <button
@@ -354,7 +377,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                 className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C2E3B] focus:border-transparent"
                             />
                             {apiKey && (
-                                <div className="absolute top-0 right-0 h-full flex items-center pr-3">
+                                <div
+                                    className="absolute top-0 right-0 h-full flex items-center pr-3">
                                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
                                 </div>
                             )}
@@ -366,14 +390,16 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                 className={`px-6 py-3 bg-[#2C2E3B] text-white rounded-lg hover:bg-opacity-90 flex items-center w-full justify-center ${(isGenerating || !results || !apiKey) ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isGenerating ? (
-                                    <>Generiere SEO-Vorschläge<span className="ml-2 animate-pulse">...</span></>
+                                    <>Generiere SEO-Vorschläge<span
+                                        className="ml-2 animate-pulse">...</span></>
                                 ) : (
                                     <>SEO verbessern <Sparkles size={18} className="ml-2"/></>
                                 )}
                             </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
-                            Ihr API-Schlüssel wird sicher im Browser gespeichert und niemals auf dem Server gespeichert.
+                            Ihr API-Schlüssel wird sicher im Browser gespeichert und niemals auf dem
+                            Server gespeichert.
                         </p>
                     </div>
 
@@ -389,7 +415,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                         <div className="text-center py-12">
                             <div
                                 className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C2E3B] mb-4"></div>
-                            <p className="text-gray-600">Generiere SEO-Verbesserungsvorschläge mit ChatGPT...</p>
+                            <p className="text-gray-600">Generiere SEO-Verbesserungsvorschläge mit
+                                ChatGPT...</p>
                         </div>
                     )}
 
@@ -562,35 +589,46 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
 
                                     {suggestions.metaTags.title && (
                                         <div className="mb-3">
-                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Title Tag</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
-                                                <code className="text-sm break-words">{suggestions.metaTags.title}</code>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Title
+                                                Tag</h5>
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code
+                                                    className="text-sm break-words">{suggestions.metaTags.title}</code>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                {suggestions.metaTags.title.length} Zeichen (optimal: 50-60)
+                                                {suggestions.metaTags.title.length} Zeichen
+                                                (optimal: 50-60)
                                             </p>
                                         </div>
                                     )}
 
                                     {suggestions.metaTags.description && (
                                         <div className="mb-3">
-                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Meta Description</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
-                                                <code className="text-sm break-words">{suggestions.metaTags.description}</code>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B]">Meta
+                                                Description</h5>
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code
+                                                    className="text-sm break-words">{suggestions.metaTags.description}</code>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                {suggestions.metaTags.description.length} Zeichen (optimal: 150-160)
+                                                {suggestions.metaTags.description.length} Zeichen
+                                                (optimal: 150-160)
                                             </p>
                                         </div>
                                     )}
 
                                     {suggestions.metaTags.additionalTags && suggestions.metaTags.additionalTags.length > 0 && (
                                         <div>
-                                            <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">Zusätzliche Meta-Tags</h5>
+                                            <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">Zusätzliche
+                                                Meta-Tags</h5>
                                             {suggestions.metaTags.additionalTags.map((tag, index) => (
-                                                <div key={index} className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mb-2">
+                                                <div key={index}
+                                                     className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mb-2">
                                                     <div className="text-sm">
-                                                        <span className="font-medium">{tag.name}:</span> {tag.content}
+                                                        <span
+                                                            className="font-medium">{tag.name}:</span> {tag.content}
                                                     </div>
                                                 </div>
                                             ))}
@@ -599,7 +637,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
 
                                     <div className="mt-3">
                                         <h5 className="text-sm font-medium text-[#2C2E3B] mb-2">HTML-Implementierung</h5>
-                                        <div className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
+                                        <div
+                                            className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
                                             <pre className="text-xs"><code>{`<head>
   <title>${suggestions.metaTags.title || ''}</title>
   <meta name="description" content="${suggestions.metaTags.description || ''}" />
@@ -620,8 +659,10 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     {suggestions.headings.h1Suggestion && (
                                         <div className="mb-3">
                                             <h5 className="text-sm font-medium text-[#2C2E3B]">H1-Vorschlag</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
-                                                <code className="text-sm">{suggestions.headings.h1Suggestion}</code>
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                                <code
+                                                    className="text-sm">{suggestions.headings.h1Suggestion}</code>
                                             </div>
                                         </div>
                                     )}
@@ -629,7 +670,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     {suggestions.headings.headingStructure && (
                                         <div>
                                             <h5 className="text-sm font-medium text-[#2C2E3B]">Strukturverbesserung</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
                                                 <p className="text-sm">{suggestions.headings.headingStructure}</p>
                                             </div>
                                         </div>
@@ -645,7 +687,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     {suggestions.content.suggestions && (
                                         <div className="mb-3">
                                             <h5 className="text-sm font-medium text-[#2C2E3B]">Inhaltsvorschläge</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
                                                 <p className="text-sm">{suggestions.content.suggestions}</p>
                                             </div>
                                         </div>
@@ -654,7 +697,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     {suggestions.content.keywordOptimization && (
                                         <div>
                                             <h5 className="text-sm font-medium text-[#2C2E3B]">Keyword-Optimierung</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
                                                 <p className="text-sm">{suggestions.content.keywordOptimization}</p>
                                             </div>
                                         </div>
@@ -675,8 +719,10 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                             {suggestions.technical.codeSnippets.map((snippet, index) => (
                                                 <div key={index} className="mb-4">
                                                     <p className="text-sm mb-1">{snippet.description}</p>
-                                                    <div className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
-                                                        <pre className="text-xs"><code>{snippet.code}</code></pre>
+                                                    <div
+                                                        className="bg-[#2C2E3B] text-white p-3 rounded overflow-x-auto">
+                                                        <pre
+                                                            className="text-xs"><code>{snippet.code}</code></pre>
                                                     </div>
                                                 </div>
                                             ))}
@@ -686,7 +732,8 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                     {suggestions.technical.performanceTips && (
                                         <div>
                                             <h5 className="text-sm font-medium text-[#2C2E3B]">Performance-Tipps</h5>
-                                            <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
+                                            <div
+                                                className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1">
                                                 <p className="text-sm">{suggestions.technical.performanceTips}</p>
                                             </div>
                                         </div>
@@ -698,8 +745,10 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                             {suggestions.rawResponse && (
                                 <div className="bg-[#2C2E3B] bg-opacity-5 p-4 rounded-lg">
                                     <h4 className="font-medium text-[#2C2E3B] mb-3">ChatGPT-Antwort</h4>
-                                    <div className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1 max-h-96 overflow-y-auto">
-                                        <pre className="text-xs whitespace-pre-wrap">{suggestions.rawResponse}</pre>
+                                    <div
+                                        className="bg-[#2C2E3B] bg-opacity-10 p-3 rounded mt-1 max-h-96 overflow-y-auto">
+                                        <pre
+                                            className="text-xs whitespace-pre-wrap">{suggestions.rawResponse}</pre>
                                     </div>
                                 </div>
                             )}

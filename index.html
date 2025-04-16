@@ -66,7 +66,7 @@
 
         header p {
             font-size: 1.1rem;
-            color: #a1a1aa;
+            color: #efefef;
         }
 
         .apps {
@@ -183,7 +183,7 @@
 <canvas id="canvas"></canvas>
 <header>
     <h1>mrx3k1.de</h1>
-    <p>Deine Tools und Spiele</p>
+    <p id="app-count">Entdecke meine App-Sammlung</p>
 </header>
 
 <section class="apps">
@@ -289,7 +289,7 @@
     <div class="card">
         <h2>✨ AI-Playground</h2>
         <p>Künstliche Intelligenz: Chatbots helfen, Bilder entstehen, Daten analysieren – du kannst
-            was entdecken, probier’s aus!</p>
+            was entdecken, probier's aus!</p>
         <a href="https://mrx3k1.de/ai-playground-portal/" target="_blank" class="btn-blue">Ab ins
             Chaos</a>
     </div>
@@ -333,6 +333,15 @@
 <div class="footer-buttons">
     <p>Made with ❤️ by Martin Pfeffer</p>
 </div>
+
+<script>
+    // Zähle die Anzahl der Card-Elemente und aktualisiere den Text
+    document.addEventListener('DOMContentLoaded', function() {
+        const cardCount = document.querySelectorAll('.card').length;
+        document.getElementById('app-count').textContent = `${cardCount} nützliche Apps und Tools`;
+    });
+</script>
+
 <script src="script.js"></script>
 </body>
 </html>
