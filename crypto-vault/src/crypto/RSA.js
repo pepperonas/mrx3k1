@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Copy, Download, Key, RefreshCw} from 'lucide-react';
+import {Copy, Download, Key, RefreshCw, Upload} from 'lucide-react';
 
 // RSA-Komponente für CryptoVault
 export function RSAEncryption() {
@@ -14,6 +14,10 @@ export function RSAEncryption() {
     const [keySize, setKeySize] = useState(2048);
     const [mode, setMode] = useState('encrypt');
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [externalPublicKey, setExternalPublicKey] = useState('');
+    const [useExternalKey, setUseExternalKey] = useState(false);
+    const [externalKeyLoaded, setExternalKeyLoaded] = useState(false);
+    const [externalKeyObj, setExternalKeyObj] = useState(null);
 
     // Lade gespeicherte Schlüssel beim Start
     useEffect(() => {
@@ -26,6 +30,8 @@ export function RSAEncryption() {
         try {
             setIsGenerating(true);
             setError('');
+            setUseExternalKey(false);
+            setExternalKeyLoaded(false);
 
             // RSA-Schlüsselpaar generieren
             const keyPair = await window.crypto.subtle.generateKey(
@@ -71,6 +77,55 @@ export function RSAEncryption() {
         }
     };
 
+    // Importiere externen öffentlichen Schlüssel
+    const importExternalPublicKey = async () => {
+        if (!externalPublicKey.trim()) {
+            setError('Bitte geben Sie einen öffentlichen Schlüssel ein');
+            return;
+        }
+
+        try {
+            setError('');
+
+            // Der Schlüssel könnte im PEM-Format sein, wir extrahieren den Base64-Teil
+            let base64Key = externalPublicKey;
+
+            // PEM-Format entfernen, wenn vorhanden
+            if (base64Key.includes('-----BEGIN PUBLIC KEY-----')) {
+                base64Key = base64Key
+                    .replace('-----BEGIN PUBLIC KEY-----', '')
+                    .replace('-----END PUBLIC KEY-----', '')
+                    .replace(/\s/g, '');
+            }
+
+            // Base64 zu Binär umwandeln
+            const binaryKey = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+
+            // Schlüssel importieren
+            const publicKey = await window.crypto.subtle.importKey(
+                "spki",
+                binaryKey,
+                {
+                    name: "RSA-OAEP",
+                    hash: "SHA-256",
+                },
+                true,
+                ["encrypt"]
+            );
+
+            setExternalKeyObj(publicKey);
+            setExternalKeyLoaded(true);
+            setUseExternalKey(true);
+            setInfo('Externer öffentlicher Schlüssel erfolgreich importiert');
+            setTimeout(() => setInfo(''), 3000);
+        } catch (err) {
+            setError(`Fehler beim Importieren des öffentlichen Schlüssels: ${err.message}`);
+            console.error(err);
+            setExternalKeyLoaded(false);
+            setUseExternalKey(false);
+        }
+    };
+
     // Speichere Schlüsselpaar in localStorage
     const saveKeyPair = () => {
         if (!keyPairName.trim()) {
@@ -111,6 +166,8 @@ export function RSAEncryption() {
     const loadKeyPair = async (savedKeyPair) => {
         try {
             setError('');
+            setUseExternalKey(false);
+            setExternalKeyLoaded(false);
 
             // Public Key importieren
             const publicKeyBinary = Uint8Array.from(atob(savedKeyPair.publicKey), c => c.charCodeAt(0));
@@ -200,24 +257,33 @@ export function RSAEncryption() {
                 return;
             }
 
-            if (!keyPair || !keyPair.subtle) {
-                setError('Bitte zuerst ein Schlüsselpaar generieren oder laden');
-                return;
-            }
-
             if (mode === 'encrypt') {
+                // Für Verschlüsselung brauchen wir entweder den eigenen oder externen öffentlichen Schlüssel
+                if (!useExternalKey && (!keyPair || !keyPair.subtle)) {
+                    setError('Bitte zuerst ein Schlüsselpaar generieren oder laden');
+                    return;
+                }
+
+                if (useExternalKey && !externalKeyLoaded) {
+                    setError('Bitte zuerst einen externen öffentlichen Schlüssel importieren');
+                    return;
+                }
+
+                const publicKey = useExternalKey ? externalKeyObj : keyPair.subtle.publicKey;
+                const actualKeySize = useExternalKey ? 2048 : keySize; // Annahme für externen Schlüssel
+
                 // Text mit öffentlichem Schlüssel verschlüsseln
                 // Da RSA beschränkt ist in der Größe des zu verschlüsselnden Texts,
                 // ist es besser für kleine Nachrichten oder für hybride Verschlüsselung
-                if (new TextEncoder().encode(inputText).length > ((keySize / 8) - 42)) {
-                    setError(`Die Nachricht ist zu lang für RSA-OAEP mit ${keySize} Bit (max. ${(keySize / 8) - 42} Bytes). Verwende kürzeren Text oder hybrid encryption.`);
+                if (new TextEncoder().encode(inputText).length > ((actualKeySize / 8) - 42)) {
+                    setError(`Die Nachricht ist zu lang für RSA-OAEP mit ${actualKeySize} Bit (max. ${(actualKeySize / 8) - 42} Bytes). Verwende kürzeren Text oder hybrid encryption.`);
                     return;
                 }
 
                 const encoded = new TextEncoder().encode(inputText);
                 const encrypted = await window.crypto.subtle.encrypt(
                     {name: "RSA-OAEP"},
-                    keyPair.subtle.publicKey,
+                    publicKey,
                     encoded
                 );
 
@@ -225,6 +291,12 @@ export function RSAEncryption() {
                 const base64Result = btoa(String.fromCharCode(...new Uint8Array(encrypted)));
                 setOutputText(base64Result);
             } else {
+                // Entschlüsselung funktioniert nur mit eigenem privaten Schlüssel
+                if (!keyPair || !keyPair.subtle) {
+                    setError('Bitte zuerst ein Schlüsselpaar generieren oder laden');
+                    return;
+                }
+
                 try {
                     // Base64 decodieren
                     const binaryString = atob(inputText);
@@ -264,7 +336,8 @@ export function RSAEncryption() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">RSA Verschlüsselung</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">RSA
+                    Verschlüsselung</h3>
 
                 <div className="mb-6">
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
@@ -278,18 +351,73 @@ export function RSAEncryption() {
 
                 <div className="flex space-x-4 mb-4">
                     <button
-                        onClick={() => setMode('encrypt')}
+                        onClick={() => {
+                            setMode('encrypt');
+                        }}
                         className={`px-4 py-2 rounded-md ${mode === 'encrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Verschlüsseln (mit öffentlichem Schlüssel)
                     </button>
                     <button
-                        onClick={() => setMode('decrypt')}
+                        onClick={() => {
+                            setMode('decrypt');
+                            setUseExternalKey(false); // Deaktiviere externen Schlüssel bei Entschlüsselung
+                        }}
                         className={`px-4 py-2 rounded-md ${mode === 'decrypt' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                         Entschlüsseln (mit privatem Schlüssel)
                     </button>
                 </div>
+
+                {mode === 'encrypt' && (
+                    <div
+                        className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <div className="flex items-center mb-2">
+                            <input
+                                type="checkbox"
+                                id="useExternalKey"
+                                checked={useExternalKey}
+                                onChange={(e) => setUseExternalKey(e.target.checked)}
+                                className="mr-2"
+                            />
+                            <label htmlFor="useExternalKey"
+                                   className="font-medium dark:text-gray-200">
+                                Mit fremdem öffentlichen Schlüssel verschlüsseln
+                            </label>
+                        </div>
+
+                        {useExternalKey && (
+                            <div className="mt-2">
+                                <label
+                                    className="block mb-1 text-sm font-medium dark:text-gray-200">
+                                    Öffentlicher Schlüssel (PEM oder Base64):
+                                </label>
+                                <div className="flex">
+                                    <textarea
+                                        value={externalPublicKey}
+                                        onChange={(e) => setExternalPublicKey(e.target.value)}
+                                        rows={4}
+                                        className="flex-1 p-2 border rounded-l-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
+                                        placeholder="-----BEGIN PUBLIC KEY----- ... oder Base64-Format"
+                                    />
+                                    <button
+                                        onClick={importExternalPublicKey}
+                                        disabled={!externalPublicKey.trim()}
+                                        className="px-3 bg-blue-600 text-white rounded-r-md flex items-center justify-center"
+                                    >
+                                        <Upload size={18} className="mr-1"/>
+                                        Importieren
+                                    </button>
+                                </div>
+                                {externalKeyLoaded && (
+                                    <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                                        Externer öffentlicher Schlüssel wurde geladen ✓
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -305,7 +433,8 @@ export function RSAEncryption() {
                     </div>
 
                     <div>
-                        <label className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
+                        <label
+                            className="block mb-2 font-medium dark:text-gray-200">Ergebnis</label>
                         <div className="relative">
                           <textarea
                               value={outputText}
@@ -325,117 +454,124 @@ export function RSAEncryption() {
                     </div>
                 </div>
 
-                <div className="mt-6">
-                    <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium dark:text-gray-100">Schlüsselpaar</h4>
-                        <button
-                            onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="text-blue-600 dark:text-blue-400 text-sm"
-                        >
-                            {showAdvanced ? 'Weniger anzeigen' : 'Erweiterte Optionen'}
-                        </button>
-                    </div>
-
-                    {showAdvanced && (
-                        <div
-                            className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                            <div className="mb-4">
-                                <label
-                                    className="block mb-2 text-sm font-medium dark:text-gray-200">Schlüsselgröße:</label>
-                                <select
-                                    value={keySize}
-                                    onChange={(e) => setKeySize(Number(e.target.value))}
-                                    className="p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 w-full"
-                                    disabled={keyPair !== null}
-                                >
-                                    <option value={1024}>1024 Bit (weniger sicher, schneller)
-                                    </option>
-                                    <option value={2048}>2048 Bit (empfohlen)</option>
-                                    <option value={4096}>4096 Bit (sicherer, langsamer)</option>
-                                </select>
-                            </div>
-
-                            {keyPair && (
-                                <>
-                                    <div className="mb-4">
-                                        <label className="block mb-1 text-sm font-medium dark:text-gray-200">Öffentlicher
-                                            Schlüssel:</label>
-                                        <div className="relative">
-                                          <textarea
-                                              value={keyPair.publicKey}
-                                              readOnly
-                                              rows={3}
-                                              className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
-                                          />
-                                            <div className="absolute top-2 right-2 flex">
-                                                <button
-                                                    onClick={() => copyToClipboard(keyPair.publicKey)}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 mr-1"
-                                                    title="In Zwischenablage kopieren"
-                                                >
-                                                    <Copy size={14} className="dark:text-gray-200"/>
-                                                </button>
-                                                <button
-                                                    onClick={() => exportKeys('public')}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
-                                                    title="Als .pem-Datei exportieren"
-                                                >
-                                                    <Download size={14} className="dark:text-gray-200"/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block mb-1 text-sm font-medium dark:text-gray-200">Privater
-                                            Schlüssel:</label>
-                                        <div className="relative">
-                                          <textarea
-                                              value="*** Privater Schlüssel (aus Sicherheitsgründen ausgeblendet) ***"
-                                              readOnly
-                                              rows={3}
-                                              className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
-                                          />
-                                            <div className="absolute top-2 right-2">
-                                                <button
-                                                    onClick={() => exportKeys('private')}
-                                                    className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
-                                                    title="Als .pem-Datei exportieren"
-                                                >
-                                                    <Download size={14} className="dark:text-gray-200"/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                            Der private Schlüssel sollte sicher aufbewahrt und
-                                            niemals weitergegeben werden!
-                                        </p>
-                                    </div>
-                                </>
-                            )}
+                {!useExternalKey && (
+                    <div className="mt-6">
+                        <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium dark:text-gray-100">Schlüsselpaar</h4>
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="text-blue-600 dark:text-blue-400 text-sm"
+                            >
+                                {showAdvanced ? 'Weniger anzeigen' : 'Erweiterte Optionen'}
+                            </button>
                         </div>
-                    )}
 
-                    <div className="flex">
-                        <button
-                            onClick={generateKeyPair}
-                            disabled={isGenerating}
-                            className={`flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center justify-center ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <RefreshCw size={18} className="mr-2 animate-spin"/>
-                                    Generiere Schlüsselpaar...
-                                </>
-                            ) : (
-                                <>
-                                    <Key size={18} className="mr-2"/>
-                                    Neues RSA-Schlüsselpaar generieren
-                                </>
-                            )}
-                        </button>
+                        {showAdvanced && (
+                            <div
+                                className="mb-4 p-4 border rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                                <div className="mb-4">
+                                    <label
+                                        className="block mb-2 text-sm font-medium dark:text-gray-200">Schlüsselgröße:</label>
+                                    <select
+                                        value={keySize}
+                                        onChange={(e) => setKeySize(Number(e.target.value))}
+                                        className="p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 w-full"
+                                        disabled={keyPair !== null}
+                                    >
+                                        <option value={1024}>1024 Bit (weniger sicher, schneller)
+                                        </option>
+                                        <option value={2048}>2048 Bit (empfohlen)</option>
+                                        <option value={4096}>4096 Bit (sicherer, langsamer)</option>
+                                    </select>
+                                </div>
+
+                                {keyPair && (
+                                    <>
+                                        <div className="mb-4">
+                                            <label
+                                                className="block mb-1 text-sm font-medium dark:text-gray-200">Öffentlicher
+                                                Schlüssel:</label>
+                                            <div className="relative">
+                                              <textarea
+                                                  value={keyPair.publicKey}
+                                                  readOnly
+                                                  rows={3}
+                                                  className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
+                                              />
+                                                <div className="absolute top-2 right-2 flex">
+                                                    <button
+                                                        onClick={() => copyToClipboard(keyPair.publicKey)}
+                                                        className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 mr-1"
+                                                        title="In Zwischenablage kopieren"
+                                                    >
+                                                        <Copy size={14}
+                                                              className="dark:text-gray-200"/>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => exportKeys('public')}
+                                                        className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
+                                                        title="Als .pem-Datei exportieren"
+                                                    >
+                                                        <Download size={14}
+                                                                  className="dark:text-gray-200"/>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label
+                                                className="block mb-1 text-sm font-medium dark:text-gray-200">Privater
+                                                Schlüssel:</label>
+                                            <div className="relative">
+                                              <textarea
+                                                  value="*** Privater Schlüssel (aus Sicherheitsgründen ausgeblendet) ***"
+                                                  readOnly
+                                                  rows={3}
+                                                  className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 text-xs font-mono"
+                                              />
+                                                <div className="absolute top-2 right-2">
+                                                    <button
+                                                        onClick={() => exportKeys('private')}
+                                                        className="p-1 rounded-md bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
+                                                        title="Als .pem-Datei exportieren"
+                                                    >
+                                                        <Download size={14}
+                                                                  className="dark:text-gray-200"/>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                                                Der private Schlüssel sollte sicher aufbewahrt und
+                                                niemals weitergegeben werden!
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex">
+                            <button
+                                onClick={generateKeyPair}
+                                disabled={isGenerating}
+                                className={`flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center justify-center ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <RefreshCw size={18} className="mr-2 animate-spin"/>
+                                        Generiere Schlüsselpaar...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Key size={18} className="mr-2"/>
+                                        Neues RSA-Schlüsselpaar generieren
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {error && (
                     <div
@@ -454,71 +590,75 @@ export function RSAEncryption() {
                 <div className="mt-6 flex justify-end">
                     <button
                         onClick={processText}
-                        disabled={!keyPair}
-                        className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md ${!keyPair ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={mode === 'encrypt' ? (useExternalKey && !externalKeyLoaded) || (!useExternalKey && !keyPair) : !keyPair}
+                        className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md ${(mode === 'encrypt' ? (useExternalKey && !externalKeyLoaded) || (!useExternalKey && !keyPair) : !keyPair) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {mode === 'encrypt' ? 'Verschlüsseln' : 'Entschlüsseln'}
                     </button>
                 </div>
             </div>
 
-            {/* Gespeicherte Schlüsselpaare */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Gespeicherte Schlüsselpaare</h3>
+            {/* Gespeicherte Schlüsselpaare - nur anzeigen, wenn nicht im externen Schlüssel-Modus */}
+            {!useExternalKey && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Gespeicherte
+                        Schlüsselpaare</h3>
 
-                <div className="flex mb-4">
-                    <input
-                        type="text"
-                        value={keyPairName}
-                        onChange={(e) => setKeyPairName(e.target.value)}
-                        className="flex-1 p-2 border rounded-l-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                        placeholder="Schlüsselpaarname"
-                        disabled={!keyPair}
-                    />
-                    <button
-                        onClick={saveKeyPair}
-                        disabled={!keyPair}
-                        className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-md ${!keyPair ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        Aktuelles Schlüsselpaar speichern
-                    </button>
-                </div>
-
-                {savedKeyPairs.length > 0 ? (
-                    <div
-                        className="border rounded-md divide-y dark:divide-gray-700 dark:border-gray-700">
-                        {savedKeyPairs.map(keyPair => (
-                            <div key={keyPair.id} className="p-3 flex items-center justify-between">
-                                <div>
-                                    <p className="font-medium dark:text-gray-100">{keyPair.name}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        {keyPair.keySize || 2048} Bit • Erstellt
-                                        am {new Date(keyPair.createdAt).toLocaleString()}
-                                    </p>
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={() => loadKeyPair(keyPair)}
-                                        className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md mr-2 hover:bg-gray-300 dark:hover:bg-gray-600"
-                                    >
-                                        Laden
-                                    </button>
-                                    <button
-                                        onClick={() => deleteKeyPair(keyPair.id)}
-                                        className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md"
-                                    >
-                                        Löschen
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex mb-4">
+                        <input
+                            type="text"
+                            value={keyPairName}
+                            onChange={(e) => setKeyPairName(e.target.value)}
+                            className="flex-1 p-2 border rounded-l-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                            placeholder="Schlüsselpaarname"
+                            disabled={!keyPair}
+                        />
+                        <button
+                            onClick={saveKeyPair}
+                            disabled={!keyPair}
+                            className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-md ${!keyPair ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            Aktuelles Schlüsselpaar speichern
+                        </button>
                     </div>
-                ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                        Keine gespeicherten Schlüsselpaare vorhanden
-                    </p>
-                )}
-            </div>
+
+                    {savedKeyPairs.length > 0 ? (
+                        <div
+                            className="border rounded-md divide-y dark:divide-gray-700 dark:border-gray-700">
+                            {savedKeyPairs.map(keyPair => (
+                                <div key={keyPair.id}
+                                     className="p-3 flex items-center justify-between">
+                                    <div>
+                                        <p className="font-medium dark:text-gray-100">{keyPair.name}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {keyPair.keySize || 2048} Bit • Erstellt
+                                            am {new Date(keyPair.createdAt).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <button
+                                            onClick={() => loadKeyPair(keyPair)}
+                                            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md mr-2 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                        >
+                                            Laden
+                                        </button>
+                                        <button
+                                            onClick={() => deleteKeyPair(keyPair.id)}
+                                            className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md"
+                                        >
+                                            Löschen
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                            Keine gespeicherten Schlüsselpaare vorhanden
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
