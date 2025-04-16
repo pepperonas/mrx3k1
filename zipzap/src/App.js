@@ -18,6 +18,11 @@ function App() {
     const [downloadUrl, setDownloadUrl] = useState(null);
     const [generationComplete, setGenerationComplete] = useState(false);
 
+    // API Base URL - uses relative path for production and full URL for localhost
+    const API_BASE_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:4996'
+        : '';
+
     // Constants for rate limiting
     const MAX_ATTEMPTS = 5;
     const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
@@ -84,7 +89,7 @@ function App() {
             setLoading(true);
 
             // API call to verify password
-            const response = await fetch('http://localhost:4996/api/checkPassword', {
+            const response = await fetch(`${API_BASE_URL}/api/checkPassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -152,7 +157,7 @@ function App() {
             await delay(1500);
 
             // Call the API to generate the zip bomb
-            const response = await fetch('http://localhost:4996/api/generateZipBomb', {
+            const response = await fetch(`${API_BASE_URL}/api/generateZipBomb`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -188,8 +193,8 @@ function App() {
     const handleDownload = () => {
         if (!downloadUrl) return;
 
-        // Navigate to the download URL
-        window.location.href = `http://localhost:4996${downloadUrl}`;
+        // Navigate to the download URL with the correct base URL
+        window.location.href = `${API_BASE_URL}${downloadUrl}`;
     };
 
     const createNewZipBomb = () => {
@@ -395,7 +400,7 @@ function App() {
             )}
 
             <footer className="bg-gray-800 p-4 text-center text-gray-400 text-sm">
-                <p>Build 🔒 by Martin Pfeffer</p>
+                <p>© 2025 Security Research Tool - For Educational Purposes Only</p>
             </footer>
         </div>
     );

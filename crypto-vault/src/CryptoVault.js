@@ -119,6 +119,11 @@ export default function CryptoVault() {
           <main className="flex-1 overflow-auto p-4">
             <AlgorithmComponent />
           </main>
+
+          {/* Footer */}
+          <footer className={`py-3 px-4 text-center text-sm ${isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-600'} border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            Build 🔒 by Martin Pfeffer
+          </footer>
         </div>
       </div>
   );
