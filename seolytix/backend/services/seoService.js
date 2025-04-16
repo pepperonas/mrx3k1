@@ -7,6 +7,7 @@ const headingService = require('./headingService');
 const imageService = require('./imageService');
 const contentService = require('./contentService');
 const performanceService = require('./performanceService');
+const sitemapService = require('./sitemapService');
 
 /**
  * Analysiert eine Website für SEO
@@ -47,6 +48,9 @@ exports.analyzeWebsite = async (url) => {
     // Mobile-Optimierung und Ladezeit analysieren
     const performanceAnalysis = performanceService.analyzePerformance(loadTime);
 
+    // Sitemap analysieren
+    const sitemapAnalysis = await sitemapService.analyzeSitemap($, url);
+
     // Gesamt-Score berechnen (gewichteter Durchschnitt)
     const scoreFactors = [
       { score: metaAnalysis.metaTitle.score, weight: 1.5 },
@@ -55,7 +59,8 @@ exports.analyzeWebsite = async (url) => {
       { score: imageAnalysis.score, weight: 1 },
       { score: contentAnalysis.score, weight: 2 },
       { score: performanceAnalysis.loadSpeed.score, weight: 1.5 },
-      { score: performanceAnalysis.mobileOptimization.score, weight: 1.5 }
+      { score: performanceAnalysis.mobileOptimization.score, weight: 1.5 },
+      { score: sitemapAnalysis.score, weight: 1 } // Sitemap-Score mit einbeziehen
     ];
 
     const totalWeight = scoreFactors.reduce((sum, factor) => sum + factor.weight, 0);
@@ -73,7 +78,8 @@ exports.analyzeWebsite = async (url) => {
       images: imageAnalysis,
       contentAnalysis: contentAnalysis,
       loadSpeed: performanceAnalysis.loadSpeed,
-      mobileOptimization: performanceAnalysis.mobileOptimization
+      mobileOptimization: performanceAnalysis.mobileOptimization,
+      sitemap: sitemapAnalysis // Sitemap-Analyseergebnisse hinzufügen
     };
 
   } catch (error) {

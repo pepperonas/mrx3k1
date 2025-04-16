@@ -613,6 +613,33 @@ Konzentriere dich besonders auf Bereiche mit niedrigen Scores. Wenn Meta-Tags fe
                                             </div>
                                         </div>
 
+                                        {/* Sitemap */}
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex items-start">
+                                                <FileText className="text-[#2C2E3B] mr-3 mt-1"
+                                                          size={20}/>
+                                                <div>
+                                                    <div
+                                                        className="flex items-center justify-between w-full">
+                                                        <h4 className="font-medium text-[#2C2E3B]">Sitemap</h4>
+                                                        <span
+                                                            className={`font-medium ${getScoreColor(results.sitemap.score)}`}>
+                    {results.sitemap.score}/100
+                </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">{results.sitemap.message}</p>
+                                                    {results.sitemap.exists && (
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {results.sitemap.details.isSitemapIndex
+                                                                ? `Sitemap-Index mit ${results.sitemap.details.childSitemapCount} Sitemaps`
+                                                                : `${results.sitemap.details.urlCount} URLs in der Sitemap`}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+
                                         {/* KI-Empfehlungen Button */}
                                         <div className="flex mt-6">
                                             <button

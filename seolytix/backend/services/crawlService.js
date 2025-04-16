@@ -2,8 +2,13 @@
 
 const axios = require('axios');
 const cheerio = require('cheerio');
-const {URL} = require('url');
+const { URL } = require('url');
 const seoService = require('./seoService');
+const metaService = require('./metaService');
+const headingService = require('./headingService');
+const imageService = require('./imageService');
+const contentService = require('./contentService');
+const performanceService = require('./performanceService');
 const urlValidator = require('../utils/urlValidator');
 
 /**
@@ -31,7 +36,7 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
         };
 
         // Optionen mit benutzerdefinierten Einstellungen überschreiben
-        const crawlOptions = {...defaultOptions, ...options};
+        const crawlOptions = { ...defaultOptions, ...options };
 
         // URL validieren und normalisieren
         if (!urlValidator.isValidUrl(baseUrl)) {
@@ -45,7 +50,7 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
         const startTime = Date.now();
 
         // Initialisierung der zu crawlenden URLs und bereits besuchter URLs
-        const urlQueue = [{url: baseUrl, depth: 0}];
+        const urlQueue = [{ url: baseUrl, depth: 0 }];
         const visitedUrls = new Set();
         const pageData = [];
         const errors = [];
@@ -56,7 +61,7 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
         if (crawlOptions.followRobotsTxt) {
             try {
                 const robotsTxtUrl = `${parsedBaseUrl.protocol}//${baseHostname}/robots.txt`;
-                const robotsTxtResponse = await axios.get(robotsTxtUrl, {timeout: 5000});
+                const robotsTxtResponse = await axios.get(robotsTxtUrl, { timeout: 5000 });
                 disallowedPaths = parseRobotsTxt(robotsTxtResponse.data);
             } catch (error) {
                 console.log('Konnte robots.txt nicht abrufen oder parsen:', error.message);
@@ -65,7 +70,7 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
 
         // Crawling-Schleife
         while (urlQueue.length > 0 && crawledUrlsCount < crawlOptions.maxUrls) {
-            const {url, depth} = urlQueue.shift();
+            const { url, depth } = urlQueue.shift();
 
             // Überprüfen, ob die URL bereits besucht wurde
             if (visitedUrls.has(url)) {
@@ -111,12 +116,12 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
 
                 for (const link of links) {
                     if (!visitedUrls.has(link) && !urlQueue.some(item => item.url === link)) {
-                        urlQueue.push({url: link, depth: depth + 1});
+                        urlQueue.push({ url: link, depth: depth + 1 });
                     }
                 }
 
                 // Seite analysieren und Daten speichern
-                const analysisData = await analyzePage($, url, depth, crawlOptions);
+                const analysisData = await analyzePage($, url, depth, crawlOptions, startTime);
                 pageData.push(analysisData);
                 crawledUrlsCount++;
 
@@ -156,12 +161,35 @@ exports.crawlWebsite = async (baseUrl, options = {}) => {
  * @param {string} url - URL der Seite
  * @param {number} depth - Aktuelle Crawling-Tiefe
  * @param {Object} options - Crawling-Optionen
+ * @param {number} startTime - Startzeit des Crawlings für Ladezeit-Berechnung
  * @returns {Object} Analyseergebnisse der Seite
  */
-const analyzePage = async ($, url, depth, options) => {
+const analyzePage = async ($, url, depth, options, startTime) => {
     try {
-        // Basis-Analyse mit dem bestehenden SEO-Service
-        const baseSeoAnalysis = await seoService.analyzeHtml($, url);
+        // Zeit für das Laden der Seite berechnen
+        const loadTime = (Date.now() - startTime) / 1000;
+
+        // Direkt die benötigten Service-Funktionen aufrufen, statt seoService.analyzeHtml
+        const metaAnalysis = metaService.analyzeMetaInfo($);
+        const headingAnalysis = headingService.analyzeHeadings($);
+        const imageAnalysis = imageService.analyzeImages($);
+        const contentAnalysis = contentService.analyzeContent($);
+        const performanceAnalysis = performanceService.analyzePerformance(loadTime);
+
+        // Gesamt-Score berechnen (gewichteter Durchschnitt)
+        const scoreFactors = [
+            { score: metaAnalysis.metaTitle.score, weight: 1.5 },
+            { score: metaAnalysis.metaDescription.score, weight: 1.5 },
+            { score: headingAnalysis.score, weight: 1 },
+            { score: imageAnalysis.score, weight: 1 },
+            { score: contentAnalysis.score, weight: 2 },
+            { score: performanceAnalysis.loadSpeed.score, weight: 1.5 },
+            { score: performanceAnalysis.mobileOptimization.score, weight: 1.5 }
+        ];
+
+        const totalWeight = scoreFactors.reduce((sum, factor) => sum + factor.weight, 0);
+        const weightedScore = scoreFactors.reduce((sum, factor) => sum + (factor.score * factor.weight), 0) / totalWeight;
+        const finalScore = Math.round(weightedScore);
 
         // Zusätzliche Analysen basierend auf Optionen
         const additionalData = {
@@ -232,10 +260,10 @@ const analyzePage = async ($, url, depth, options) => {
         return {
             url,
             crawlDepth: depth,
-            title: baseSeoAnalysis.metaTitle.title,
-            description: baseSeoAnalysis.metaDescription.description,
-            h1: baseSeoAnalysis.headings.h1Elements,
-            score: baseSeoAnalysis.score,
+            title: metaAnalysis.metaTitle.title,
+            description: metaAnalysis.metaDescription.description,
+            h1: headingAnalysis.h1Elements,
+            score: finalScore,
             internalLinksCount: additionalData.internalLinks.length,
             externalLinksCount: additionalData.externalLinks.length,
             internalLinks: additionalData.internalLinks,
@@ -246,9 +274,9 @@ const analyzePage = async ($, url, depth, options) => {
             hasMobileViewport,
             schemaMarkup: schemaMarkup.length > 0 ? schemaMarkup : null,
             // Weitere Basisdaten aus der SEO-Analyse
-            wordCount: baseSeoAnalysis.contentAnalysis.wordCount,
-            imagesCount: baseSeoAnalysis.images.totalImages,
-            imagesWithAltText: baseSeoAnalysis.images.withAlt
+            wordCount: contentAnalysis.wordCount,
+            imagesCount: imageAnalysis.totalImages,
+            imagesWithAltText: imageAnalysis.withAlt
         };
     } catch (error) {
         console.error(`Fehler bei der Analyse von ${url}:`, error);
