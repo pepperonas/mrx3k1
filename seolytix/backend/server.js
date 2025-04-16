@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const seoRoutes = require('./routes/seoRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const competitorRoutes = require('./routes/competitorRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5010;
@@ -13,6 +14,7 @@ app.use(express.json({ limit: '10mb' })); // Erhöhtes Limit für größere Anfr
 // Routes
 app.use('/api/seo', seoRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/competitors', competitorRoutes);
 
 // Server starten
 app.listen(PORT, () => {

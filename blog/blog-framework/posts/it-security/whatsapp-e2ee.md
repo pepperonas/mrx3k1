@@ -60,7 +60,7 @@ Curve25519 ist die spezifische elliptische Kurve, die WhatsApp für diesen Schl�
 Für die technisch Interessierten: Curve25519 ist eine Montgomery-Kurve, definiert durch die Gleichung:
 
 ```
-y² = x³ + 486662x² + x mod (2²⁵⁵ - 19)
+y² = x³ + 486662x² + x mod (2⁵⁵ - 19)
 ```
 
 Diese Gleichung beschreibt eine Menge von Punkten im zweidimensionalen Raum über einem endlichen Feld. Die mathematischen Operationen auf dieser Kurve bilden die Grundlage der kryptografischen Stärke.

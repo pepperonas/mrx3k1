@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Key, Shield, Menu, X, Save, ChevronRight, Upload } from 'lucide-react';
+import { Lock, Key, Shield, Menu, X, Save, ChevronRight, Upload, File } from 'lucide-react';
 
 // Crypto-Algorithmen
 import { AESEncryption } from './crypto/AES';
 import { RSAEncryption } from './crypto/RSA';
 import { CaesarCipher } from './crypto/Caesar';
+// FileEncryption-Komponente einbinden
+import { FileEncryption } from './crypto/FileEncryption';
 
 const algorithms = [
   {
@@ -27,6 +29,13 @@ const algorithms = [
     description: 'Einfache Verschiebungs-Chiffre',
     icon: <Lock size={20} />,
     component: CaesarCipher
+  },
+  {
+    id: 'files',
+    name: 'Dateien',
+    description: 'Dateiverschlüsselung mit AES',
+    icon: <File size={20} />,
+    component: FileEncryption
   }
 ];
 
