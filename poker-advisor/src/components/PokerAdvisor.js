@@ -514,7 +514,7 @@ const PokerAdvisor = () => {
 
     return (
         <div className="poker-container">
-            <h1 className="heading">Poker Hand Advisor</h1>
+            <h1 className="heading">🍀 Heinz im Glück</h1>
 
             <div className="controls-area">
                 <div className="tabs">
