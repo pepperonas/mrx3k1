@@ -22,8 +22,8 @@ function App() {
 
   const sendData = async (data) => {
     try {
-      // Verwende Port 6666 für Server-Endpunkt
-      const url = 'http://localhost:4800/api/log';
+      // Relative URL statt absoluter URL verwenden
+      const url = '/free-wifi/api/log';  // Durch das basename-Präfix funktioniert dies
 
       await fetch(url, {
         method: 'POST',
@@ -32,11 +32,8 @@ function App() {
         },
         body: JSON.stringify(data),
       });
-
-      // Optional: Hier kann die Verarbeitung der Antwort erfolgen
     } catch (error) {
       console.error('Error:', error);
-      // Fehler leise behandeln, um den Benutzer nicht zu alarmieren
     }
   };
 
