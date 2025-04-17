@@ -25,6 +25,8 @@
             <excludedPath local="true" path="$PROJECT_DIR$/cliptune/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/zipzap/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/crypto-vault/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/philips-hue-controller/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/free-wifi/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>

