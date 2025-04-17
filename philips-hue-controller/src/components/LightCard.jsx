@@ -62,53 +62,53 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
   };
 
   return (
-    <div className="light-card" data-light-id={id}>
-      <div className="light-header">
-        <div
-          className="color-indicator"
-          style={{
-            backgroundColor: light.state.on
-              ? getColorFromState(light.state)
-              : '#333'
-          }}
-        />
-        <h3>{light.name}</h3>
-      </div>
-
-      <label className="switch">
-        <input
-          type="checkbox"
-          checked={light.state.on}
-          onChange={(e) => toggleLight(id, e.target.checked)}
-        />
-        <span className="slider"></span>
-      </label>
-
-      <div className="light-controls">
-        <div>
-          <label>Helligkeit:</label>
-          <input
-            type="range"
-            min="1"
-            max="254"
-            value={light.state.bri || 254}
-            onChange={(e) => setBrightness(id, e.target.value)}
+      <div className="light-card" data-light-id={id}>
+        <div className="light-header">
+          <div
+              className="color-indicator"
+              style={{
+                backgroundColor: light.state.on
+                    ? getColorFromState(light.state)
+                    : '#333'
+              }}
           />
+          <h3>{light.name}</h3>
         </div>
 
-        {light.state.hue !== undefined && light.state.sat !== undefined && (
+        <label className="switch">
+          <input
+              type="checkbox"
+              checked={light.state.on}
+              onChange={(e) => toggleLight(id, e.target.checked)}
+          />
+          <span className="slider"></span>
+        </label>
+
+        <div className="light-controls">
           <div>
-            <label>Farbe:</label>
+            <label>Helligkeit:</label>
             <input
-              type="color"
-              className="color-picker"
-              value={getHexColor(light.state)}
-              onChange={(e) => setColor(id, e.target.value)}
+                type="range"
+                min="1"
+                max="254"
+                value={light.state.bri || 254}
+                onChange={(e) => setBrightness(id, e.target.value)}
             />
           </div>
-        )}
+
+          {light.state.hue !== undefined && light.state.sat !== undefined && (
+              <div>
+                <label>Farbe:</label>
+                <input
+                    type="color"
+                    className="color-picker"
+                    value={getHexColor(light.state)}
+                    onChange={(e) => setColor(id, e.target.value)}
+                />
+              </div>
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 

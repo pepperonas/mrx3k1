@@ -1,4 +1,4 @@
-// App.jsx - Direkt-Modus ohne Proxy
+// App.jsx - Unterstützt Direkt-Modus und Proxy-Modus
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
@@ -12,16 +12,20 @@ function App() {
   const [statusMessage, setStatusMessage] = useState({ message: '', type: 'info' });
   const [connecting, setConnecting] = useState(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [useProxy, setUseProxy] = useState(false);
 
-  // Basis-URL für API-Anfragen im direkten Modus
+  // Basis-URL für API-Anfragen je nach Modus
   const getBaseUrl = (ip) => {
-    return `http://${ip}`;
+    return useProxy
+        ? `http://localhost:8080/hue/${ip}`
+        : `http://${ip}`;
   };
 
   // Gespeicherte Werte laden
   useEffect(() => {
     const savedBridgeIP = localStorage.getItem('hue-bridge-ip');
     const savedUsername = localStorage.getItem('hue-username');
+    const savedUseProxy = localStorage.getItem('hue-use-proxy');
 
     if (savedBridgeIP) {
       setBridgeIP(savedBridgeIP);
@@ -29,6 +33,10 @@ function App() {
 
     if (savedUsername) {
       setUsername(savedUsername);
+    }
+
+    if (savedUseProxy === 'true') {
+      setUseProxy(true);
     }
 
     if (savedBridgeIP && savedUsername) {
@@ -52,13 +60,37 @@ function App() {
     setStatus('Suche nach Hue Bridge im Netzwerk...', 'info');
 
     try {
-      // Methode: Offizielle Discovery-URL
-      const response = await fetch('https://discovery.meethue.com/');
-      const bridges = await response.json();
+      // Versuche beide Methoden: mDNS (via Proxy) und offizielle Discovery-URL
+      let bridges = [];
+
+      // Methode 1: Offizielle Discovery-URL
+      try {
+        const response = await fetch('https://discovery.meethue.com/');
+        bridges = await response.json();
+      } catch (e) {
+        console.log("Fehler bei der offiziellen Discovery-URL:", e);
+        // Fehler ignorieren und mit der zweiten Methode fortfahren
+      }
+
+      // Methode 2: Lokale Discovery über den Proxy (falls aktiviert)
+      if (useProxy && bridges.length === 0) {
+        try {
+          const response = await fetch('http://localhost:8080/hue/discovery');
+          const proxyResult = await response.json();
+          if (proxyResult && proxyResult.bridges) {
+            bridges = [...bridges, ...proxyResult.bridges];
+          }
+        } catch (e) {
+          console.log("Fehler bei der Proxy-Discovery:", e);
+          // Fehler ignorieren
+        }
+      }
 
       if (bridges && bridges.length > 0) {
-        setBridgeIP(bridges[0].internalipaddress);
-        setStatus(`Bridge gefunden: ${bridges[0].internalipaddress}`, 'success');
+        const foundIP = bridges[0].internalipaddress;
+        setBridgeIP(foundIP);
+        localStorage.setItem('hue-bridge-ip', foundIP);
+        setStatus(`Bridge gefunden: ${foundIP}`, 'success');
       } else {
         setStatus('Keine Bridge gefunden. Bitte gib die IP-Adresse manuell ein.', 'error');
       }
@@ -69,7 +101,7 @@ function App() {
     setLoading(false);
   };
 
-  // Verbindung zur Bridge aufbauen - Direkt-Modus
+  // Verbindung zur Bridge aufbauen - Unterstützt beide Modi
   const connectToBridge = async (ip = bridgeIP, user = username) => {
     if (!ip) {
       setStatus('Bitte Bridge IP eingeben', 'error');
@@ -85,8 +117,11 @@ function App() {
     setStatus('Verbinde mit Hue Bridge...', 'info');
 
     try {
-      console.log(`Versuche direkte Verbindung: http://${ip}/api/${user}/lights`);
-      const response = await fetch(`http://${ip}/api/${user}/lights`);
+      const baseUrl = getBaseUrl(ip);
+      const endpoint = `${baseUrl}/api/${user}/lights`;
+
+      console.log(`Versuche Verbindung: ${endpoint}`);
+      const response = await fetch(endpoint);
       const data = await response.json();
 
       if (data.error && data.error[0]?.description?.includes('unauthorized')) {
@@ -100,15 +135,27 @@ function App() {
         // Einstellungen speichern
         localStorage.setItem('hue-bridge-ip', ip);
         localStorage.setItem('hue-username', user);
+        localStorage.setItem('hue-use-proxy', useProxy.toString());
 
         setStatus('Erfolgreich mit Hue Bridge verbunden', 'success');
       } else {
         console.log("Unerwartete Antwort:", data);
         setStatus('Verbindung fehlgeschlagen. Unerwartete Antwort.', 'error');
+
+        // Falls wir im Direkt-Modus sind und CORS-Fehler auftreten könnten,
+        // empfehlen wir den Proxy-Modus
+        if (!useProxy) {
+          setStatus('Verbindung fehlgeschlagen. Versuche den Proxy-Modus für CORS-Unterstützung.', 'warning');
+        }
       }
     } catch (error) {
       console.error("Verbindungsfehler:", error);
       setStatus(`Verbindung fehlgeschlagen: ${error.message}`, 'error');
+
+      // Bei CORS-Fehlern auf Proxy-Modus hinweisen
+      if (!useProxy && error.message.includes('CORS')) {
+        setStatus('CORS-Fehler erkannt. Aktiviere den Proxy-Modus und versuche es erneut.', 'warning');
+      }
     }
 
     setLoading(false);
@@ -126,6 +173,12 @@ function App() {
     setConnectionAttempts(0);
     setStatus('Drücke den Link-Button auf deiner Hue Bridge...', 'info');
 
+    // Speichere Bridge IP bereits vorab
+    localStorage.setItem('hue-bridge-ip', bridgeIP);
+
+    // Speichere Proxy-Einstellung
+    localStorage.setItem('hue-use-proxy', useProxy.toString());
+
     // Starte den Versuchsprozess
     tryCreateUser();
   };
@@ -139,9 +192,12 @@ function App() {
     setStatus(`Versuch ${attemptNumber}/${MAX_ATTEMPTS}...`, 'info');
 
     try {
-      console.log(`Versuche User zu erstellen: http://${bridgeIP}/api`);
+      const baseUrl = getBaseUrl(bridgeIP);
+      const endpoint = `${baseUrl}/api`;
 
-      const response = await fetch(`http://${bridgeIP}/api`, {
+      console.log(`Versuche User zu erstellen: ${endpoint}`);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -182,6 +238,16 @@ function App() {
     } catch (error) {
       console.error("Fehler beim Erstellen des Users:", error);
       setStatus(`Fehler: ${error.message}`, 'error');
+
+      // Bei CORS-Fehlern auf Proxy-Modus hinweisen
+      if (!useProxy && error.message.includes('CORS')) {
+        setUseProxy(true);
+        localStorage.setItem('hue-use-proxy', 'true');
+        setStatus('CORS-Fehler erkannt. Proxy-Modus wurde aktiviert. Probiere es erneut.', 'warning');
+        setConnecting(false);
+        setLoading(false);
+        return;
+      }
     }
 
     // Wenn wir hier ankommen, dann war der aktuelle Versuch nicht erfolgreich
@@ -206,7 +272,8 @@ function App() {
   // Licht ein-/ausschalten
   const toggleLight = async (id, on) => {
     try {
-      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+      const baseUrl = getBaseUrl(bridgeIP);
+      const response = await fetch(`${baseUrl}/api/${username}/lights/${id}/state`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -235,7 +302,8 @@ function App() {
   // Helligkeit setzen
   const setBrightness = async (id, brightness) => {
     try {
-      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+      const baseUrl = getBaseUrl(bridgeIP);
+      const response = await fetch(`${baseUrl}/api/${username}/lights/${id}/state`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -266,7 +334,8 @@ function App() {
     const hsv = hexToHsv(hexColor);
 
     try {
-      const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${id}/state`, {
+      const baseUrl = getBaseUrl(bridgeIP);
+      const response = await fetch(`${baseUrl}/api/${username}/lights/${id}/state`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -294,6 +363,20 @@ function App() {
     } catch (error) {
       setStatus(`Fehler beim Einstellen der Farbe von Licht ${id}: ${error.message}`, 'error');
     }
+  };
+
+  // Daten zurücksetzen
+  const resetConnection = () => {
+    localStorage.removeItem('hue-bridge-ip');
+    localStorage.removeItem('hue-username');
+    localStorage.removeItem('hue-use-proxy');
+
+    setBridgeIP('');
+    setUsername('');
+    setConnectedToBridge(false);
+    setLights({});
+
+    setStatus('Verbindungsdaten wurden zurückgesetzt. Du kannst dich nun neu verbinden.', 'info');
   };
 
   // Konvertierung: Hex zu HSV für die Hue API
@@ -367,6 +450,17 @@ function App() {
                   disabled={connecting}
               />
             </div>
+            <div className="checkbox-container">
+              <label>
+                <input
+                    type="checkbox"
+                    checked={useProxy}
+                    onChange={(e) => setUseProxy(e.target.checked)}
+                    disabled={connecting}
+                />
+                Proxy-Modus verwenden (für CORS-Kompatibilität)
+              </label>
+            </div>
             <div>
               <button
                   onClick={() => connectToBridge()}
@@ -381,13 +475,23 @@ function App() {
                 Bridge finden
               </button>
               {!connecting ? (
-                  <button
-                      onClick={createUserWithLinkButton}
-                      disabled={!bridgeIP}
-                      className="create-button"
-                  >
-                    Neuen Benutzer erstellen
-                  </button>
+                  <>
+                    <button
+                        onClick={createUserWithLinkButton}
+                        disabled={!bridgeIP}
+                        className="create-button"
+                    >
+                      Neuen Benutzer erstellen
+                    </button>
+                    {(bridgeIP || username) && (
+                        <button
+                            onClick={resetConnection}
+                            className="reset-button"
+                        >
+                          Zurücksetzen
+                        </button>
+                    )}
+                  </>
               ) : (
                   <button
                       onClick={cancelConnection}
@@ -441,7 +545,7 @@ function App() {
           )}
 
           <div className="mode-info">
-            <span>Direkt-Modus: Kommunikation direkt mit Bridge</span>
+            <span>{useProxy ? 'Proxy-Modus: CORS-kompatibel' : 'Direkt-Modus: Kommunikation direkt mit Bridge'}</span>
           </div>
         </div>
       </div>
