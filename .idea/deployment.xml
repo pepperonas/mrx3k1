@@ -27,6 +27,7 @@
             <excludedPath local="true" path="$PROJECT_DIR$/crypto-vault/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/philips-hue-controller/node_modules" />
             <excludedPath local="true" path="$PROJECT_DIR$/free-wifi/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/glitter-gue/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>
