@@ -1,0 +1,42 @@
+Modern Dark Theme Specification:
+- Color Scheme: Dark theme based on #2C2E3B (Material Design)
+- Main Colors:
+  * Background Dark: #2B2E3B
+  * Background Darker: #252830
+  * Card Background: #343845
+  * Accent Blue: #688db1
+  * Accent Green: #9cb68f
+  * Accent Red: #e16162
+  * Text Primary: #d1d5db
+  * Text Secondary: #9ca3af
+
+- Typography:
+  * Font: 'Poppins', sans-serif
+  * Headlines with clear hierarchy (h1-h4)
+  * Text Sizes: Normal (1rem), Small (0.875rem), Accent (in blue tone)
+
+- UI Components:
+  * Cards: Rounded containers with shadow (border-radius: 1rem)
+  * Buttons: Primary (Blue), Secondary (Green), Outline, Danger (Red)
+  * Forms: Input fields with subtle hover effects
+  * Progress Bars: Gradient, Success (Green), Warning (Red)
+  * Stats Elements: Card-based grid system for metrics and data
+  * Flexible Grid Layouts: For content, forms, and data visualization
+
+- Design Principles:
+  * Contrast: Dark background with light text and accent colors for optimal readability
+  * Consistency: Uniform rounded corners, shadows, and subtle transparency effects
+  * Simplicity: Clean layouts with ample whitespace
+  * Responsive: Adaptable grid layouts for various display sizes
+
+- CSS Variables for:
+  * Colors (--background-dark, --accent-blue, etc.)
+  * Shadows (--shadow-sm, --shadow, --shadow-lg)
+  * Spacing (--spacing-1 to --spacing-16)
+  * Border Radius (--radius-sm, --radius, --radius-lg, --radius-xl)
+
+- Interactions:
+  * Subtle hover effects for interactive elements
+  * Smooth transitions (0.3s ease)
+  * Animated progress bars
+  * Clear visual feedback for active/focused elements

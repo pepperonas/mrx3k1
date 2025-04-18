@@ -1,0 +1,42 @@
+Modern Dark Theme Spezifikation:
+- Farbschema: Dunkles Theme basierend auf #2C2E3B (Material Design)
+- Hauptfarben:
+  * Hintergrund-Dunkel: #2B2E3B
+  * Hintergrund-Dunkler: #252830
+  * Karten-Hintergrund: #343845
+  * Akzent-Blau: #688db1
+  * Akzent-Grün: #9cb68f
+  * Akzent-Rot: #e16162
+  * Text-Primär: #d1d5db
+  * Text-Sekundär: #9ca3af
+
+- Typografie:
+  * Schriftart: 'Poppins', sans-serif
+  * Überschriften mit klarer Hierarchie (h1-h4)
+  * Text-Größen: Normal (1rem), Klein (0.875rem), Akzent (in Blauton)
+
+- UI-Komponenten:
+  * Cards: Abgerundete Container mit Schatten (border-radius: 1rem)
+  * Buttons: Primary (Blau), Secondary (Grün), Outline, Danger (Rot)
+  * Formulare: Eingabefelder mit subtilen Hover-Effekten
+  * Fortschrittsbalken: Gradient, Erfolg (Grün), Warnung (Rot)
+  * Statistik-Elemente: Kartenbasiertes Grid-System für Kennzahlen und Daten
+  * Flexible Grid-Layouts: Für Content, Formulare und Datenvisualisierung
+
+- Design-Prinzipien:
+  * Kontrast: Dunkler Hintergrund mit hellen Text- und Akzentfarben für optimale Lesbarkeit
+  * Konsistenz: Durchgängige Rundungen, Schatten und dezente Transparenzeffekte
+  * Einfachheit: Aufgeräumte Layouts mit ausreichend Leerraum
+  * Responsive: Anpassungsfähige Grid-Layouts für verschiedene Displaygrößen
+
+- CSS-Variablen für:
+  * Farben (--background-dark, --accent-blue, etc.)
+  * Schatten (--shadow-sm, --shadow, --shadow-lg)
+  * Abstände (--spacing-1 bis --spacing-16)
+  * Rundungen (--radius-sm, --radius, --radius-lg, --radius-xl)
+
+- Interaktionen:
+  * Subtile Hover-Effekte für interaktive Elemente
+  * Smooth Transitions (0.3s ease)
+  * Animierte Fortschrittsbalken
+  * Klare visuelle Rückmeldung für aktive/fokussierte Elemente

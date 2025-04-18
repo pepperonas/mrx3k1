@@ -1,0 +1,29 @@
+<svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7d83ff" />
+      <stop offset="100%" stop-color="#9fa4ff" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Hintergrund-Kreis mit Schein -->
+  <circle cx="20" cy="20" r="16" fill="#2c2e3b" stroke="rgba(125, 131, 255, 0.3)" stroke-width="1" />
+  
+  <!-- Glühbirnen-Symbol -->
+  <path d="M20,10 C16.13,10 13,13.13 13,17 C13,19.57 14.5,21.77 16.62,22.74 C16.8,22.83 17,23.03 17,23.3 L17,27 C17,27.55 17.45,28 18,28 L22,28 C22.55,28 23,27.55 23,27 L23,23.3 C23,23.03 23.17,22.83 23.37,22.74 C25.5,21.77 27,19.57 27,17 C27,13.13 23.87,10 20,10 Z" 
+        fill="url(#logoGradient)" />
+  
+  <!-- Glanz/Lichteffekte -->
+  <circle cx="17" cy="16" r="1.5" fill="white" opacity="0.6" />
+  <circle cx="15" cy="18" r="0.8" fill="white" opacity="0.4" />
+  
+  <!-- Strahlen -->
+  <line x1="20" y1="5" x2="20" y2="8" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="28" y1="12" x2="26" y2="14" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="30" y1="20" x2="27" y2="20" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="12" y1="12" x2="14" y2="14" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="10" y1="20" x2="13" y2="20" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" />
+  
+  <!-- Text -->
+  <text x="45" y="24" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">GlitterHue</text>
+</svg>

@@ -1,10 +1,102 @@
-// App.jsx - Aktualisiert ohne Proxy-Modus
+// App.jsx - Neugestaltung im BrainBuster-Stil
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
 import MusicVisualizer from './components/MusicVisualizer';
 import { Tabs, Tab } from './components/Tabs';
 import SettingsPanel from './components/SettingsPanel';
+
+// BrainBuster-Stil Logo-Komponente
+const LogoComponent = () => (
+    <div className="logo-container">
+      <svg width="32" height="32" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" className="app-icon">
+        <defs>
+          <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#7d83ff" />
+            <stop offset="100%" stopColor="#9fa4ff" />
+          </linearGradient>
+        </defs>
+
+        {/* Hintergrund-Kreis mit Schein */}
+        <circle cx="20" cy="20" r="16" fill="#2c2e3b" stroke="rgba(125, 131, 255, 0.3)" strokeWidth="1" />
+
+        {/* Glühbirnen-Symbol */}
+        <path d="M20,10 C16.13,10 13,13.13 13,17 C13,19.57 14.5,21.77 16.62,22.74 C16.8,22.83 17,23.03 17,23.3 L17,27 C17,27.55 17.45,28 18,28 L22,28 C22.55,28 23,27.55 23,27 L23,23.3 C23,23.03 23.17,22.83 23.37,22.74 C25.5,21.77 27,19.57 27,17 C27,13.13 23.87,10 20,10 Z"
+              fill="url(#logoGradient)" />
+
+        {/* Glanz/Lichteffekte */}
+        <circle cx="17" cy="16" r="1.5" fill="white" opacity="0.6" />
+        <circle cx="15" cy="18" r="0.8" fill="white" opacity="0.4" />
+
+        {/* Strahlen */}
+        <line x1="20" y1="5" x2="20" y2="8" stroke="url(#logoGradient)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="28" y1="12" x2="26" y2="14" stroke="url(#logoGradient)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="30" y1="20" x2="27" y2="20" stroke="url(#logoGradient)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="12" y1="12" x2="14" y2="14" stroke="url(#logoGradient)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="10" y1="20" x2="13" y2="20" stroke="url(#logoGradient)" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+      <h1 className="app-title">GlitterHue</h1>
+    </div>
+);
+
+// Home-Screen mit Kategorien
+const HomeScreen = ({ onConnectClick, onDiscoverClick }) => {
+  return (
+      <div className="home-screen">
+        <div className="hero">
+          <h1 className="hero-title">GlitterHue</h1>
+          <p className="hero-subtitle">Steuere deine Philips Hue-Lampen und synchronisiere sie mit Musik</p>
+        </div>
+
+        <div className="category-grid">
+          <div className="category-card">
+            <div className="category-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </div>
+            <h3 className="category-title">Lampen steuern</h3>
+            <p className="category-description">Steuere Helligkeit und Farbe deiner Hue-Lampen</p>
+            <button onClick={onConnectClick}>Verbinden</button>
+          </div>
+
+          <div className="category-card">
+            <div className="category-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+            <h3 className="category-title">Disco Modus</h3>
+            <p className="category-description">Synchronisiere deine Lampen mit Musik</p>
+            <button onClick={onConnectClick}>Starten</button>
+          </div>
+
+          <div className="category-card">
+            <div className="category-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3 className="category-title">Bridge finden</h3>
+            <p className="category-description">Automatische Suche nach deiner Hue Bridge</p>
+            <button onClick={onDiscoverClick}>Bridge finden</button>
+          </div>
+        </div>
+      </div>
+  );
+};
 
 function App() {
   const [bridgeIP, setBridgeIP] = useState('');
@@ -24,6 +116,7 @@ function App() {
     colorScheme: 'rainbow', // 'rainbow', 'warm', 'cool', 'mono'
     lightsToInclude: []
   });
+  const [showHomeScreen, setShowHomeScreen] = useState(true);
 
   // Referenz für den Media-Analyzer
   const audioAnalyzerRef = useRef(null);
@@ -62,6 +155,7 @@ function App() {
       // Verzögerte Verbindung um UI-Rendering zu gewährleisten
       const timer = setTimeout(() => {
         connectToBridge(savedBridgeIP, savedUsername);
+        setShowHomeScreen(false);
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -90,6 +184,7 @@ function App() {
   // Bridge finden
   const discoverBridge = async () => {
     setLoading(true);
+    setShowHomeScreen(false);
     setStatus('Suche nach Hue Bridge im Netzwerk...', 'info');
 
     try {
@@ -125,6 +220,7 @@ function App() {
     }
 
     setLoading(true);
+    setShowHomeScreen(false);
     setStatus('Verbinde mit Hue Bridge...', 'info');
 
     try {
@@ -407,6 +503,7 @@ function App() {
     setUsername('');
     setConnectedToBridge(false);
     setLights({});
+    setShowHomeScreen(true);
 
     setStatus('Verbindungsdaten wurden zurückgesetzt. Du kannst dich nun neu verbinden.', 'info');
   };
@@ -667,16 +764,24 @@ function App() {
     }
   }
 
+  // Prüfen, ob HTTPS verwendet wird
+  const isSecureConnection = window.location.protocol === 'https:';
+
   return (
       <div className="app">
         <header>
-          <h1>GlitterHue</h1>
+          <LogoComponent />
         </header>
 
         <div className="container">
-          {!connectedToBridge ? (
+          {showHomeScreen ? (
+              <HomeScreen
+                  onConnectClick={() => setShowHomeScreen(false)}
+                  onDiscoverClick={discoverBridge}
+              />
+          ) : !connectedToBridge ? (
               <div className="setup-section">
-                <h2>Verbindung einrichten</h2>
+                <h2 className="section-title">Verbindung einrichten</h2>
                 <div>
                   <label htmlFor="bridge-ip">Bridge IP:</label>
                   <input
@@ -726,7 +831,7 @@ function App() {
                                 onClick={resetConnection}
                                 className="reset-button"
                             >
-                              Zurücksetzen
+                              Zurück
                             </button>
                         )}
                       </>
@@ -754,6 +859,13 @@ function App() {
                         ></div>
                       </div>
                       <p>Drücke den Link-Button auf deiner Hue Bridge...</p>
+                    </div>
+                )}
+
+                {!isSecureConnection && (
+                    <div className="status-message status-info">
+                      <strong>Hinweis:</strong> Für die vollständige Funktionalität, einschließlich des Disco-Modus, wird eine HTTPS-Verbindung benötigt.
+                      Die meisten Browser erlauben den Zugriff auf das Mikrofon nur in einer sicheren Umgebung.
                     </div>
                 )}
               </div>
@@ -795,13 +907,14 @@ function App() {
                             lights={lights}
                             discoMode={discoMode}
                             toggleDiscoMode={toggleDiscoMode}
+                            isSecureConnection={isSecureConnection}
                         />
                       </div>
                     </div>
                   </Tab>
                   <Tab id="settings" label="Einstellungen">
                     <div className="settings-section">
-                      <h2>Einstellungen</h2>
+                      <h2 className="section-title">Einstellungen</h2>
                       <div className="settings-card">
                         <h3>Verbindung</h3>
                         <div className="setting-row">
@@ -815,6 +928,19 @@ function App() {
                             Verbindung zurücksetzen
                           </button>
                         </div>
+                      </div>
+
+                      <div className="settings-card">
+                        <h3>Über GlitterHue</h3>
+                        <p>Version: 0.2.0</p>
+                        <p>Eine moderne, mobiloptimierte Web-App zur Steuerung von Philips Hue-Lampen mit Musik-Visualisierung und Disco-Modus.</p>
+
+                        {!isSecureConnection && (
+                            <div className="status-message status-warning" style={{marginTop: '1rem'}}>
+                              <p><strong>Hinweis:</strong> Die Disco-Funktionalität benötigt einen gesicherten Kontext (HTTPS).</p>
+                              <p style={{marginTop: '0.5rem'}}><a href="https://github.com/yourusername/glitterhue/releases" style={{color: '#ffad33', textDecoration: 'underline'}}>Lade die Electron Desktop-Version herunter</a>, um vollen Funktionsumfang zu erhalten.</p>
+                            </div>
+                        )}
                       </div>
                     </div>
                   </Tab>

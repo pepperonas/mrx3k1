@@ -1,0 +1,293 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainBuster Theme Template</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="theme-container">
+    <h1 class="page-title">BrainBuster Theme Template</h1>
+
+    <!-- Farb-Palette -->
+    <section class="section">
+        <h2 class="section-title">Farbpalette</h2>
+        <div class="color-grid">
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #2B2E3B;"></div>
+                <span class="color-name">Hintergrund (Dunkel)</span>
+                <span class="color-value">#2B2E3B</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #252830;"></div>
+                <span class="color-name">Hintergrund (Dunkler)</span>
+                <span class="color-value">#252830</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #343845;"></div>
+                <span class="color-name">Karten-Hintergrund</span>
+                <span class="color-value">#343845</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #688db1;"></div>
+                <span class="color-name">Akzent Blau</span>
+                <span class="color-value">#688db1</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #9cb68f;"></div>
+                <span class="color-name">Akzent Grün</span>
+                <span class="color-value">#9cb68f</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #e16162;"></div>
+                <span class="color-name">Akzent Rot</span>
+                <span class="color-value">#e16162</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #d1d5db;"></div>
+                <span class="color-name">Text (Primär)</span>
+                <span class="color-value">#d1d5db</span>
+            </div>
+            <div class="color-swatch">
+                <div class="color-sample" style="background-color: #9ca3af;"></div>
+                <span class="color-name">Text (Sekundär)</span>
+                <span class="color-value">#9ca3af</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Typografie -->
+    <section class="section">
+        <h2 class="section-title">Typografie</h2>
+        <div class="card">
+            <h1 class="h1">Überschrift 1</h1>
+            <h2 class="h2">Überschrift 2</h2>
+            <h3 class="h3">Überschrift 3</h3>
+            <h4 class="h4">Überschrift 4</h4>
+            <p class="text">Normaler Text in Standardgröße. Die App verwendet 'Poppins' als Hauptschriftart.</p>
+            <p class="text-small">Kleinerer Text für weniger wichtige Informationen.</p>
+            <p class="text-accent">Farbiger Text für Hervorhebungen.</p>
+        </div>
+    </section>
+
+    <!-- Komponenten -->
+    <section class="section">
+        <h2 class="section-title">Komponenten</h2>
+
+        <!-- Cards -->
+        <div class="subsection">
+            <h3 class="subsection-title">Cards</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h4 class="card-title">Standard Card</h4>
+                    <p>Cards werden für alle Content-Bereiche verwendet und haben eine leicht abgerundete Form mit subtiler Schattierung.</p>
+                </div>
+
+                <div class="card card-alt">
+                    <h4 class="card-title">Alternative Card</h4>
+                    <p>Für leichte Variation können Cards auch mit einem semi-transparenten Hintergrund dargestellt werden.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="subsection">
+            <h3 class="subsection-title">Buttons</h3>
+            <div class="button-group">
+                <button class="btn btn-primary">
+                    Primary Button
+                </button>
+
+                <button class="btn btn-secondary">
+                    Secondary Button
+                </button>
+
+                <button class="btn btn-outline">
+                    Outline Button
+                </button>
+
+                <button class="btn btn-danger">
+                    Danger Button
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Elements -->
+        <div class="subsection">
+            <h3 class="subsection-title">Formular-Elemente</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Input-Feld</label>
+                    <input
+                            type="text"
+                            placeholder="Text eingeben..."
+                            class="form-input"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dropdown</label>
+                    <select class="form-select">
+                        <option>Option 1</option>
+                        <option>Option 2</option>
+                        <option>Option 3</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="subsection">
+            <h3 class="subsection-title">Fortschrittsbalken</h3>
+            <div class="progress-container">
+                <div class="progress-group">
+                    <div class="progress-header">
+                        <span class="progress-label">Standardfortschritt</span>
+                        <span class="progress-value">70%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-gradient" style="width: 70%;"></div>
+                    </div>
+                </div>
+
+                <div class="progress-group">
+                    <div class="progress-header">
+                        <span class="progress-label">Erfolg</span>
+                        <span class="progress-value">85%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-success" style="width: 85%;"></div>
+                    </div>
+                </div>
+
+                <div class="progress-group">
+                    <div class="progress-header">
+                        <span class="progress-label">Warnung</span>
+                        <span class="progress-value">45%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-danger" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Layouts -->
+    <section class="section">
+        <h2 class="section-title">Layout-Beispiele</h2>
+
+        <div class="card mb-20">
+            <h3 class="subsection-title">Quiz-Frage Layout</h3>
+
+            <div class="quiz-header">
+                <div class="quiz-info">
+                    <span class="quiz-category">Kategorie • Schwierigkeit</span>
+                    <span class="quiz-timer">Zeit: 20s</span>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill progress-gradient" style="width: 75%;"></div>
+                </div>
+            </div>
+
+            <h3 class="quiz-question">Wie lautet die Frage?</h3>
+
+            <div class="quiz-options">
+                <div class="quiz-option">
+                    <div class="option-marker">A</div>
+                    <span>Antwort Option 1</span>
+                </div>
+
+                <div class="quiz-option option-selected">
+                    <div class="option-marker">B</div>
+                    <span>Ausgewählte Option</span>
+                </div>
+
+                <div class="quiz-option">
+                    <div class="option-marker">C</div>
+                    <span>Antwort Option 3</span>
+                </div>
+
+                <div class="quiz-option">
+                    <div class="option-marker">D</div>
+                    <span>Antwort Option 4</span>
+                </div>
+            </div>
+
+            <div class="quiz-actions">
+                <button class="btn btn-primary">
+                    Antwort überprüfen
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="subsection-title">Statistik Layout</h3>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Gespielte Spiele</div>
+                    <div class="stat-value">42</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Siege</div>
+                    <div class="stat-value stat-success">28</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Niederlagen</div>
+                    <div class="stat-value stat-danger">14</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Siegrate</div>
+                    <div class="stat-value">67%</div>
+                </div>
+            </div>
+
+            <div class="progress-group">
+                <div class="progress-header">
+                    <span class="progress-label">Genauigkeit</span>
+                    <span class="progress-value">73%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-gradient" style="width: 73%;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Designprinzipien -->
+    <section class="section">
+        <h2 class="section-title">Designprinzipien</h2>
+        <div class="card">
+            <ul class="principle-list">
+                <li>
+                    <strong>Kontrast:</strong> Dunkler Hintergrund mit hellen Text- und Akzentfarben für optimale Lesbarkeit.
+                </li>
+                <li>
+                    <strong>Konsistenz:</strong> Durchgängige Verwendung von abgerundeten Ecken, Schattierungen und Transparenzeffekten.
+                </li>
+                <li>
+                    <strong>Einfachheit:</strong> Klare Layouts mit ausreichend Leerraum und gut strukturierter Hierarchie.
+                </li>
+                <li>
+                    <strong>Feedback:</strong> Interaktive Elemente zeigen deutliche Hover- und Aktiv-Zustände.
+                </li>
+                <li>
+                    <strong>Animation:</strong> Subtile Übergänge und Bewegungen für bessere Benutzererfahrung.
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- JavaScript mit einfachen Interaktionen -->
+    <script src="script.js"></script>
+</div>
+</body>
+</html>
