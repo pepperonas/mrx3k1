@@ -1,0 +1,461 @@
+/* src/styles/energy.css - Stilregeln für das Energiedashboard in GlitterHue */
+
+.energy-dashboard-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.energy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.energy-dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+}
+
+@media (min-width: 1024px) {
+    .energy-dashboard-content {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+/* Energie-Zusammenfassung */
+.energy-summary-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.energy-summary-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-medium);
+}
+
+.energy-summary-card h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+    color: var(--color-text);
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-sm);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+    transition: transform var(--transition-normal), background-color var(--transition-normal);
+}
+
+.summary-stat:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.stat-name {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.stat-value {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--space-xs);
+}
+
+.stat-value.highlight {
+    color: var(--color-primary);
+}
+
+.stat-value.primary {
+    color: var(--color-primary-light);
+}
+
+.stat-detail {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.stat-detail.primary {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+/* Energiespartipps */
+.energy-tips {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.energy-tips h4 {
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    margin-bottom: var(--space-sm);
+}
+
+.energy-tips ul {
+    list-style-type: none;
+    padding-left: var(--space-md);
+}
+
+.energy-tips li {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-xs);
+    position: relative;
+}
+
+.energy-tips li::before {
+    content: '•';
+    color: var(--color-primary);
+    position: absolute;
+    left: -1rem;
+}
+
+/* Diagramm-Bereich */
+.chart-container {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    padding: var(--space-md);
+    box-shadow: var(--shadow-medium);
+    height: 250px;
+    position: relative;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.chart-header h3 {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.chart-controls {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.chart-controls button {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-small);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chart-controls button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chart-controls button.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.energy-chart-container {
+    width: 100%;
+    height: calc(100% - 40px);
+    position: relative;
+}
+
+.energy-chart {
+    width: 100%;
+    height: 100%;
+}
+
+/* Gerätedetails */
+.energy-details-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.lights-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lights-header h3 {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.sort-controls label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.sort-controls select {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-small);
+    font-size: var(--font-size-sm);
+}
+
+.lights-energy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background-color: var(--color-surface);
+    border-radius: 0 0 var(--radius-medium) var(--radius-medium);
+}
+
+/* Lampen-Energiekarte */
+.light-energy-card {
+    background-color: var(--color-surface-light);
+    border-radius: var(--radius-small);
+    padding: var(--space-md);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.light-energy-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-small);
+}
+
+.light-energy-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--color-primary);
+    opacity: 0.7;
+}
+
+.light-energy-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.light-color-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-energy-header h3 {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    margin: 0;
+    flex-grow: 1;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.light-type {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.light-energy-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.energy-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.power-meter {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.power-bar {
+    flex-grow: 1;
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-small);
+    overflow: hidden;
+}
+
+.power-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+    transition: width 0.5s ease;
+}
+
+.power-value {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    min-width: 3rem;
+    text-align: right;
+}
+
+.daily-usage, .monthly-cost {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.usage-value, .cost-value {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.efficiency-meter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-xs);
+}
+
+.efficiency-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.efficiency-badge {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+}
+
+.efficiency-badge.excellent {
+    background-color: #4CAF50;
+}
+
+.efficiency-badge.good {
+    background-color: #8BC34A;
+}
+
+.efficiency-badge.average {
+    background-color: #FFC107;
+}
+
+.efficiency-badge.fair {
+    background-color: #FF9800;
+}
+
+.efficiency-badge.poor {
+    background-color: #F44336;
+}
+
+.light-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-error);
+}
+
+.status-dot.on {
+    background-color: var(--color-success);
+}
+
+.status-text {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+/* Dialog für Stromkosten */
+.modal-content.small {
+    max-width: 400px;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .energy-summary-section {
+        order: 1;
+    }
+
+    .energy-details-section {
+        order: 2;
+    }
+
+    .summary-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .lights-energy-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lights-header {
+        flex-direction: column;
+        gap: var(--space-sm);
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 200px;
+    }
+}

@@ -1,0 +1,206 @@
+/* src/styles/timer.css - Stilregeln für die Timer-Komponente in GlitterHue */
+
+.timer-control-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.timer-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-md);
+}
+
+.timer-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    padding: var(--space-md);
+    box-shadow: var(--shadow-medium);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    overflow: hidden;
+}
+
+.timer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-large);
+}
+
+.timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.timer-header h3 {
+    font-size: var(--font-size-lg);
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.timer-actions {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.timer-details {
+    margin-top: var(--space-sm);
+}
+
+.timer-description {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.timer-progress {
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-small);
+    overflow: hidden;
+    margin-bottom: var(--space-sm);
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--color-primary);
+    transition: width 1s linear;
+}
+
+.time-remaining {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Timer Form Styles */
+.presets-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.duration-input {
+    width: 100%;
+}
+
+.presets-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.presets-buttons button {
+    background-color: var(--color-surface-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-small);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.presets-buttons button:hover {
+    background-color: rgba(125, 131, 255, 0.1);
+    color: var(--color-text);
+}
+
+.presets-buttons button.preset-active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.light-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+    max-height: 200px;
+    overflow-y: auto;
+    padding: var(--space-xs);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+}
+
+.light-selection-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+}
+
+.form-hint {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-xs);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    text-align: center;
+}
+
+.empty-state p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+/* Responsive Design Anpassungen */
+@media (max-width: 768px) {
+    .timer-list {
+        grid-template-columns: 1fr;
+    }
+
+    .presets-buttons {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .presets-buttons button {
+        flex: 1 0 calc(33.33% - var(--space-xs));
+        min-width: 0;
+    }
+}
+
+/* Animationen */
+@keyframes countdown {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+.countdown-animation {
+    animation: countdown linear forwards;
+}
+
+/* Dark Mode Optimierungen */
+.timer-card {
+    position: relative;
+}
+
+.timer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+    opacity: 0.8;
+}
