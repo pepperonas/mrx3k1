@@ -13,6 +13,7 @@ import MediaSyncTool from './components/MediaSyncTool';
 import EnhancedAutomationView from './components/EnhancedAutomationView';
 import TimerControlView from './components/TimerControlView';
 import EnergyDashboardView from './components/EnergyDashboardView';
+import GeofencingView from './components/GeofencingView';
 
 // BrainBuster-Stil Logo-Komponente
 const LogoComponent = () => (
@@ -1065,6 +1066,14 @@ function App() {
 
                             <Tab id="mediasync" label="Media Sync">
                                 <MediaSyncTool
+                                    lights={lights}
+                                    username={username}
+                                    bridgeIP={bridgeIP}
+                                />
+                            </Tab>
+
+                            <Tab id="geofencing" label="Standort">
+                                <GeofencingView
                                     lights={lights}
                                     username={username}
                                     bridgeIP={bridgeIP}
