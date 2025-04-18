@@ -1,4 +1,4 @@
-// App.jsx - Verbesserte GUI mit Musikvisualisierung und optimiertem Local-Mode
+// App.jsx - Aktualisiert ohne Proxy-Modus
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
@@ -15,7 +15,6 @@ function App() {
   const [statusMessage, setStatusMessage] = useState({ message: '', type: 'info' });
   const [connecting, setConnecting] = useState(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
-  const [useProxy, setUseProxy] = useState(false);
   const [activeTab, setActiveTab] = useState('lights');
   const [discoMode, setDiscoMode] = useState(false);
   const [discoSettings, setDiscoSettings] = useState({
@@ -29,19 +28,19 @@ function App() {
   // Referenz für den Media-Analyzer
   const audioAnalyzerRef = useRef(null);
 
-  // Basis-URL für API-Anfragen je nach Modus
+  // Basis-URL für API-Anfragen - Direkt-Modus
   const getBaseUrl = (ip) => {
-    return useProxy
-        ? `/glitter-hue/hue/${ip}` // Proxy-Modus für Server-Deployment
-        : `http://${ip}`; // Direktmodus für lokale Kommunikation
+    return `http://${ip}`;
   };
 
   // Gespeicherte Werte laden
   useEffect(() => {
     const savedBridgeIP = localStorage.getItem('hue-bridge-ip');
     const savedUsername = localStorage.getItem('hue-username');
-    const savedUseProxy = localStorage.getItem('hue-use-proxy');
     const savedDiscoSettings = localStorage.getItem('hue-disco-settings');
+
+    // Lösche alten Proxy-Modus-Eintrag falls vorhanden
+    localStorage.removeItem('hue-use-proxy');
 
     if (savedBridgeIP) {
       setBridgeIP(savedBridgeIP);
@@ -49,13 +48,6 @@ function App() {
 
     if (savedUsername) {
       setUsername(savedUsername);
-    }
-
-    // Default: Kein Proxy für direkte lokale Kommunikation
-    if (savedUseProxy === 'true') {
-      setUseProxy(true);
-    } else {
-      setUseProxy(false); // Explizit auf false setzen für lokale Nutzung
     }
 
     if (savedDiscoSettings) {
@@ -101,32 +93,9 @@ function App() {
     setStatus('Suche nach Hue Bridge im Netzwerk...', 'info');
 
     try {
-      // Versuche beide Methoden: offizielle Discovery-URL und lokale Suche
-      let bridges = [];
-
-      // Methode 1: Offizielle Discovery-URL (funktioniert im lokalen Modus)
-      try {
-        const response = await fetch('https://discovery.meethue.com/');
-        bridges = await response.json();
-      } catch (e) {
-        console.log("Fehler bei der offiziellen Discovery-URL:", e);
-        // Fehler ignorieren und mit der zweiten Methode fortfahren
-      }
-
-      // Methode 2: Lokale Discovery über den Proxy (falls aktiviert)
-      if (useProxy && bridges.length === 0) {
-        try {
-          // Verwende den korrekten relativen Pfad
-          const response = await fetch('/glitter-hue/hue/discovery');
-          const proxyResult = await response.json();
-          if (proxyResult && proxyResult.bridges) {
-            bridges = [...bridges, ...proxyResult.bridges];
-          }
-        } catch (e) {
-          console.log("Fehler bei der Proxy-Discovery:", e);
-          // Fehler ignorieren
-        }
-      }
+      // Verwende ausschließlich die offizielle Discovery-URL
+      const response = await fetch('https://discovery.meethue.com/');
+      const bridges = await response.json();
 
       if (bridges && bridges.length > 0) {
         const foundIP = bridges[0].internalipaddress;
@@ -143,7 +112,7 @@ function App() {
     setLoading(false);
   };
 
-  // Verbindung zur Bridge aufbauen - Unterstützt beide Modi
+  // Verbindung zur Bridge aufbauen
   const connectToBridge = async (ip = bridgeIP, user = username) => {
     if (!ip) {
       setStatus('Bitte Bridge IP eingeben', 'error');
@@ -177,7 +146,6 @@ function App() {
         // Einstellungen speichern
         localStorage.setItem('hue-bridge-ip', ip);
         localStorage.setItem('hue-username', user);
-        localStorage.setItem('hue-use-proxy', useProxy.toString());
 
         // Setze Standard-Lichter für Disco-Modus bei erstem Verbinden
         if (discoSettings.lightsToInclude.length === 0) {
@@ -193,20 +161,14 @@ function App() {
       } else {
         console.log("Unerwartete Antwort:", data);
         setStatus('Verbindung fehlgeschlagen. Unerwartete Antwort.', 'error');
-
-        // Falls wir im Direkt-Modus sind und CORS-Fehler auftreten könnten,
-        // empfehlen wir den Proxy-Modus
-        if (!useProxy) {
-          setStatus('Verbindung fehlgeschlagen. Versuche den Proxy-Modus für CORS-Unterstützung.', 'warning');
-        }
       }
     } catch (error) {
       console.error("Verbindungsfehler:", error);
       setStatus(`Verbindung fehlgeschlagen: ${error.message}`, 'error');
 
-      // Bei CORS-Fehlern auf Proxy-Modus hinweisen
-      if (!useProxy && error.message.includes('CORS')) {
-        setStatus('CORS-Fehler erkannt. Aktiviere den Proxy-Modus und versuche es erneut.', 'warning');
+      // Bei CORS-Fehlern eine spezifische Hilfestellung anbieten
+      if (error.message.includes('CORS')) {
+        setStatus('CORS-Fehler. Stelle sicher, dass du dich im selben Netzwerk wie die Hue Bridge befindest.', 'warning');
       }
     }
 
@@ -227,9 +189,6 @@ function App() {
 
     // Speichere Bridge IP bereits vorab
     localStorage.setItem('hue-bridge-ip', bridgeIP);
-
-    // Speichere Proxy-Einstellung
-    localStorage.setItem('hue-use-proxy', useProxy.toString());
 
     // Starte den Versuchsprozess
     tryCreateUser();
@@ -290,16 +249,6 @@ function App() {
     } catch (error) {
       console.error("Fehler beim Erstellen des Users:", error);
       setStatus(`Fehler: ${error.message}`, 'error');
-
-      // Bei CORS-Fehlern auf Proxy-Modus hinweisen
-      if (!useProxy && error.message.includes('CORS')) {
-        setUseProxy(true);
-        localStorage.setItem('hue-use-proxy', 'true');
-        setStatus('CORS-Fehler erkannt. Proxy-Modus wurde aktiviert. Probiere es erneut.', 'warning');
-        setConnecting(false);
-        setLoading(false);
-        return;
-      }
     }
 
     // Wenn wir hier ankommen, dann war der aktuelle Versuch nicht erfolgreich
@@ -453,7 +402,6 @@ function App() {
   const resetConnection = () => {
     localStorage.removeItem('hue-bridge-ip');
     localStorage.removeItem('hue-username');
-    localStorage.removeItem('hue-use-proxy');
 
     setBridgeIP('');
     setUsername('');
@@ -751,20 +699,6 @@ function App() {
                       disabled={connecting}
                   />
                 </div>
-                <div className="checkbox-container">
-                  <label>
-                    <input
-                        type="checkbox"
-                        checked={useProxy}
-                        onChange={(e) => setUseProxy(e.target.checked)}
-                        disabled={connecting}
-                    />
-                    Proxy-Modus verwenden
-                  </label>
-                  <span className="help-text" style={{marginLeft: '10px', fontSize: '0.8em', opacity: 0.7}}>
-                    (Für lokale Nutzung ausschalten)
-                  </span>
-                </div>
                 <div className="button-group">
                   <button
                       onClick={() => connectToBridge()}
@@ -876,22 +810,6 @@ function App() {
                         <div className="setting-row">
                           <span>API Username: {username.substring(0, 8)}...</span>
                         </div>
-                        <div className="checkbox-container">
-                          <label>
-                            <input
-                                type="checkbox"
-                                checked={useProxy}
-                                onChange={(e) => {
-                                  setUseProxy(e.target.checked);
-                                  localStorage.setItem('hue-use-proxy', e.target.checked.toString());
-                                }}
-                            />
-                            Proxy-Modus verwenden
-                          </label>
-                          <span className="help-text" style={{marginLeft: '10px', fontSize: '0.8em', opacity: 0.7}}>
-                            (Für lokale Nutzung ausschalten)
-                          </span>
-                        </div>
                         <div className="button-group">
                           <button onClick={resetConnection} className="reset-button">
                             Verbindung zurücksetzen
@@ -909,10 +827,6 @@ function App() {
                 )}
               </>
           )}
-
-          <div className="mode-info">
-            <span>{useProxy ? 'Proxy-Modus' : 'Direkt-Modus'}</span>
-          </div>
         </div>
       </div>
   );
