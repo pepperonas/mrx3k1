@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 // Konfiguration
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 const ALLOWED_ORIGINS = '*';  // Im Produktionsmodus einschränken
 const DISCOVERY_INTERVAL = 60 * 1000;  // Millisekunden zwischen Discovery-Versuchen
 
@@ -55,8 +55,9 @@ async function discoverBridges() {
             console.error('Fehler bei offizieller Discovery-Methode:', error.message);
         }
 
-        // Methode 2: Vereinfachte lokale Discovery könnte hier implementiert werden
-        // Im echten Einsatz würde hier eine umfangreichere Implementation stehen
+        // Methode 2: Vereinfachte lokale Discovery (falls nötig)
+        // In einer vollständigen Implementation könnte hier eine zusätzliche
+        // lokale Discovery-Methode wie UPNP/SSDP implementiert werden
 
         lastDiscoveryTime = Date.now();
         console.log(`Discovery abgeschlossen. Gefundene Bridges: ${bridges.length}`);
@@ -81,6 +82,21 @@ app.get('/hue/discovery', async (req, res) => {
             await discoverBridges();
         } catch (error) {
             console.error('Fehler beim Bridge-Discovery:', error);
+        }
+    }
+
+    // Wenn keine Bridges gefunden wurden, versuche einen Fallback
+    if (bridges.length === 0) {
+        // Wenn im lokalen Netzwerk, könnte die Bridge so zu finden sein
+        try {
+            const officialResponse = await fetch('https://discovery.meethue.com/');
+            const officialBridges = await officialResponse.json();
+
+            if (officialBridges && officialBridges.length > 0) {
+                bridges = officialBridges;
+            }
+        } catch (error) {
+            console.error('Fallback Discovery fehlgeschlagen:', error);
         }
     }
 
@@ -119,7 +135,13 @@ app.all('/hue/:bridgeIp/*', async (req, res) => {
 
         // Sende die Anfrage an die Bridge
         const response = await fetch(targetUrl, fetchOptions);
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            // Falls die Antwort kein JSON ist, sende den Text
+            data = await response.text();
+        }
 
         // Antwort an den Client senden
         res.status(response.status).json(data);
@@ -137,10 +159,31 @@ app.options('*', (req, res) => {
 });
 
 /**
+ * Status-Endpunkt
+ * Gibt Informationen über den Proxy zurück
+ */
+app.get('/hue/status', (req, res) => {
+    res.json({
+        status: 'online',
+        bridgesFound: bridges.length,
+        lastDiscoveryTime: new Date(lastDiscoveryTime).toISOString(),
+        uptime: process.uptime()
+    });
+});
+
+/**
  * Fallback-Route für ungültige Pfade
  */
 app.use((req, res) => {
     res.status(404).json({error: 'Ungültiger Pfad. Format: /hue/<bridge-ip>/...'});
+});
+
+/**
+ * Error Handler
+ */
+app.use((err, req, res, next) => {
+    console.error('Server-Fehler:', err);
+    res.status(500).json({error: 'Interner Serverfehler', message: err.message});
 });
 
 /**

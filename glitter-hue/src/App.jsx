@@ -1,4 +1,4 @@
-// App.jsx - Verbesserte GUI mit Musikvisualisierung
+// App.jsx - Verbesserte GUI mit Musikvisualisierung und optimiertem Local-Mode
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
@@ -32,8 +32,8 @@ function App() {
   // Basis-URL für API-Anfragen je nach Modus
   const getBaseUrl = (ip) => {
     return useProxy
-        ? `http://localhost:8080/hue/${ip}`
-        : `http://${ip}`;
+        ? `/glitter-hue/hue/${ip}` // Proxy-Modus für Server-Deployment
+        : `http://${ip}`; // Direktmodus für lokale Kommunikation
   };
 
   // Gespeicherte Werte laden
@@ -51,8 +51,11 @@ function App() {
       setUsername(savedUsername);
     }
 
+    // Default: Kein Proxy für direkte lokale Kommunikation
     if (savedUseProxy === 'true') {
       setUseProxy(true);
+    } else {
+      setUseProxy(false); // Explizit auf false setzen für lokale Nutzung
     }
 
     if (savedDiscoSettings) {
@@ -98,10 +101,10 @@ function App() {
     setStatus('Suche nach Hue Bridge im Netzwerk...', 'info');
 
     try {
-      // Versuche beide Methoden: mDNS (via Proxy) und offizielle Discovery-URL
+      // Versuche beide Methoden: offizielle Discovery-URL und lokale Suche
       let bridges = [];
 
-      // Methode 1: Offizielle Discovery-URL
+      // Methode 1: Offizielle Discovery-URL (funktioniert im lokalen Modus)
       try {
         const response = await fetch('https://discovery.meethue.com/');
         bridges = await response.json();
@@ -113,7 +116,8 @@ function App() {
       // Methode 2: Lokale Discovery über den Proxy (falls aktiviert)
       if (useProxy && bridges.length === 0) {
         try {
-          const response = await fetch('http://localhost:8080/hue/discovery');
+          // Verwende den korrekten relativen Pfad
+          const response = await fetch('/glitter-hue/hue/discovery');
           const proxyResult = await response.json();
           if (proxyResult && proxyResult.bridges) {
             bridges = [...bridges, ...proxyResult.bridges];
@@ -757,6 +761,9 @@ function App() {
                     />
                     Proxy-Modus verwenden
                   </label>
+                  <span className="help-text" style={{marginLeft: '10px', fontSize: '0.8em', opacity: 0.7}}>
+                    (Für lokale Nutzung ausschalten)
+                  </span>
                 </div>
                 <div className="button-group">
                   <button
@@ -881,6 +888,9 @@ function App() {
                             />
                             Proxy-Modus verwenden
                           </label>
+                          <span className="help-text" style={{marginLeft: '10px', fontSize: '0.8em', opacity: 0.7}}>
+                            (Für lokale Nutzung ausschalten)
+                          </span>
                         </div>
                         <div className="button-group">
                           <button onClick={resetConnection} className="reset-button">
