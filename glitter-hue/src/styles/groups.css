@@ -1,0 +1,516 @@
+/* src/styles/groups.css - Stile für die Gruppen- und Raumansicht */
+
+.groups-view {
+    padding: var(--space-md);
+}
+
+.groups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.groups-layout {
+    display: flex;
+    gap: var(--space-lg);
+}
+
+.groups-sidebar {
+    flex: 0 0 300px;
+    max-width: 300px;
+}
+
+.groups-content {
+    flex: 1;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-small);
+    padding: var(--space-md);
+    min-height: 400px;
+}
+
+.group-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-small);
+}
+
+.group-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: var(--radius-medium) 0 0 var(--radius-medium);
+    background-color: transparent;
+    transition: background-color var(--transition-normal);
+}
+
+.group-card.active::before {
+    background-color: var(--color-primary);
+}
+
+.group-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+    background-color: var(--color-surface-light);
+}
+
+.group-card.active {
+    background-color: var(--color-surface-light);
+    box-shadow: var(--shadow-medium);
+}
+
+.room-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    margin-right: var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    color: var(--color-secondary);
+}
+
+.room-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.group-details {
+    flex: 1;
+}
+
+.group-details h3 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+}
+
+.group-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.group-actions {
+    display: flex;
+    gap: var(--space-xs);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.group-card:hover .group-actions {
+    opacity: 1;
+}
+
+.icon-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+}
+
+.icon-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-button.edit:hover {
+    color: var(--color-primary);
+}
+
+.icon-button.delete:hover {
+    color: var(--color-error);
+}
+
+.no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: var(--space-md);
+}
+
+/* Group Controls */
+.group-controls {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.control-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.brightness-control {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-sm);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+}
+
+.brightness-control label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.brightness-value {
+    min-width: 40px;
+    text-align: right;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-primary-light);
+}
+
+.group-lights-list {
+    margin-top: var(--space-md);
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.group-lights-list h4 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+}
+
+.group-lights {
+    flex: 1;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+    padding: var(--space-xs);
+}
+
+.group-light-item {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.group-light-item:last-child {
+    border-bottom: none;
+}
+
+.light-color-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: var(--space-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-status {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-left: auto;
+}
+
+/* Group Form Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-md);
+}
+
+.modal-content {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-large);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button:hover {
+    color: var(--color-text);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+form {
+    padding: var(--space-md);
+}
+
+.form-group {
+    margin-bottom: var(--space-md);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.form-section {
+    margin-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: var(--space-md);
+}
+
+.form-section h3 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+}
+
+.hint-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.drag-drop-container {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.available-lights,
+.group-drop-zone {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+    padding: var(--space-sm);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.available-lights h4,
+.group-drop-zone h4 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.lights-list,
+.group-lights-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.light-item {
+    display: flex;
+    align-items: center;
+    padding: var(--space-xs);
+    border-radius: var(--radius-small);
+    margin-bottom: var(--space-xs);
+    background-color: rgba(0, 0, 0, 0.2);
+    cursor: grab;
+    transition: all var(--transition-fast);
+}
+
+.light-item.in-group {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.light-item.dragging {
+    opacity: 0.5;
+}
+
+.light-item:hover:not(.in-group) {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.light-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: var(--space-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-toggle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: var(--color-text);
+    font-size: var(--font-size-md);
+    line-height: 1;
+    padding: 0;
+    margin-left: auto;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.light-toggle.add:hover {
+    background-color: var(--color-success);
+}
+
+.light-toggle.remove:hover {
+    background-color: var(--color-error);
+}
+
+.group-drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
+}
+
+.group-drop-zone.active {
+    border-color: var(--color-primary);
+    background-color: rgba(125, 131, 255, 0.1);
+}
+
+.empty-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+}
+
+.empty-group svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--space-md);
+    opacity: 0.5;
+}
+
+.group-light {
+    display: flex;
+    align-items: center;
+    padding: var(--space-xs);
+    border-radius: var(--radius-small);
+    margin-bottom: var(--space-xs);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-medium);
+    color: var(--color-text-secondary);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .groups-layout {
+        flex-direction: column;
+    }
+
+    .groups-sidebar {
+        flex: auto;
+        max-width: none;
+    }
+
+    .group-actions {
+        opacity: 1;
+    }
+
+    .drag-drop-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-section,
+    .form-group {
+        margin-bottom: var(--space-sm);
+    }
+}
