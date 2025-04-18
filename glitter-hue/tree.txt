@@ -1,4 +1,4 @@
-Verzeichnisstruktur generiert am Fri Apr 18 22:54:57 CEST 2025
+Verzeichnisstruktur generiert am Fri Apr 18 23:31:09 CEST 2025
 Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 
 .
@@ -32,6 +32,7 @@ Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 │   │   ├── AutomationsView.jsx
 │   │   ├── DashboardView.jsx
 │   │   ├── DynamicEffectsView.jsx
+│   │   ├── EnergyDashboardView.jsx
 │   │   ├── EnhancedAutomationView.jsx
 │   │   ├── GroupsView.jsx
 │   │   ├── LightCard.jsx
@@ -39,15 +40,29 @@ Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 │   │   ├── MusicVisualizer.jsx
 │   │   ├── ScenesView.jsx
 │   │   ├── SettingsPanel.jsx
-│   │   └── Tabs.jsx
+│   │   ├── Tabs.jsx
+│   │   ├── TimerControlView.jsx
+│   │   └── WeatherIntegrationView.jsx
 │   ├── index.css
 │   ├── index.js
 │   ├── models
+│   │   └── types.js
 │   ├── services
 │   │   └── HueApiService.jsx
-│   └── styles
-│       ├── effects.css
-│       └── scenes.css
+│   ├── styles
+│   │   ├── _empty.css
+│   │   ├── automation.css
+│   │   ├── automations.css
+│   │   ├── dashboard.css
+│   │   ├── effects.css
+│   │   ├── energy.css
+│   │   ├── groups.css
+│   │   ├── mediasync.css
+│   │   ├── scenes.css
+│   │   ├── timer.css
+│   │   └── weather.css
+│   └── utils
+│       └── colorConverters.js
 └── tree.txt
 
-8 directories, 40 files
+9 directories, 54 files
