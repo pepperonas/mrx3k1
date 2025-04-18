@@ -1,0 +1,53 @@
+Verzeichnisstruktur generiert am Fri Apr 18 22:54:57 CEST 2025
+Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
+
+.
+├── README.md
+├── bridge-test-tool.sh
+├── build
+│   ├── custom-logo-svg.svg
+│   ├── favicon.ico
+│   ├── logo.svg
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── features.md
+├── generate-tree.sh
+├── package-lock.json
+├── package.json
+├── public
+│   ├── custom-logo-svg.svg
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo.svg
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── src
+│   ├── App.css
+│   ├── App.jsx
+│   ├── components
+│   │   ├── AutomationsView.jsx
+│   │   ├── DashboardView.jsx
+│   │   ├── DynamicEffectsView.jsx
+│   │   ├── EnhancedAutomationView.jsx
+│   │   ├── GroupsView.jsx
+│   │   ├── LightCard.jsx
+│   │   ├── MediaSyncTool.jsx
+│   │   ├── MusicVisualizer.jsx
+│   │   ├── ScenesView.jsx
+│   │   ├── SettingsPanel.jsx
+│   │   └── Tabs.jsx
+│   ├── index.css
+│   ├── index.js
+│   ├── models
+│   ├── services
+│   │   └── HueApiService.jsx
+│   └── styles
+│       ├── effects.css
+│       └── scenes.css
+└── tree.txt
+
+8 directories, 40 files

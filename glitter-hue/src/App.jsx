@@ -1,10 +1,16 @@
-// App.jsx - Neugestaltung im BrainBuster-Stil
+// App.jsx - Mit erweiterter Automatisierungsansicht
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
 import MusicVisualizer from './components/MusicVisualizer';
 import { Tabs, Tab } from './components/Tabs';
 import SettingsPanel from './components/SettingsPanel';
+import GroupsView from './components/GroupsView';
+import ScenesView from './components/ScenesView';
+import DynamicEffectsView from './components/DynamicEffectsView';
+import DashboardView from './components/DashboardView';
+import MediaSyncTool from './components/MediaSyncTool';
+import EnhancedAutomationView from './components/EnhancedAutomationView';
 
 // BrainBuster-Stil Logo-Komponente
 const LogoComponent = () => (
@@ -117,6 +123,11 @@ function App() {
     lightsToInclude: []
   });
   const [showHomeScreen, setShowHomeScreen] = useState(true);
+
+  // Gruppen von Lichtern
+  const [groups, setGroups] = useState([]);
+  // Szenen
+  const [scenes, setScenes] = useState([]);
 
   // Referenz für den Media-Analyzer
   const audioAnalyzerRef = useRef(null);
@@ -253,6 +264,12 @@ function App() {
           });
         }
 
+        // Lade Gruppen
+        loadGroups(ip, user);
+
+        // Lade Szenen
+        loadScenes(ip, user);
+
         setStatus('Erfolgreich mit Hue Bridge verbunden', 'success');
       } else {
         console.log("Unerwartete Antwort:", data);
@@ -269,6 +286,83 @@ function App() {
     }
 
     setLoading(false);
+  };
+
+  // Lade Gruppen von der Bridge
+  const loadGroups = async (ip, user) => {
+    try {
+      const baseUrl = getBaseUrl(ip);
+      const endpoint = `${baseUrl}/api/${user}/groups`;
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (typeof data === 'object' && !Array.isArray(data) && !data.error) {
+        // Konvertiere Gruppen in ein Array-Format für unsere App
+        const groupsArray = Object.entries(data).map(([id, group]) => ({
+          id,
+          bridgeGroupId: id,
+          name: group.name,
+          type: group.type === 'Room' ? 'room' : 'zone',
+          roomType: group.class ? mapBridgeTypeToRoomType(group.class) : 'other',
+          lights: group.lights || []
+        }));
+
+        setGroups(groupsArray);
+
+        // Speichere Gruppen im localStorage
+        localStorage.setItem('hue-groups', JSON.stringify(groupsArray));
+      }
+    } catch (error) {
+      console.error("Fehler beim Laden der Gruppen:", error);
+    }
+  };
+
+  // Konvertiere Bridge-Raumtypen zu unseren Typen
+  const mapBridgeTypeToRoomType = (bridgeClass) => {
+    const mapping = {
+      'Living room': 'living',
+      'Kitchen': 'kitchen',
+      'Dining': 'dining',
+      'Bedroom': 'bedroom',
+      'Bathroom': 'bathroom',
+      'Office': 'office',
+      'Outdoor': 'outdoor'
+    };
+
+    return mapping[bridgeClass] || 'other';
+  };
+
+  // Lade Szenen von der Bridge
+  const loadScenes = async (ip, user) => {
+    try {
+      const baseUrl = getBaseUrl(ip);
+      const endpoint = `${baseUrl}/api/${user}/scenes`;
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (typeof data === 'object' && !Array.isArray(data) && !data.error) {
+        // Konvertiere Szenen in ein Array-Format für unsere App
+        const scenesArray = Object.entries(data).map(([id, scene]) => ({
+          id,
+          name: scene.name,
+          type: scene.type || 'static',
+          lights: scene.lights || [],
+          owner: scene.owner,
+          recycle: scene.recycle,
+          locked: scene.locked,
+          isActive: false
+        }));
+
+        setScenes(scenesArray);
+
+        // Speichere Szenen im localStorage
+        localStorage.setItem('hue-scenes', JSON.stringify(scenesArray));
+      }
+    } catch (error) {
+      console.error("Fehler beim Laden der Szenen:", error);
+    }
   };
 
   // Standard-Verbindungsversuch mit Link-Button
@@ -872,6 +966,14 @@ function App() {
           ) : (
               <>
                 <Tabs activeTab={activeTab} onChange={setActiveTab}>
+                  <Tab id="dashboard" label="Dashboard">
+                    <DashboardView
+                        lights={lights}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
                   <Tab id="lights" label="Lampen">
                     {loading ? (
                         <div className="loading">
@@ -892,7 +994,50 @@ function App() {
                         </div>
                     )}
                   </Tab>
-                  <Tab id="disco" label="Disco Light">
+
+                  <Tab id="groups" label="Räume & Zonen">
+                    <GroupsView
+                        lights={lights}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
+                  <Tab id="scenes" label="Szenen">
+                    <ScenesView
+                        lights={lights}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
+                  <Tab id="automations" label="Automatisierungen">
+                    <EnhancedAutomationView
+                        lights={lights}
+                        rooms={groups}
+                        scenes={scenes}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
+                  <Tab id="effects" label="Effekte">
+                    <DynamicEffectsView
+                        lights={lights}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
+                  <Tab id="mediasync" label="Media Sync">
+                    <MediaSyncTool
+                        lights={lights}
+                        username={username}
+                        bridgeIP={bridgeIP}
+                    />
+                  </Tab>
+
+                  <Tab id="disco" label="Disco">
                     <div className="disco-section">
                       {discoMode && (
                           <div className="music-visualizer">
@@ -912,6 +1057,7 @@ function App() {
                       </div>
                     </div>
                   </Tab>
+
                   <Tab id="settings" label="Einstellungen">
                     <div className="settings-section">
                       <h2 className="section-title">Einstellungen</h2>
@@ -932,12 +1078,12 @@ function App() {
 
                       <div className="settings-card">
                         <h3>Über GlitterHue</h3>
-                        <p>Version: 0.2.0</p>
-                        <p>Eine moderne, mobiloptimierte Web-App zur Steuerung von Philips Hue-Lampen mit Musik-Visualisierung und Disco-Modus.</p>
+                        <p>Version: 0.3.0</p>
+                        <p>Eine moderne, mobiloptimierte Web-App zur Steuerung von Philips Hue-Lampen mit Musik-Visualisierung, Automatisierungen und Disco-Modus.</p>
 
                         {!isSecureConnection && (
                             <div className="status-message status-warning" style={{marginTop: '1rem'}}>
-                              <p><strong>Hinweis:</strong> Die Disco-Funktionalität benötigt einen gesicherten Kontext (HTTPS).</p>
+                              <p><strong>Hinweis:</strong> Einige Funktionen wie der Disco-Modus benötigen einen gesicherten Kontext (HTTPS).</p>
                               <p style={{marginTop: '0.5rem'}}><a href="https://github.com/yourusername/glitterhue/releases" style={{color: '#ffad33', textDecoration: 'underline'}}>Lade die Electron Desktop-Version herunter</a>, um vollen Funktionsumfang zu erhalten.</p>
                             </div>
                         )}
