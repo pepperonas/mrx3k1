@@ -13,6 +13,7 @@ import MediaSyncTool from './components/MediaSyncTool';
 import EnhancedAutomationView from './components/EnhancedAutomationView';
 import TimerControlView from './components/TimerControlView';
 import EnergyDashboardView from './components/EnergyDashboardView';
+import DevView from './components/DevView';
 
 // BrainBuster-Stil Logo-Komponente
 const LogoComponent = () => (
@@ -1090,6 +1091,13 @@ function App() {
                                         />
                                     </div>
                                 </div>
+                            </Tab>
+
+                            <Tab id="dev" label="Dev">
+                                <DevView
+                                    username={username}
+                                    bridgeIP={bridgeIP}
+                                />
                             </Tab>
 
                             <Tab id="settings" label="Einstellungen">
