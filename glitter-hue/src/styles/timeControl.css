@@ -1,0 +1,809 @@
+/* src/styles/timeControl.css - Gemeinsames Styling für alle Zeitsteuerungen */
+
+.time-control-view {
+    padding: var(--space-md);
+}
+
+.time-control-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.time-control-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.time-control-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.filter-btn {
+    background-color: var(--color-surface-light);
+    color: var(--color-text-secondary);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-small);
+    transition: all var(--transition-normal);
+    box-shadow: none;
+}
+
+.filter-btn.active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.filter-btn:hover:not(.active) {
+    background-color: rgba(125, 131, 255, 0.2);
+    color: var(--color-text);
+    box-shadow: none;
+}
+
+.create-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.create-button:hover {
+    background-color: var(--color-secondary-light);
+}
+
+.button-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Listen-Layout */
+.time-controls-container {
+    margin-top: var(--space-md);
+}
+
+.time-control-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+/* Zeitsteuerungskarte */
+.time-control-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-medium);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    overflow: hidden;
+    border-left: 3px solid var(--color-primary);
+}
+
+.time-control-card.bridge {
+    border-left-color: var(--color-primary);
+}
+
+.time-control-card.local {
+    border-left-color: var(--color-secondary);
+}
+
+.time-control-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-large);
+}
+
+.time-control-card.disabled {
+    opacity: 0.7;
+    border-left-color: var(--color-text-disabled);
+}
+
+.time-control-header {
+    padding: var(--space-md);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+}
+
+.time-control-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background-color: rgba(125, 131, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+}
+
+.time-control-card.local .time-control-icon {
+    background-color: rgba(255, 173, 51, 0.1);
+    color: var(--color-secondary);
+}
+
+.time-control-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.time-control-info {
+    flex: 1;
+    min-width: 0; /* Verhindert, dass der Container überläuft */
+}
+
+.time-control-info h3 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-control-description {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.time-control-action {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-primary-light);
+}
+
+.local .time-control-action {
+    color: var(--color-secondary-light);
+}
+
+.time-control-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Timer-Fortschrittsbalken */
+.timer-progress-container {
+    margin-top: var(--space-xs);
+}
+
+.timer-progress {
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-small);
+    overflow: hidden;
+    margin-bottom: var(--space-xs);
+}
+
+.timer-progress .progress-fill {
+    height: 100%;
+    background-color: var(--color-secondary);
+    transition: width 1s linear;
+}
+
+.time-remaining {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    text-align: right;
+}
+
+/* Icon-Buttons */
+.icon-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    box-shadow: none;
+    transition: all var(--transition-normal);
+}
+
+.icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+    box-shadow: none;
+}
+
+.icon-button.edit:hover {
+    color: var(--color-primary);
+}
+
+.icon-button.delete:hover {
+    color: var(--color-error);
+}
+
+.icon-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-button.small svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Form Styling */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-md);
+}
+
+.modal-content {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-medium);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-large);
+}
+
+.modal-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--color-surface);
+    z-index: 10;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.close-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+}
+
+.time-control-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-button {
+    flex: 1;
+    padding: var(--space-md);
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+}
+
+.tab-button.active {
+    color: var(--color-text);
+    border-bottom-color: var(--color-primary);
+}
+
+.tab-button:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--color-text);
+}
+
+.modal-content form {
+    padding: var(--space-lg);
+}
+
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.hint-text {
+    margin-top: var(--space-xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* Radio-Buttons */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-top: var(--space-xs);
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-weight: normal;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+/* Eingabefelder mit +/- Buttons */
+.input-with-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+}
+
+.input-with-buttons input {
+    flex: 1;
+    text-align: center;
+}
+
+.input-with-buttons button {
+    width: 36px;
+    padding: var(--space-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tage-Auswahl */
+.days-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-xs);
+}
+
+.day-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    padding: 0;
+    background-color: var(--color-surface-light);
+    color: var(--color-text-secondary);
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-button:hover {
+    background-color: rgba(125, 131, 255, 0.2);
+    box-shadow: none;
+}
+
+.day-button.selected {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.day-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.day-presets button {
+    background-color: var(--color-surface-light);
+    color: var(--color-text);
+    font-size: var(--font-size-xs);
+    box-shadow: none;
+}
+
+.day-presets button:hover {
+    background-color: rgba(125, 131, 255, 0.2);
+    box-shadow: none;
+}
+
+/* Timer-Dauer Presets */
+.presets-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.duration-input {
+    width: 100%;
+}
+
+.presets-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.presets-buttons button {
+    background-color: var(--color-surface-light);
+    color: var(--color-text);
+    font-size: var(--font-size-xs);
+    box-shadow: none;
+    min-width: 50px;
+}
+
+.presets-buttons button:hover {
+    background-color: rgba(125, 131, 255, 0.2);
+    box-shadow: none;
+}
+
+.presets-buttons button.preset-active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/* Lampen-Auswahl für Timer */
+.light-selection-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.light-selection-buttons button {
+    background-color: var(--color-surface-light);
+    color: var(--color-text);
+    font-size: var(--font-size-xs);
+    box-shadow: none;
+}
+
+.light-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.light-checkbox {
+    font-size: var(--font-size-sm);
+}
+
+.light-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    cursor: pointer;
+}
+
+/* Aktionen */
+.actions-list {
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-small);
+    margin-bottom: var(--space-xs);
+}
+
+.action-details {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.action-type {
+    font-weight: 500;
+    color: var(--color-primary-light);
+}
+
+.action-target {
+    color: var(--color-text);
+}
+
+.action-state {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl) var(--space-md);
+    color: var(--color-text-secondary);
+}
+
+.empty-state button {
+    margin-top: var(--space-md);
+}
+
+.add-action-section {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-small);
+    padding: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.add-action-section h4 {
+    margin-top: 0;
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+}
+
+.action-type-selector,
+.action-target-selector,
+.action-state-selector,
+.sensor-status-selector {
+    margin-bottom: var(--space-md);
+}
+
+.action-type-selector label,
+.action-target-selector label {
+    margin-bottom: var(--space-xs);
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.action-state-options {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-xs);
+}
+
+.action-state-options label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-weight: normal;
+    cursor: pointer;
+    margin-bottom: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+.brightness-selector {
+    margin-top: var(--space-sm);
+}
+
+.brightness-selector label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.add-action-btn {
+    width: 100%;
+    margin-top: var(--space-sm);
+    background-color: var(--color-surface-light);
+}
+
+.add-action-btn:hover:not(:disabled) {
+    background-color: var(--color-primary-light);
+}
+
+.add-action-btn:disabled {
+    background-color: var(--color-surface-light);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sensor-status-selector input {
+    width: 80px;
+    text-align: center;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+button.secondary-button {
+    background-color: var(--color-surface-light);
+    color: var(--color-text);
+}
+
+button.secondary-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Status-Nachrichten */
+.status-message {
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+    border-radius: var(--radius-small);
+    font-size: var(--font-size-sm);
+    border-left: 4px solid transparent;
+}
+
+.status-error {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left-color: var(--color-error);
+    color: #ff8a85;
+}
+
+.status-success {
+    background-color: rgba(76, 175, 80, 0.1);
+    border-left-color: var(--color-success);
+    color: #8eff93;
+}
+
+.status-info {
+    background-color: rgba(33, 150, 243, 0.1);
+    border-left-color: var(--color-info);
+    color: #9cd8ff;
+}
+
+.status-warning {
+    background-color: rgba(255, 173, 51, 0.1);
+    border-left-color: var(--color-warning);
+    color: #ffd699;
+}
+
+/* Loading Indikator */
+.loading {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--color-text-secondary);
+}
+
+.loading::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: var(--space-md) auto;
+    border-radius: 50%;
+    border: 3px solid rgba(125, 131, 255, 0.3);
+    border-top-color: var(--color-primary);
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .time-control-header {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .time-control-header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .time-control-filter {
+        justify-content: stretch;
+    }
+
+    .filter-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .create-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .time-control-header {
+        flex-wrap: wrap;
+    }
+
+    .time-control-info {
+        flex: 1 0 calc(100% - 100px);
+    }
+
+    .time-control-actions {
+        margin-top: var(--space-xs);
+        margin-left: calc(48px + var(--space-md));
+    }
+
+    .radio-group {
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .days-selection {
+        justify-content: space-between;
+    }
+
+    .day-button {
+        flex: 0 0 calc(14.28% - var(--space-xs));
+    }
+
+    .day-presets {
+        flex-direction: column;
+        gap: var(--space-xs);
+        align-items: flex-start;
+    }
+
+    .day-presets button {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+
+    .light-selection-buttons {
+        flex-direction: column;
+    }
+
+    .light-selection-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .time-control-header {
+        padding: var(--space-sm);
+        gap: var(--space-sm);
+    }
+
+    .time-control-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+    }
+
+    .time-control-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .time-control-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .action-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-xs);
+    }
+}

@@ -1,4 +1,4 @@
-// App.jsx - Mit erweiterter Automatisierungsansicht
+// App.jsx - Mit Sensoren-/Schalter-Verwaltung
 import React, {useEffect, useRef, useState} from 'react';
 import './App.css';
 import LightCard from './components/LightCard';
@@ -11,9 +11,10 @@ import DynamicEffectsView from './components/DynamicEffectsView';
 import DashboardView from './components/DashboardView';
 import MediaSyncTool from './components/MediaSyncTool';
 import EnhancedAutomationView from './components/EnhancedAutomationView';
-import TimerControlView from './components/TimerControlView';
 import EnergyDashboardView from './components/EnergyDashboardView';
+import SensorControlView from './components/SensorControlView';
 import DevView from './components/DevView';
+import TimeControlView from "./components/TimeControlView";
 
 // BrainBuster-Stil Logo-Komponente
 const LogoComponent = () => (
@@ -1030,6 +1031,13 @@ function App() {
                                 />
                             </Tab>
 
+                            <Tab id="sensors" label="Schalter & Sensoren">
+                                <SensorControlView
+                                    username={username}
+                                    bridgeIP={bridgeIP}
+                                />
+                            </Tab>
+
                             <Tab id="automations" label="Automatisierungen">
                                 <EnhancedAutomationView
                                     lights={lights}
@@ -1040,11 +1048,11 @@ function App() {
                                 />
                             </Tab>
 
-                            <Tab id="timer" label="Timer">
-                                <TimerControlView
-                                    lights={lights}
+                            <Tab id="timecontrol" label="Zeitsteuerung">
+                                <TimeControlView
                                     username={username}
                                     bridgeIP={bridgeIP}
+                                    lights={lights}
                                 />
                             </Tab>
 

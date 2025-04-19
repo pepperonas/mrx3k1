@@ -1,6 +1,8 @@
-// src/components/MediaSyncTool.jsx - Fortschrittliches Mediensynchronisationstool für GlitterHue
+// src/components/MediaSyncTool.jsx - Fortschrittliches Mediensynchronisationstool für GlitterHue mit Spotify-Integration
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/mediasync.css';
+import '../styles/spotify.css';
+import SpotifyIntegration from './SpotifyIntegration';
 
 // Verfügbare Medienquellen
 const MEDIA_SOURCES = {
@@ -8,7 +10,8 @@ const MEDIA_SOURCES = {
     FILE: 'file',               // Lokale Audio-Datei
     SCREEN: 'screen',           // Bildschirmaufnahme
     VIDEO: 'video',             // Videokamera
-    URL: 'url'                  // Online-Streaming-URL
+    URL: 'url',                 // Online-Streaming-URL
+    SPOTIFY: 'spotify'          // Spotify-Integration
 };
 
 // Voreingestellte Lichtsynchronisationsmuster
@@ -95,6 +98,21 @@ const MediaSourceSelector = ({ selectedSource, onSourceChange, onFileSelect, onU
                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
                     <span>Stream-URL</span>
+                </button>
+
+                {/* Spotify-Button */}
+                <button
+                    className={`source-button ${selectedSource === MEDIA_SOURCES.SPOTIFY ? 'active' : ''}`}
+                    onClick={() => onSourceChange(MEDIA_SOURCES.SPOTIFY)}
+                    title="Mit Spotify verbinden"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M8 14.5c2.5 1 5 1 7.5 0"></path>
+                        <path d="M7 10.5c3.5 1 6.5 1 10 0"></path>
+                        <path d="M9 6.5c2 0.5 4 0.5 6 0"></path>
+                    </svg>
+                    <span>Spotify</span>
                 </button>
             </div>
 
@@ -894,6 +912,19 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
                 await audioContext.suspend();
             }
         } else {
+            // Wenn Spotify-Quelle ausgewählt ist, keine AudioContext-Initialisierung notwendig
+            if (mediaSource === MEDIA_SOURCES.SPOTIFY) {
+                setSyncActive(true);
+                // FPS-Zähler zurücksetzen
+                fpsRef.current = {
+                    frames: 0,
+                    lastTime: performance.now()
+                };
+                updateFPS();
+                startLightSync();
+                return;
+            }
+
             // Synchronisation starten
             if (!analyserNode) {
                 // Falls noch kein Analyser vorhanden ist, neu einrichten
@@ -924,6 +955,14 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
             // Animation Loop starten
             updateFPS();
             startLightSync();
+        }
+    };
+
+    // Spotify Audiodaten-Handler
+    const handleSpotifyAnalyze = (audioData) => {
+        // Hier die Audiodaten von Spotify verarbeiten
+        if (analyzerData && syncActive) {
+            analyzerData.current = audioData;
         }
     };
 
@@ -1293,6 +1332,78 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
         setSelectedLights([]);
     };
 
+    // Rendere Visualizer basierend auf der Medienquelle
+    const renderVisualizer = () => {
+        if (mediaSource === MEDIA_SOURCES.SPOTIFY) {
+            return (
+                <SpotifyIntegration
+                    onAnalyzeAudio={handleSpotifyAnalyze}
+                    isActive={syncActive}
+                />
+            );
+        }
+
+        // Original-Visualizer-Code für andere Quellen
+        return (
+            <>
+                {/* Audio Player für Datei oder URL */}
+                {(mediaSource === MEDIA_SOURCES.FILE || mediaSource === MEDIA_SOURCES.URL) && audioElement && (
+                    <div className="audio-player-container">
+                        <div className="audio-info">
+                          <span className="audio-source">
+                            {mediaSource === MEDIA_SOURCES.FILE
+                                ? `Datei: ${fileName || 'Audiofile'}`
+                                : `Stream: ${urlValue}`}
+                          </span>
+                        </div>
+                        <div className="audio-controls">
+                            {audioElement}
+                        </div>
+                    </div>
+                )}
+
+                {/* Screen Capture Display */}
+                {mediaSource === MEDIA_SOURCES.SCREEN && mediaStream && (
+                    <div className="screen-capture-container">
+                        <video
+                            autoPlay
+                            muted
+                            ref={video => {
+                                if (video && mediaStream) {
+                                    video.srcObject = mediaStream;
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* Audio Visualizer */}
+                {analyserNode && (
+                    <SpectrumVisualizer
+                        analyserNode={analyserNode}
+                        fftSize={fftSize}
+                        analyzerData={analyzerData}
+                        syncActive={syncActive}
+                    />
+                )}
+
+                {/* Wenn kein Analyzer aktiv ist, zeige Hinweis */}
+                {!analyserNode && (
+                    <div className="start-message">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="10 2 2 9 10 16 10 2"></polygon>
+                            <path d="M2 16l10 7V16"></path>
+                            <path d="M16 1l6 6-6 6"></path>
+                            <path d="M10 16l11 0"></path>
+                        </svg>
+                        <h3>Media Sync starten</h3>
+                        <p>Wähle eine Medienquelle und klicke auf "Synchronisation starten", um deine Lichter mit Musik zu synchronisieren.</p>
+                    </div>
+                )}
+            </>
+        );
+    };
+
     // Bereinige beim Unmounten
     useEffect(() => {
         return () => {
@@ -1331,16 +1442,19 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
                         urlValue={urlValue}
                     />
 
-                    <SyncSettings
-                        pattern={syncPattern}
-                        onPatternChange={setSyncPattern}
-                        quality={syncQuality}
-                        onQualityChange={setSyncQuality}
-                        fftSize={fftSize}
-                        onFftSizeChange={setFftSize}
-                        customSettings={customSettings}
-                        onCustomSettingChange={handleCustomSettingChange}
-                    />
+                    {/* Nur anzeigen, wenn nicht Spotify ausgewählt ist */}
+                    {mediaSource !== MEDIA_SOURCES.SPOTIFY && (
+                        <SyncSettings
+                            pattern={syncPattern}
+                            onPatternChange={setSyncPattern}
+                            quality={syncQuality}
+                            onQualityChange={setSyncQuality}
+                            fftSize={fftSize}
+                            onFftSizeChange={setFftSize}
+                            customSettings={customSettings}
+                            onCustomSettingChange={handleCustomSettingChange}
+                        />
+                    )}
 
                     <LightConfiguration
                         lights={lights}
@@ -1353,64 +1467,11 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
 
                 <div className="visualizer-panel">
                     <div className="main-visualizer-container">
-                        {/* Audio Player für Datei oder URL */}
-                        {(mediaSource === MEDIA_SOURCES.FILE || mediaSource === MEDIA_SOURCES.URL) && audioElement && (
-                            <div className="audio-player-container">
-                                <div className="audio-info">
-                  <span className="audio-source">
-                    {mediaSource === MEDIA_SOURCES.FILE
-                        ? `Datei: ${fileName || 'Audiofile'}`
-                        : `Stream: ${urlValue}`}
-                  </span>
-                                </div>
-                                <div className="audio-controls">
-                                    {audioElement}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Screen Capture Display */}
-                        {mediaSource === MEDIA_SOURCES.SCREEN && mediaStream && (
-                            <div className="screen-capture-container">
-                                <video
-                                    autoPlay
-                                    muted
-                                    ref={video => {
-                                        if (video && mediaStream) {
-                                            video.srcObject = mediaStream;
-                                        }
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        {/* Audio Visualizer */}
-                        {analyserNode && (
-                            <SpectrumVisualizer
-                                analyserNode={analyserNode}
-                                fftSize={fftSize}
-                                analyzerData={analyzerData}
-                                syncActive={syncActive}
-                            />
-                        )}
-
-                        {/* Wenn kein Analyzer aktiv ist, zeige Hinweis */}
-                        {!analyserNode && (
-                            <div className="start-message">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polygon points="10 2 2 9 10 16 10 2"></polygon>
-                                    <path d="M2 16l10 7V16"></path>
-                                    <path d="M16 1l6 6-6 6"></path>
-                                    <path d="M10 16l11 0"></path>
-                                </svg>
-                                <h3>Media Sync starten</h3>
-                                <p>Wähle eine Medienquelle und klicke auf "Synchronisation starten", um deine Lichter mit Musik zu synchronisieren.</p>
-                            </div>
-                        )}
+                        {renderVisualizer()}
                     </div>
 
                     {/* Performance-Indikatoren */}
-                    {syncActive && (
+                    {syncActive && mediaSource !== MEDIA_SOURCES.SPOTIFY && (
                         <PerformanceIndicator
                             quality={syncQuality}
                             fftSize={fftSize}
@@ -1426,8 +1487,14 @@ const MediaSyncTool = ({ lights = {}, username, bridgeIP }) => {
                                 <span className="status-text">Synchronisation aktiv</span>
                             </div>
                             <div className="sync-details">
-                                <span className="detail-item">Muster: {syncPattern.charAt(0).toUpperCase() + syncPattern.slice(1)}</span>
-                                <span className="detail-item">Qualität: {syncQuality.charAt(0).toUpperCase() + syncQuality.slice(1)}</span>
+                                {mediaSource !== MEDIA_SOURCES.SPOTIFY ? (
+                                    <>
+                                        <span className="detail-item">Muster: {syncPattern.charAt(0).toUpperCase() + syncPattern.slice(1)}</span>
+                                        <span className="detail-item">Qualität: {syncQuality.charAt(0).toUpperCase() + syncQuality.slice(1)}</span>
+                                    </>
+                                ) : (
+                                    <span className="detail-item">Quelle: Spotify</span>
+                                )}
                                 <span className="detail-item">Lichter: {selectedLights.length}</span>
                             </div>
                         </div>

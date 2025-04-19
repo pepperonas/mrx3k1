@@ -1057,3 +1057,59 @@
         flex-direction: column;
     }
 }
+
+/* Füge diese Styles zu ../styles/effects.css hinzu */
+
+.strobo-warning {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 12px;
+    background-color: rgba(255, 173, 51, 0.1);
+    border-left: 4px solid var(--color-warning);
+    border-radius: var(--radius-small);
+}
+
+.strobo-warning svg {
+    width: 24px;
+    height: 24px;
+    color: var(--color-warning);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.strobo-warning p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.strobo-select {
+    width: 100%;
+    padding: var(--space-sm);
+    border-radius: var(--radius-small);
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--color-text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 4px;
+}
+
+.setting-controls {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.setting-controls label {
+    margin-right: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.setting-controls input[type="range"] {
+    flex-grow: 1;
+}
+
+.flash-field {
+    margin-top: 12px;
+}

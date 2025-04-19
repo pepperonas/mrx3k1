@@ -88,7 +88,24 @@ const PRESET_EFFECTS = [
             briBase: 100,
             flash: true,
             flashChance: 0.05,
-            flashDuration: 150
+            flashDuration: 150,
+            strobo: false,
+            stroboFrequency: 10
+        }
+    },
+    {
+        id: 'strobo',
+        name: 'Strobo',
+        icon: 'zap',
+        settings: {
+            intensity: 100,
+            speed: 50,           // Bestimmt die Strobo-Geschwindigkeit
+            stroboColor: 'white', // 'white', 'color', 'rainbow'
+            hueBase: 0,          // Wird für farbigen Strobo verwendet
+            satBase: 254,
+            briBase: 254,
+            briRange: 0,
+            colorRange: 65535    // Wird für Regenbogen-Strobo verwendet
         }
     }
 ];
@@ -141,6 +158,11 @@ const EffectIcon = ({ type }) => {
                         <polyline points="13 11 9 17 15 17 11 23" />
                     </>
                 )}
+                {type === 'zap' && (
+                    <>
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </>
+                )}
                 {type === 'custom' && (
                     <>
                         <path d="M12 3v3" />
@@ -187,20 +209,23 @@ const EffectCard = ({ effect, active, onSelect, onCustomize }) => {
 // Effekt-Anpassungsdialog
 const EffectCustomizeModal = ({ effect, onSave, onCancel, lights }) => {
     const [settings, setSettings] = useState({...effect.settings});
-    const [selectedLights, setSelectedLights] = useState([]);
+    const [selectedLights, setSelectedLights] = useState(effect.lights || []);
     const [previewActive, setPreviewActive] = useState(false);
     const previewTimerRef = useRef(null);
 
-    // Beim Öffnen des Dialogs, wähle alle Lichter standardmäßig
+    // Beim Öffnen des Dialogs, wähle alle Lichter standardmäßig falls keine definiert sind
     useEffect(() => {
-        setSelectedLights(Object.keys(lights));
+        if (!selectedLights || selectedLights.length === 0) {
+            setSelectedLights(Object.keys(lights).slice(0, 3)); // Erste drei Lichter standardmäßig
+        }
+
         return () => {
             // Cleanup bei Schließen des Dialogs
             if (previewTimerRef.current) {
                 clearInterval(previewTimerRef.current);
             }
         };
-    }, [lights]);
+    }, [lights, selectedLights]);
 
     const handleSettingChange = (key, value) => {
         setSettings(prev => ({
@@ -231,13 +256,20 @@ const EffectCustomizeModal = ({ effect, onSave, onCancel, lights }) => {
             // Implementierung einer Preview-Funktion hier
             // Diese würde normalerweise die Lichter mit den aktuellen Einstellungen steuern
             previewTimerRef.current = setInterval(() => {
-                console.log("Vorschau läuft mit Einstellungen:", settings);
+                console.log("Vorschau läuft mit Einstellungen:", settings, "für Lichter:", selectedLights);
                 // Hier würde die tatsächliche Lichtsteuerung erfolgen
             }, 1000);
         }
     };
 
     const handleSave = () => {
+        console.log("Speichere angepassten Effekt:", {
+            id: effect.id,
+            name: effect.name,
+            settings: settings,
+            lights: selectedLights
+        });
+
         onSave({
             ...effect,
             settings,
@@ -367,19 +399,126 @@ const EffectCustomizeModal = ({ effect, onSave, onCancel, lights }) => {
                                         <span>Blitz-Effekt aktivieren</span>
                                     </label>
                                 </div>
+
                                 <div className="flash-field">
                                     <label>Häufigkeit</label>
-                                    <input
-                                        type="range"
-                                        min="0.01"
-                                        max="0.2"
-                                        step="0.01"
-                                        value={settings.flashChance}
-                                        onChange={(e) => handleSettingChange('flashChance', parseFloat(e.target.value))}
-                                        disabled={!settings.flash}
-                                    />
+                                    <div className="setting-controls">
+                                        <input
+                                            type="range"
+                                            min="0.01"
+                                            max="0.2"
+                                            step="0.01"
+                                            value={settings.flashChance}
+                                            onChange={(e) => handleSettingChange('flashChance', parseFloat(e.target.value))}
+                                            disabled={!settings.flash}
+                                        />
+                                        <span className="setting-value">{Math.round(settings.flashChance * 100)}%</span>
+                                    </div>
+                                </div>
 
-                                    <span className="setting-value">{settings.flashDuration}ms</span>
+                                <div className="flash-field">
+                                    <label>Blitzdauer</label>
+                                    <div className="setting-controls">
+                                        <input
+                                            type="range"
+                                            min="50"
+                                            max="500"
+                                            step="10"
+                                            value={settings.flashDuration || 150}
+                                            onChange={(e) => handleSettingChange('flashDuration', parseInt(e.target.value))}
+                                            disabled={!settings.flash}
+                                        />
+                                        <span className="setting-value">{settings.flashDuration || 150}ms</span>
+                                    </div>
+                                </div>
+
+                                <div className="flash-field">
+                                    <label className="checkbox-container">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.strobo || false}
+                                            onChange={(e) => handleSettingChange('strobo', e.target.checked)}
+                                            disabled={!settings.flash}
+                                        />
+                                        <span>Strobo-Effekt bei Blitzen</span>
+                                    </label>
+
+                                    {settings.strobo && (
+                                        <div className="setting-controls">
+                                            <label>Strobo-Frequenz</label>
+                                            <input
+                                                type="range"
+                                                min="5"
+                                                max="30"
+                                                value={settings.stroboFrequency || 10}
+                                                onChange={(e) => handleSettingChange('stroboFrequency', parseInt(e.target.value))}
+                                                disabled={!settings.flash || !settings.strobo}
+                                            />
+                                            <span className="setting-value">{settings.stroboFrequency || 10} Hz</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {effect.id === 'strobo' && (
+                        <div className="setting-group">
+                            <h3>Strobo-Einstellungen</h3>
+                            <div className="flash-controls">
+                                <div className="flash-field">
+                                    <label>Geschwindigkeit</label>
+                                    <div className="setting-controls">
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="50"
+                                            value={settings.speed}
+                                            onChange={(e) => handleSettingChange('speed', parseInt(e.target.value))}
+                                        />
+                                        <span className="setting-value">{settings.speed} Hz</span>
+                                    </div>
+                                </div>
+
+                                <div className="flash-field">
+                                    <label>Farbmodus</label>
+                                    <select
+                                        value={settings.stroboColor || 'white'}
+                                        onChange={(e) => handleSettingChange('stroboColor', e.target.value)}
+                                        className="strobo-select"
+                                    >
+                                        <option value="white">Weiß</option>
+                                        <option value="color">Feste Farbe</option>
+                                        <option value="rainbow">Regenbogen</option>
+                                    </select>
+                                </div>
+
+                                {settings.stroboColor === 'color' && (
+                                    <div className="color-field">
+                                        <label>Farbe</label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="65535"
+                                            value={settings.hueBase}
+                                            onChange={(e) => handleSettingChange('hueBase', parseInt(e.target.value))}
+                                        />
+                                        <div
+                                            className="color-preview"
+                                            style={{
+                                                backgroundColor: `hsl(${(settings.hueBase / 65535) * 360}, ${(settings.satBase / 254) * 100}%, 50%)`
+                                            }}
+                                        ></div>
+                                    </div>
+                                )}
+
+                                <div className="strobo-warning">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    <p>Warnung: Strobo-Effekte können bei empfindlichen Personen Beschwerden oder epileptische Anfälle auslösen.</p>
                                 </div>
                             </div>
                         </div>
@@ -430,14 +569,19 @@ class EffectAnimationService {
         this.animationFrame = null;
         this.lastUpdateTime = 0;
         this.lightStates = {}; // Aktuelle Zustände der Lichter speichern
+        console.log(`EffectAnimationService initialisiert für ${effect.name}`,
+            `mit ${effect.lights ? effect.lights.length : 0} Lichtern:`,
+            effect.lights);
     }
 
     start() {
+        console.log(`Starte Effekt: ${this.effect.name}`);
         this.isRunning = true;
         this.animate();
     }
 
     stop() {
+        console.log(`Stoppe Effekt: ${this.effect.name}`);
         this.isRunning = false;
         if (this.animationFrame) {
             cancelAnimationFrame(this.animationFrame);
@@ -460,17 +604,28 @@ class EffectAnimationService {
         this.animationFrame = requestAnimationFrame(this.animate.bind(this));
     }
 
-    updateLights() {
-        if (!this.effect.lights || this.effect.lights.length === 0) return;
+    async updateLights() {
+        if (!this.effect.lights || this.effect.lights.length === 0) {
+            console.warn("Keine Lichter für Effekt definiert");
+            return;
+        }
 
         // Für jedes Licht im Effekt
-        this.effect.lights.forEach(lightId => {
+        const updatePromises = this.effect.lights.map(async lightId => {
             // Berechne neuen Lichtzustand basierend auf dem Effekt-Typ und Einstellungen
             const newState = this.calculateLightState(lightId);
 
+            // Logge Einstellungen für Debugging
+            if (lightId === this.effect.lights[0]) { // Nur für das erste Licht loggen, um nicht zu spammen
+                console.debug(`Effekt '${this.effect.id}' für Licht ${lightId}:`, newState);
+            }
+
             // Wende den Zustand auf das Licht an
-            this.setLightState(lightId, newState);
+            return await this.setLightState(lightId, newState);
         });
+
+        // Warte auf alle Updates
+        await Promise.all(updatePromises);
 
         // Callback mit aktuellen Zuständen aufrufen, falls vorhanden
         if (this.callback) {
@@ -524,12 +679,50 @@ class EffectAnimationService {
 
             case 'rainbow':
                 // Fortlaufender Regenbogen-Effekt
-                const rainbowOffset = (lightId % 3) * 21845; // Versatz für verschiedene Lichter
+                const rainbowOffset = (parseInt(lightId) % 3) * 21845; // Versatz für verschiedene Lichter
                 const rainbowTime = Date.now() / (110 - settings.speed); // Geschwindigkeitsabhängig
                 state.hue = (rainbowTime + rainbowOffset) % 65535;
                 state.sat = settings.satBase;
                 state.bri = settings.briBase;
                 state.transitiontime = 1;
+                break;
+
+            case 'strobo':
+                // Strobo-Effekt mit schnellem Blinken
+                const stroboTime = Date.now();
+                const stroboSpeed = settings.speed * 2; // 2-100 Hz
+
+                // Berechne, ob das Licht an oder aus sein soll
+                // Je höher die Geschwindigkeit, desto häufiger wechselt der Zustand
+                const stroboOn = Math.sin((stroboTime / (1000 / stroboSpeed))) > 0;
+
+                if (stroboOn) {
+                    // Für den "An"-Zustand je nach Farboption
+                    switch (settings.stroboColor) {
+                        case 'white':
+                            // Weißes Licht (keine Farbe)
+                            state.hue = 0;
+                            state.sat = 0;
+                            break;
+                        case 'color':
+                            // Feste Farbe
+                            state.hue = settings.hueBase;
+                            state.sat = settings.satBase;
+                            break;
+                        case 'rainbow':
+                            // Regenbogenfarben
+                            state.hue = (stroboTime / 50) % 65535;
+                            state.sat = settings.satBase;
+                            break;
+                    }
+                    state.bri = 254; // Volle Helligkeit
+                } else {
+                    // Für den "Aus"-Zustand
+                    state.bri = 0; // Aus
+                }
+
+                // Sofortiger Übergang für schnellen Wechsel
+                state.transitiontime = 0;
                 break;
 
             case 'thunderstorm':
@@ -544,7 +737,39 @@ class EffectAnimationService {
                     state.sat = 20;  // Fast weiß
                     state.transitiontime = 0; // Sofortiger Übergang
 
-                    // Zurücksetzen nach Blitz (wird später durch einen Timer implementiert)
+                    // Strobo-Effekt bei Blitzen, falls aktiviert
+                    if (settings.strobo) {
+                        const stroboFreq = settings.stroboFrequency || 10;
+
+                        // Startet einen Strobo-Effekt für die Dauer des Blitzes
+                        let stroboCount = 0;
+                        const stroboInterval = setInterval(() => {
+                            // Wechsel zwischen hell und dunkel
+                            if (stroboCount % 2 === 0) {
+                                this.setLightState(lightId, {
+                                    on: true,
+                                    bri: 254,
+                                    sat: 0,
+                                    transitiontime: 0
+                                });
+                            } else {
+                                this.setLightState(lightId, {
+                                    on: true,
+                                    bri: 0,
+                                    transitiontime: 0
+                                });
+                            }
+
+                            stroboCount++;
+
+                            // Beende Strobo, wenn die Blitzdauer erreicht ist
+                            if (stroboCount >= (settings.flashDuration / (1000 / stroboFreq) * 2)) {
+                                clearInterval(stroboInterval);
+                            }
+                        }, 1000 / stroboFreq / 2);
+                    }
+
+                    // Zurücksetzen nach Blitz
                     setTimeout(() => {
                         this.setLightState(lightId, {
                             hue: settings.hueBase + (Math.random() - 0.5) * settings.colorRange,
@@ -589,9 +814,19 @@ class EffectAnimationService {
             });
 
             const data = await response.json();
-            return data;
+
+            // Überprüfe, ob ein Fehler zurückgemeldet wurde
+            if (data[0] && data[0].error) {
+                console.error(`Fehler bei Licht ${lightId}:`, data[0].error.description);
+                return false;
+            }
+
+            // Aktualisiere den lokalen Zustand
+            this.lightStates[lightId] = {...state};
+            return true;
         } catch (error) {
             console.error(`Fehler beim Setzen des Lichtzustands für ${lightId}:`, error);
+            return false;
         }
     }
 }
@@ -605,6 +840,27 @@ const DynamicEffectsView = ({ lights, bridgeIP, username }) => {
     const [error, setError] = useState(null);
 
     const animationServiceRef = useRef(null);
+
+    // Lade gespeicherte Effekte beim Mount
+    useEffect(() => {
+        try {
+            const savedEffects = localStorage.getItem('hue-dynamic-effects');
+            if (savedEffects) {
+                setEffects(JSON.parse(savedEffects));
+            }
+        } catch (error) {
+            console.error("Fehler beim Laden der gespeicherten Effekte:", error);
+        }
+    }, []);
+
+    // Speichere Effekte im localStorage, wenn sie sich ändern
+    useEffect(() => {
+        try {
+            localStorage.setItem('hue-dynamic-effects', JSON.stringify(effects));
+        } catch (error) {
+            console.error("Fehler beim Speichern der Effekte:", error);
+        }
+    }, [effects]);
 
     // Bereinige Animation beim Unmounten
     useEffect(() => {
@@ -635,14 +891,22 @@ const DynamicEffectsView = ({ lights, bridgeIP, username }) => {
 
         if (!selectedEffect) return;
 
+        // Sicherstellen, dass der Effekt eine lights-Eigenschaft hat
+        if (!selectedEffect.lights || selectedEffect.lights.length === 0) {
+            // Standardmäßig die ersten drei Lichter, falls keine definiert sind
+            selectedEffect.lights = Object.keys(lights).slice(0, 3);
+
+            // Aktualisiere den Effekt in der Liste
+            setEffects(prevEffects =>
+                prevEffects.map(e => e.id === effectId ? {...e, lights: selectedEffect.lights} : e)
+            );
+        }
+
         // Starte Animations-Service für den ausgewählten Effekt
         animationServiceRef.current = new EffectAnimationService(
             bridgeIP,
             username,
-            {
-                ...selectedEffect,
-                lights: Object.keys(lights).slice(0, 3) // Standardmäßig die ersten drei Lichter
-            }
+            selectedEffect
         );
 
         animationServiceRef.current.start();
@@ -655,9 +919,13 @@ const DynamicEffectsView = ({ lights, bridgeIP, username }) => {
 
     // Speichere angepassten Effekt
     const saveCustomizedEffect = (customizedEffect) => {
-        // Aktualisiere den Effekt in der Liste
+        // Aktualisiere den Effekt in der Liste mit allen Eigenschaften
         setEffects(prev => prev.map(e =>
-            e.id === customizedEffect.id ? { ...e, settings: customizedEffect.settings } : e
+            e.id === customizedEffect.id ? {
+                ...e,
+                settings: customizedEffect.settings,
+                lights: customizedEffect.lights
+            } : e
         ));
 
         // Stoppe aktuellen Animations-Service
@@ -693,7 +961,8 @@ const DynamicEffectsView = ({ lights, bridgeIP, username }) => {
                 satBase: 200,
                 briRange: 30,
                 briBase: 150
-            }
+            },
+            lights: Object.keys(lights).slice(0, 3) // Die ersten 3 Lichter als Standard
         };
 
         // Füge den neuen Effekt zur Liste hinzu
@@ -757,6 +1026,7 @@ const DynamicEffectsView = ({ lights, bridgeIP, username }) => {
                 </>
             )}
 
+            {/* Modaler Dialog zum Anpassen eines Effekts */}
             {customizing && (
                 <EffectCustomizeModal
                     effect={customizing}

@@ -1,8 +1,10 @@
-Verzeichnisstruktur generiert am Fri Apr 18 23:31:09 CEST 2025
+Verzeichnisstruktur generiert am Sat Apr 19 18:06:09 CEST 2025
 Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 
 .
 ├── README.md
+├── _prompts
+│   └── fast-forward.txt
 ├── bridge-test-tool.sh
 ├── build
 │   ├── custom-logo-svg.svg
@@ -29,8 +31,8 @@ Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 │   ├── App.css
 │   ├── App.jsx
 │   ├── components
-│   │   ├── AutomationsView.jsx
 │   │   ├── DashboardView.jsx
+│   │   ├── DevView.jsx
 │   │   ├── DynamicEffectsView.jsx
 │   │   ├── EnergyDashboardView.jsx
 │   │   ├── EnhancedAutomationView.jsx
@@ -39,30 +41,38 @@ Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 │   │   ├── MediaSyncTool.jsx
 │   │   ├── MusicVisualizer.jsx
 │   │   ├── ScenesView.jsx
+│   │   ├── SensorControlView.jsx
 │   │   ├── SettingsPanel.jsx
+│   │   ├── SpotifyIntegration.jsx
 │   │   ├── Tabs.jsx
-│   │   ├── TimerControlView.jsx
+│   │   ├── TimeControlView.jsx
 │   │   └── WeatherIntegrationView.jsx
 │   ├── index.css
 │   ├── index.js
 │   ├── models
 │   │   └── types.js
 │   ├── services
-│   │   └── HueApiService.jsx
+│   │   ├── HueApiService.jsx
+│   │   └── TimeControlService.js
 │   ├── styles
 │   │   ├── _empty.css
 │   │   ├── automation.css
 │   │   ├── automations.css
 │   │   ├── dashboard.css
+│   │   ├── dev.css
 │   │   ├── effects.css
 │   │   ├── energy.css
 │   │   ├── groups.css
 │   │   ├── mediasync.css
 │   │   ├── scenes.css
+│   │   ├── schedules.css
+│   │   ├── sensors.css
+│   │   ├── spotify.css
+│   │   ├── timeControl.css
 │   │   ├── timer.css
 │   │   └── weather.css
 │   └── utils
 │       └── colorConverters.js
 └── tree.txt
 
-9 directories, 54 files
+10 directories, 63 files
