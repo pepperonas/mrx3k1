@@ -138,9 +138,10 @@ const GroupCard = ({ group, onEdit, onDelete, onActivate, isActive }) => {
 };
 
 // Bedienelemente für die aktive Gruppe
-const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, bridgeIP }) => {
+const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, bridgeIP, onUpdateLights }) => {
     const [allOn, setAllOn] = useState(false);
     const [brightness, setBrightness] = useState(254);
+    const [statusMessage, setStatusMessage] = useState({ message: '', type: '' });
 
     // Berechne den Gruppenstatus basierend auf den enthaltenen Lichtern
     useEffect(() => {
@@ -166,58 +167,217 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
         }
     }, [group, lights]);
 
+    // Status anzeigen und nach Zeitraum ausblenden
+    const setStatus = (message, type = 'info') => {
+        setStatusMessage({ message, type });
+        setTimeout(() => {
+            setStatusMessage({ message: '', type: '' });
+        }, 3000);
+    };
+
     // Gruppe ein-/ausschalten
     const toggleGroup = async () => {
         try {
-            onToggleAll(!allOn);
+            // Sofort UI aktualisieren für bessere UX
+            const newOn = !allOn;
+            setAllOn(newOn);
 
-            // Direkter API-Aufruf für die Gruppe (wenn Bridge-API verwendet wird)
-            if (group.bridgeGroupId) {
-                await fetch(`http://${bridgeIP}/api/${username}/groups/${group.bridgeGroupId}/action`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ on: !allOn })
-                });
-            } else {
-                // Andernfalls jedes Licht einzeln schalten
-                for (const lightId of group.lights) {
-                    await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ on: !allOn })
+            // Die Statusänderung für alle Lichter vorbereiten
+            const updatedLights = { ...lights };
+            const lightUpdates = [];
+
+            for (const lightId of group.lights) {
+                if (updatedLights[lightId]) {
+                    // Lokalen Zustand aktualisieren
+                    updatedLights[lightId] = {
+                        ...updatedLights[lightId],
+                        state: {
+                            ...updatedLights[lightId].state,
+                            on: newOn
+                        }
+                    };
+
+                    // API-Anfrage vorbereiten
+                    lightUpdates.push({
+                        lightId,
+                        request: fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ on: newOn })
+                        })
                     });
                 }
             }
+
+            // An Callback zur Aktualisierung der Lichtzustände senden
+            onUpdateLights(updatedLights);
+            onToggleAll(newOn);
+
+            // Direkter API-Aufruf für die Gruppe (wenn Bridge-API verwendet wird)
+            let groupApiSuccess = true;
+            if (group.bridgeGroupId) {
+                try {
+                    const groupResponse = await fetch(`http://${bridgeIP}/api/${username}/groups/${group.bridgeGroupId}/action`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ on: newOn })
+                    });
+
+                    const groupResult = await groupResponse.json();
+                    if (groupResult[0] && groupResult[0].error) {
+                        console.error("Fehler beim Gruppen-API-Aufruf:", groupResult);
+                        groupApiSuccess = false;
+                    }
+                } catch (error) {
+                    console.error("Fehler beim Gruppen-API-Aufruf:", error);
+                    groupApiSuccess = false;
+                }
+            }
+
+            // Einzelne Lichter schalten, wenn Gruppenaufruf fehlgeschlagen ist
+            if (!groupApiSuccess || !group.bridgeGroupId) {
+                // Alle API-Anfragen parallel durchführen
+                const results = await Promise.all(
+                    lightUpdates.map(async (update) => {
+                        try {
+                            const response = await update.request;
+                            return { lightId: update.lightId, result: await response.json() };
+                        } catch (error) {
+                            return { lightId: update.lightId, error };
+                        }
+                    })
+                );
+
+                // Auf Fehler prüfen
+                const errors = results.filter(result => result.error || (result.result[0] && result.result[0].error));
+
+                if (errors.length > 0) {
+                    console.error("Fehler beim Schalten einzelner Lichter:", errors);
+                    setStatus(`Fehler beim Schalten von ${errors.length} Lichtern`, 'error');
+
+                    // Licht-Status bei fehlgeschlagenen Anfragen zurücksetzen
+                    const correctedLights = { ...updatedLights };
+                    errors.forEach(error => {
+                        const lightId = error.lightId;
+                        if (correctedLights[lightId]) {
+                            correctedLights[lightId] = {
+                                ...correctedLights[lightId],
+                                state: {
+                                    ...correctedLights[lightId].state,
+                                    on: !newOn // Zurück zum ursprünglichen Zustand
+                                }
+                            };
+                        }
+                    });
+
+                    // Aktualisierte Lichter zurücksenden
+                    onUpdateLights(correctedLights);
+                } else {
+                    setStatus(newOn ? 'Gruppe eingeschaltet' : 'Gruppe ausgeschaltet', 'success');
+                }
+            } else {
+                setStatus(newOn ? 'Gruppe eingeschaltet' : 'Gruppe ausgeschaltet', 'success');
+            }
         } catch (error) {
-            console.error("Fehler beim Schalten der Gruppe:", error);
+            console.error("Allgemeiner Fehler beim Schalten der Gruppe:", error);
+            setStatus('Verbindungsfehler zur Bridge', 'error');
+
+            // Status zurücksetzen
+            setAllOn(!allOn);
         }
     };
 
     // Helligkeit der Gruppe einstellen
     const adjustBrightness = async (value) => {
         try {
-            setBrightness(value);
-            onSetBrightness(value);
+            // Sofort UI aktualisieren für bessere UX
+            const newBrightness = parseInt(value);
+            setBrightness(newBrightness);
 
-            // Direkter API-Aufruf für die Gruppe (wenn Bridge-API verwendet wird)
-            if (group.bridgeGroupId) {
-                await fetch(`http://${bridgeIP}/api/${username}/groups/${group.bridgeGroupId}/action`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bri: parseInt(value) })
-                });
-            } else {
-                // Andernfalls jedes Licht einzeln anpassen
-                for (const lightId of group.lights) {
-                    await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ bri: parseInt(value) })
+            // Die Helligkeitsänderung für alle Lichter vorbereiten
+            const updatedLights = { ...lights };
+            const lightUpdates = [];
+
+            for (const lightId of group.lights) {
+                if (updatedLights[lightId] && updatedLights[lightId].state.on) {
+                    // Lokalen Zustand aktualisieren
+                    updatedLights[lightId] = {
+                        ...updatedLights[lightId],
+                        state: {
+                            ...updatedLights[lightId].state,
+                            bri: newBrightness
+                        }
+                    };
+
+                    // API-Anfrage vorbereiten
+                    lightUpdates.push({
+                        lightId,
+                        request: fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ bri: newBrightness })
+                        })
                     });
                 }
             }
+
+            // An Callback zur Aktualisierung der Lichtzustände senden
+            onUpdateLights(updatedLights);
+            onSetBrightness(newBrightness);
+
+            // Direkter API-Aufruf für die Gruppe (wenn Bridge-API verwendet wird)
+            let groupApiSuccess = true;
+            if (group.bridgeGroupId) {
+                try {
+                    const groupResponse = await fetch(`http://${bridgeIP}/api/${username}/groups/${group.bridgeGroupId}/action`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bri: newBrightness })
+                    });
+
+                    const groupResult = await groupResponse.json();
+                    if (groupResult[0] && groupResult[0].error) {
+                        console.error("Fehler beim Gruppen-API-Aufruf:", groupResult);
+                        groupApiSuccess = false;
+                    }
+                } catch (error) {
+                    console.error("Fehler beim Gruppen-API-Aufruf:", error);
+                    groupApiSuccess = false;
+                }
+            }
+
+            // Einzelne Lichter anpassen, wenn Gruppenaufruf fehlgeschlagen ist
+            if (!groupApiSuccess || !group.bridgeGroupId) {
+                // Alle API-Anfragen parallel durchführen
+                const results = await Promise.all(
+                    lightUpdates.map(async (update) => {
+                        try {
+                            const response = await update.request;
+                            return { lightId: update.lightId, result: await response.json() };
+                        } catch (error) {
+                            return { lightId: update.lightId, error };
+                        }
+                    })
+                );
+
+                // Auf Fehler prüfen
+                const errors = results.filter(result => result.error || (result.result[0] && result.result[0].error));
+
+                if (errors.length > 0) {
+                    console.error("Fehler beim Ändern der Helligkeit einzelner Lichter:", errors);
+                    setStatus(`Fehler beim Ändern der Helligkeit von ${errors.length} Lichtern`, 'error');
+                } else {
+                    setStatus('Helligkeit angepasst', 'success');
+                }
+            } else {
+                setStatus('Helligkeit angepasst', 'success');
+            }
         } catch (error) {
-            console.error("Fehler beim Einstellen der Gruppenhelligkeit:", error);
+            console.error("Allgemeiner Fehler beim Einstellen der Gruppenhelligkeit:", error);
+            setStatus('Verbindungsfehler zur Bridge', 'error');
+
+            // Status zurücksetzen
+            setBrightness(brightness);
         }
     };
 
@@ -271,15 +431,21 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
                                 ></div>
                                 <span className="light-name">{light.name}</span>
                                 <span className="light-status">
-                  {light.state.on ?
-                      `${Math.round((light.state.bri || 254) / 254 * 100)}%` :
-                      'Aus'}
-                </span>
+                                    {light.state.on ?
+                                        `${Math.round((light.state.bri || 254) / 254 * 100)}%` :
+                                        'Aus'}
+                                </span>
                             </div>
                         );
                     })}
                 </div>
             </div>
+
+            {statusMessage.message && (
+                <div className={`status-message status-${statusMessage.type}`}>
+                    {statusMessage.message}
+                </div>
+            )}
         </div>
     );
 };
@@ -587,7 +753,7 @@ const hsvToColor = (state) => {
 };
 
 // Hauptkomponente für die Gruppenverwaltung
-const GroupsView = ({ lights, username, bridgeIP }) => {
+const GroupsView = ({ lights, username, bridgeIP, onLightsUpdate }) => {
     const [groups, setGroups] = useState([]);
     const [bridgeGroups, setBridgeGroups] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -595,6 +761,21 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
     const [editingGroup, setEditingGroup] = useState(null);
     const [showFormModal, setShowFormModal] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState(null);
+    const [localLights, setLocalLights] = useState({});
+    const [statusMessage, setStatusMessage] = useState({ message: '', type: '' });
+
+    // Initialisiere lokalen Lichtzustand
+    useEffect(() => {
+        setLocalLights(lights);
+    }, [lights]);
+
+    // Status setzen mit Timeout
+    const setStatus = (message, type = 'info') => {
+        setStatusMessage({ message, type });
+        setTimeout(() => {
+            setStatusMessage({ message: '', type: 'info' });
+        }, 3000);
+    };
 
     // Lade Gruppen beim Komponenten-Mount
     useEffect(() => {
@@ -649,6 +830,7 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
                 }
             } catch (err) {
                 console.warn("Konnte keine Gruppen von der Bridge laden:", err);
+                setStatus("Konnte keine Gruppen von der Bridge laden", "warning");
             }
 
             setGroups(localGroups);
@@ -672,6 +854,7 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
             localStorage.setItem('hue-groups', JSON.stringify(updatedGroups));
         } catch (err) {
             console.error("Fehler beim Speichern der Gruppen:", err);
+            setStatus("Fehler beim Speichern der Gruppen", "error");
         }
     };
 
@@ -700,6 +883,8 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
             if (activeGroupId === groupId) {
                 setActiveGroupId(updatedGroups.length > 0 ? updatedGroups[0].id : null);
             }
+
+            setStatus("Gruppe wurde gelöscht", "success");
         }
     };
 
@@ -712,6 +897,7 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
             updatedGroups = groups.map(g =>
                 g.id === editingGroup.id ? { ...g, ...groupData } : g
             );
+            setStatus(`Gruppe "${groupData.name}" wurde aktualisiert`, "success");
         } else {
             // Erstelle neue Gruppe
             const newGroup = {
@@ -719,6 +905,7 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
                 id: Date.now().toString()
             };
             updatedGroups = [...groups, newGroup];
+            setStatus(`Gruppe "${groupData.name}" wurde erstellt`, "success");
         }
 
         setGroups(updatedGroups);
@@ -734,59 +921,21 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
 
     // Alle Lichter in der aktiven Gruppe ein-/ausschalten
     const toggleAllLights = async (on) => {
-        try {
-            if (!activeGroupId) return;
-
-            const group = groups.find(g => g.id === activeGroupId);
-            if (!group) return;
-
-            // Aktualisiere lokale Daten (optimistische UI-Aktualisierung)
-            const updatedLights = { ...lights };
-            group.lights.forEach(lightId => {
-                if (updatedLights[lightId]) {
-                    updatedLights[lightId] = {
-                        ...updatedLights[lightId],
-                        state: {
-                            ...updatedLights[lightId].state,
-                            on
-                        }
-                    };
-                }
-            });
-
-            // Aktualisierung in der UI anzeigen
-            // (In einer realen App würdest du hier einen Zustandsmanager wie Redux verwenden)
-        } catch (err) {
-            console.error("Fehler beim Umschalten aller Lichter:", err);
-        }
+        // Implementation in GroupControls
+        console.log("Alle Lichter in Gruppe:", on ? "ein" : "aus");
     };
 
     // Helligkeit aller Lichter in der aktiven Gruppe einstellen
     const setGroupBrightness = async (brightness) => {
-        try {
-            if (!activeGroupId) return;
+        // Implementation in GroupControls
+        console.log("Gruppenhelligkeit setzen:", brightness);
+    };
 
-            const group = groups.find(g => g.id === activeGroupId);
-            if (!group) return;
-
-            // Aktualisiere lokale Daten (optimistische UI-Aktualisierung)
-            const updatedLights = { ...lights };
-            group.lights.forEach(lightId => {
-                if (updatedLights[lightId] && updatedLights[lightId].state.on) {
-                    updatedLights[lightId] = {
-                        ...updatedLights[lightId],
-                        state: {
-                            ...updatedLights[lightId].state,
-                            bri: parseInt(brightness)
-                        }
-                    };
-                }
-            });
-
-            // Aktualisierung in der UI anzeigen
-            // (In einer realen App würdest du hier einen Zustandsmanager wie Redux verwenden)
-        } catch (err) {
-            console.error("Fehler beim Einstellen der Gruppenhelligkeit:", err);
+    // Update der Lichtzustände
+    const handleLightsUpdate = (updatedLights) => {
+        setLocalLights(updatedLights);
+        if (typeof onLightsUpdate === 'function') {
+            onLightsUpdate(updatedLights);
         }
     };
 
@@ -838,9 +987,10 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
                     {activeGroup ? (
                         <GroupControls
                             group={activeGroup}
-                            lights={lights}
+                            lights={localLights}
                             onToggleAll={toggleAllLights}
                             onSetBrightness={setGroupBrightness}
+                            onUpdateLights={handleLightsUpdate}
                             username={username}
                             bridgeIP={bridgeIP}
                         />
@@ -855,11 +1005,17 @@ const GroupsView = ({ lights, username, bridgeIP }) => {
             {showFormModal && (
                 <GroupFormModal
                     group={editingGroup}
-                    lights={lights}
+                    lights={localLights}
                     onSave={saveGroup}
                     onCancel={() => { setShowFormModal(false); setEditingGroup(null); }}
                     bridgeGroups={bridgeGroups}
                 />
+            )}
+
+            {statusMessage.message && (
+                <div className={`status-message status-${statusMessage.type}`}>
+                    {statusMessage.message}
+                </div>
             )}
         </div>
     );
