@@ -82,9 +82,11 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
         }
 
         // Zähle ein- und ausgeschaltete Lichter
-        const onCount = groupLights.filter(light => light.state.on).length;
-        const allOn = onCount === groupLights.length;
-        const someOn = onCount > 0 && onCount < groupLights.length;
+        // Füge zusätzliche Prüfung hinzu, um sicherzustellen, dass wir nur gültige Lichter zählen
+        const validLights = groupLights.filter(light => light && light.state !== undefined);
+        const onCount = validLights.filter(light => light.state.on === true).length;
+        const allOn = validLights.length > 0 && onCount === validLights.length;
+        const someOn = onCount > 0 && onCount < validLights.length;
 
         return (
             <div className="light-group-widget">
@@ -226,6 +228,10 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
 
     // Status-Widget zeigt den aktuellen Zustand der Bridge und der Lichter
     const StatusWidget = ({ lightsData }) => {
+        // Sicherstellen, dass nur gültige Lichtdaten gezählt werden
+        const validLights = Object.values(lightsData || {}).filter(l => l && l.state);
+        const activeLights = validLights.filter(l => l.state.on === true).length;
+
         return (
             <div className="status-widget">
                 <h3>{data.title || 'System-Status'}</h3>
@@ -236,11 +242,11 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
                     </div>
                     <div className="status-item">
                         <span className="status-label">Lichter:</span>
-                        <span className="status-value">{Object.keys(lightsData).length} gefunden</span>
+                        <span className="status-value">{validLights.length} gefunden</span>
                     </div>
                     <div className="status-item">
                         <span className="status-label">Aktiv:</span>
-                        <span className="status-value">{Object.values(lightsData).filter(l => l.state.on).length} eingeschaltet</span>
+                        <span className="status-value">{activeLights} eingeschaltet</span>
                     </div>
                 </div>
             </div>
@@ -807,10 +813,14 @@ const DashboardView = ({ lights: initialLights, scenes = [], bridgeIP, username,
         switch (action) {
             case 'toggleLight':
                 try {
+                    // Speichern des Originalzustands für mögliche Wiederherstellung
+                    const originalState = {...localLights};
+                    const originalLightState = originalState[params.lightId]?.state?.on;
+
                     // Update UI sofort für bessere UX
                     setLocalLights(prevLights => {
                         const newLights = { ...prevLights };
-                        if (newLights[params.lightId]) {
+                        if (newLights[params.lightId] && newLights[params.lightId].state) {
                             newLights[params.lightId] = {
                                 ...newLights[params.lightId],
                                 state: {
@@ -833,29 +843,18 @@ const DashboardView = ({ lights: initialLights, scenes = [], bridgeIP, username,
 
                     const result = await response.json();
 
-                    // Falls API-Fehler zurückgibt, ggf. State zurücksetzen
+                    // Falls API-Fehler zurückgibt, State zurücksetzen
                     if (result[0] && result[0].error) {
                         console.error("API-Fehler:", result[0].error);
                         setStatus("Fehler beim Schalten des Lichts", "error");
 
-                        // UI-Zustand zurücksetzen
-                        setLocalLights(prevLights => {
-                            const newLights = { ...prevLights };
-                            if (newLights[params.lightId]) {
-                                newLights[params.lightId] = {
-                                    ...newLights[params.lightId],
-                                    state: {
-                                        ...newLights[params.lightId].state,
-                                        on: !params.on // zurück zum vorherigen Zustand
-                                    }
-                                };
-                            }
-                            return newLights;
-                        });
+                        // UI-Zustand zurück zum original
+                        setLocalLights(originalState);
                     } else {
-                        // Informiere übergeordnete Komponente über Änderung
+                        // Informiere übergeordnete Komponente über Änderung mit dem aktuellen Zustand
                         if (typeof onLightsUpdate === 'function') {
-                            onLightsUpdate(localLights);
+                            // Hole den aktuellen Zustand, nicht den veralteten localLights
+                            onLightsUpdate(prev => ({...prev}));
                         }
                     }
                 } catch (error) {
@@ -1038,11 +1037,14 @@ const DashboardView = ({ lights: initialLights, scenes = [], bridgeIP, username,
                 try {
                     const widget = widgets.find(w => w.id === params.widgetId);
                     if (widget && widget.lightIds) {
+                        // Speichere den Originalzustand für mögliche Rücksetzung
+                        const originalLights = JSON.parse(JSON.stringify(localLights));
+
                         // Update UI sofort
                         setLocalLights(prevLights => {
                             const newLights = { ...prevLights };
                             widget.lightIds.forEach(lightId => {
-                                if (newLights[lightId]) {
+                                if (newLights[lightId] && newLights[lightId].state) {
                                     newLights[lightId] = {
                                         ...newLights[lightId],
                                         state: {
@@ -1057,30 +1059,43 @@ const DashboardView = ({ lights: initialLights, scenes = [], bridgeIP, username,
 
                         // Dann API-Aufrufe
                         const promises = widget.lightIds.map(async (lightId) => {
-                            const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ on: params.on })
-                            });
+                            try {
+                                const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ on: params.on })
+                                });
 
-                            return response.json();
+                                return { lightId, result: await response.json() };
+                            } catch (error) {
+                                console.error(`Fehler beim Schalten von Licht ${lightId}:`, error);
+                                return { lightId, error: true };
+                            }
                         });
 
                         // Warte auf alle API-Aufrufe
                         const results = await Promise.all(promises);
 
                         // Prüfe auf API-Fehler
-                        const hasErrors = results.some(result => result[0] && result[0].error);
-                        if (hasErrors) {
-                            console.error("API-Fehler bei Gruppensteuerung:", results);
-                            setStatus("Fehler beim Schalten der Gruppe", "error");
+                        const failedLights = results.filter(item =>
+                            item.error || (item.result[0] && item.result[0].error)
+                        );
+
+                        if (failedLights.length > 0) {
+                            console.error("API-Fehler bei Gruppensteuerung:", failedLights);
+                            setStatus(`Fehler beim Schalten von ${failedLights.length} Lichtern in der Gruppe`, "error");
+
+                            // Bei Fehlern komplett auf original zurücksetzen
+                            setLocalLights(originalLights);
                         } else {
                             // Informiere übergeordnete Komponente über Änderung
                             if (typeof onLightsUpdate === 'function') {
-                                onLightsUpdate(localLights);
+                                onLightsUpdate({...localLights});
                             }
+
+                            setStatus(params.on ? "Gruppe eingeschaltet" : "Gruppe ausgeschaltet", "success");
                         }
                     }
                 } catch (error) {

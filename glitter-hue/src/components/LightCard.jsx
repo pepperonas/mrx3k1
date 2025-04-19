@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
+
   // Farbe aus Licht-Status ermitteln
   const getColorFromState = (state) => {
     if (state.hue === undefined || state.sat === undefined) {
@@ -66,9 +67,20 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
     toggleLight(id, !light.state.on);
   };
 
-  // Behandelt die Änderung der Helligkeit
+  // Temporärer Zustand für Helligkeit während des Ziehens
+  const [tempBrightness, setTempBrightness] = useState(null);
+
+  // Behandelt die Änderung der Helligkeit während des Ziehens
   const handleBrightnessChange = (e) => {
-    setBrightness(id, e.target.value);
+    setTempBrightness(parseInt(e.target.value));
+  };
+
+  // Sendet den Wert nur, wenn der Slider losgelassen wird
+  const handleBrightnessRelease = () => {
+    if (tempBrightness !== null) {
+      setBrightness(id, tempBrightness);
+      setTempBrightness(null);
+    }
   };
 
   // Behandelt die Änderung der Farbe
@@ -106,8 +118,10 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
                 type="range"
                 min="1"
                 max="254"
-                value={light.state.bri || 254}
+                value={tempBrightness !== null ? tempBrightness : (light.state.bri || 254)}
                 onChange={handleBrightnessChange}
+                onMouseUp={handleBrightnessRelease}
+                onTouchEnd={handleBrightnessRelease}
                 disabled={!light.state.on}
             />
           </div>
@@ -129,4 +143,4 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
   );
 };
 
-export default LightCard;
+export default React.memo(LightCard);

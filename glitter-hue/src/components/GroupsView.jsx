@@ -149,16 +149,17 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
 
         const groupLights = group.lights
             .map(id => lights[id])
-            .filter(light => light !== undefined);
+            .filter(light => light !== undefined && light.state !== undefined);
 
         if (groupLights.length === 0) return;
 
         // Alle Lichter eingeschaltet?
-        const allLightsOn = groupLights.every(light => light.state.on);
+        const allLightsOn = groupLights.length > 0 &&
+            groupLights.every(light => light.state && light.state.on === true);
         setAllOn(allLightsOn);
 
         // Durchschnittliche Helligkeit der eingeschalteten Lichter
-        const onLights = groupLights.filter(light => light.state.on);
+        const onLights = groupLights.filter(light => light.state && light.state.on === true);
         if (onLights.length > 0) {
             const avgBrightness = Math.round(
                 onLights.reduce((sum, light) => sum + (light.state.bri || 254), 0) / onLights.length
@@ -182,31 +183,42 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
             const newOn = !allOn;
             setAllOn(newOn);
 
+            // Originalen Zustand für mögliche Wiederherstellung speichern
+            const originalLights = JSON.parse(JSON.stringify(lights));
+
             // Die Statusänderung für alle Lichter vorbereiten
             const updatedLights = { ...lights };
             const lightUpdates = [];
 
-            for (const lightId of group.lights) {
-                if (updatedLights[lightId]) {
-                    // Lokalen Zustand aktualisieren
-                    updatedLights[lightId] = {
-                        ...updatedLights[lightId],
-                        state: {
-                            ...updatedLights[lightId].state,
-                            on: newOn
-                        }
-                    };
+            // Prüfe, ob gültige Lichter in der Gruppe sind
+            const validLightIds = group.lights.filter(id =>
+                updatedLights[id] && updatedLights[id].state !== undefined
+            );
 
-                    // API-Anfrage vorbereiten
-                    lightUpdates.push({
-                        lightId,
-                        request: fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ on: newOn })
-                        })
-                    });
-                }
+            if (validLightIds.length === 0) {
+                setStatus("Keine gültigen Lichter in dieser Gruppe", "warning");
+                return;
+            }
+
+            for (const lightId of validLightIds) {
+                // Lokalen Zustand aktualisieren
+                updatedLights[lightId] = {
+                    ...updatedLights[lightId],
+                    state: {
+                        ...updatedLights[lightId].state,
+                        on: newOn
+                    }
+                };
+
+                // API-Anfrage vorbereiten
+                lightUpdates.push({
+                    lightId,
+                    request: fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ on: newOn })
+                    })
+                });
             }
 
             // An Callback zur Aktualisierung der Lichtzustände senden
@@ -255,23 +267,9 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
                     console.error("Fehler beim Schalten einzelner Lichter:", errors);
                     setStatus(`Fehler beim Schalten von ${errors.length} Lichtern`, 'error');
 
-                    // Licht-Status bei fehlgeschlagenen Anfragen zurücksetzen
-                    const correctedLights = { ...updatedLights };
-                    errors.forEach(error => {
-                        const lightId = error.lightId;
-                        if (correctedLights[lightId]) {
-                            correctedLights[lightId] = {
-                                ...correctedLights[lightId],
-                                state: {
-                                    ...correctedLights[lightId].state,
-                                    on: !newOn // Zurück zum ursprünglichen Zustand
-                                }
-                            };
-                        }
-                    });
-
-                    // Aktualisierte Lichter zurücksenden
-                    onUpdateLights(correctedLights);
+                    // Bei Fehlern komplett zum Originalzustand zurückkehren
+                    onUpdateLights(originalLights);
+                    setAllOn(!newOn); // UI-Zustand zurücksetzen
                 } else {
                     setStatus(newOn ? 'Gruppe eingeschaltet' : 'Gruppe ausgeschaltet', 'success');
                 }
@@ -282,8 +280,9 @@ const GroupControls = ({ group, lights, onToggleAll, onSetBrightness, username, 
             console.error("Allgemeiner Fehler beim Schalten der Gruppe:", error);
             setStatus('Verbindungsfehler zur Bridge', 'error');
 
-            // Status zurücksetzen
-            setAllOn(!allOn);
+            // Komplett zum Originalzustand zurücksetzen
+            onUpdateLights(originalLights);
+            setAllOn(!newOn); // UI-Zustand zurücksetzen
         }
     };
 
