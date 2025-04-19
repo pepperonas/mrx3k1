@@ -61,6 +61,21 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
     return `#${r}${g}${b}`;
   };
 
+  // Behandelt den Wechsel des Ein/Aus-Zustandes
+  const handleToggleChange = () => {
+    toggleLight(id, !light.state.on);
+  };
+
+  // Behandelt die Änderung der Helligkeit
+  const handleBrightnessChange = (e) => {
+    setBrightness(id, e.target.value);
+  };
+
+  // Behandelt die Änderung der Farbe
+  const handleColorChange = (e) => {
+    setColor(id, e.target.value);
+  };
+
   return (
       <div className="light-card" data-light-id={id}>
         <div className="light-header">
@@ -79,7 +94,7 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
           <input
               type="checkbox"
               checked={light.state.on}
-              onChange={(e) => toggleLight(id, e.target.checked)}
+              onChange={handleToggleChange}
           />
           <span className="slider"></span>
         </label>
@@ -92,7 +107,8 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
                 min="1"
                 max="254"
                 value={light.state.bri || 254}
-                onChange={(e) => setBrightness(id, e.target.value)}
+                onChange={handleBrightnessChange}
+                disabled={!light.state.on}
             />
           </div>
 
@@ -103,7 +119,8 @@ const LightCard = ({ id, light, toggleLight, setBrightness, setColor }) => {
                     type="color"
                     className="color-picker"
                     value={getHexColor(light.state)}
-                    onChange={(e) => setColor(id, e.target.value)}
+                    onChange={handleColorChange}
+                    disabled={!light.state.on}
                 />
               </div>
           )}

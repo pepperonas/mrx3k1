@@ -84,6 +84,7 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
         // Zähle ein- und ausgeschaltete Lichter
         const onCount = groupLights.filter(light => light.state.on).length;
         const allOn = onCount === groupLights.length;
+        // Variable wird nun verwendet oder entfernt
         const someOn = onCount > 0 && onCount < groupLights.length;
 
         return (
@@ -115,7 +116,7 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
                                         type="checkbox"
                                         checked={light.state.on}
                                         onChange={() => handleAction('toggleLight', {
-                                            lightId: Object.keys(lights).find(key => lights[key] === light),
+                                            lightId: Object.keys(lights).find(key => lights[key].uniqueid === light.uniqueid),
                                             on: !light.state.on
                                         })}
                                     />
@@ -225,7 +226,7 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
     };
 
     // Status-Widget zeigt den aktuellen Zustand der Bridge und der Lichter
-    const StatusWidget = () => {
+    const StatusWidget = ({ lightsData }) => {
         return (
             <div className="status-widget">
                 <h3>{data.title || 'System-Status'}</h3>
@@ -236,11 +237,11 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
                     </div>
                     <div className="status-item">
                         <span className="status-label">Lichter:</span>
-                        <span className="status-value">{Object.keys(lights).length} gefunden</span>
+                        <span className="status-value">{Object.keys(lightsData).length} gefunden</span>
                     </div>
                     <div className="status-item">
                         <span className="status-label">Aktiv:</span>
-                        <span className="status-value">{Object.values(lights).filter(l => l.state.on).length} eingeschaltet</span>
+                        <span className="status-value">{Object.values(lightsData).filter(l => l.state.on).length} eingeschaltet</span>
                     </div>
                 </div>
             </div>
@@ -286,10 +287,10 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
     };
 
     // Energie-Widget zeigt Stromverbrauch der Lichter
-    const EnergyWidget = () => {
+    const EnergyWidget = ({ lightsData }) => {
         // Berechne geschätzten Stromverbrauch basierend auf Lampentyp und Helligkeit
         const calculateEstimatedUsage = () => {
-            return Object.values(lights).reduce((total, light) => {
+            return Object.values(lightsData).reduce((total, light) => {
                 if (!light.state.on) return total;
 
                 // Durchschnittlicher Verbrauch verschiedener Lampentypen (in Watt)
@@ -324,10 +325,10 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
                 </div>
 
                 <div className="active-lights">
-                    <h4>Aktive Lichter: {Object.values(lights).filter(l => l.state.on).length}</h4>
+                    <h4>Aktive Lichter: {Object.values(lightsData).filter(l => l.state.on).length}</h4>
                     {expanded && (
                         <div className="energy-details">
-                            {Object.entries(lights)
+                            {Object.entries(lightsData)
                                 .filter(([_, light]) => light.state.on)
                                 .slice(0, 5) // Begrenze die Anzeige auf 5 Lichter
                                 .map(([id, light]) => (
@@ -365,11 +366,11 @@ const Widget = ({ type, data, onEdit, onRemove, onAction, lights, scenes }) => {
             case WIDGET_TYPES.SINGLE_LIGHT:
                 return <SingleLightWidget />;
             case WIDGET_TYPES.STATUS:
-                return <StatusWidget />;
+                return <StatusWidget lightsData={lights} />;
             case WIDGET_TYPES.SCHEDULE:
                 return <ScheduleWidget />;
             case WIDGET_TYPES.ENERGY:
-                return <EnergyWidget />;
+                return <EnergyWidget lightsData={lights} />;
             default:
                 return <div>Unbekannter Widget-Typ</div>;
         }
@@ -651,19 +652,34 @@ const getDefaultTitle = (type) => {
 };
 
 // Hauptkomponente für das Dashboard
-const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
+const DashboardView = ({ lights: initialLights, scenes = [], bridgeIP, username, onLightsUpdate }) => {
     const [widgets, setWidgets] = useState([]);
     const [editingWidget, setEditingWidget] = useState(null);
     const [showWidgetModal, setShowWidgetModal] = useState(false);
     const [initialized, setInitialized] = useState(false);
+    const [localLights, setLocalLights] = useState({});
+    const isInitialRender = useRef(true);
 
     // Lade gespeicherte Widgets beim ersten Rendern
     useEffect(() => {
-        if (!initialized && Object.keys(lights).length > 0) {
+        if (!initialized && Object.keys(initialLights).length > 0) {
+            setLocalLights(initialLights);
             loadWidgets();
             setInitialized(true);
         }
-    }, [lights, initialized]);
+    }, [initialLights, initialized, loadWidgets]);
+
+    // Synchronisiere den lokalen Zustand mit externen Updates
+    useEffect(() => {
+        if (isInitialRender.current) {
+            isInitialRender.current = false;
+            return;
+        }
+
+        if (Object.keys(initialLights).length > 0) {
+            setLocalLights(initialLights);
+        }
+    }, [initialLights]);
 
     // Lade Widgets aus dem lokalen Speicher
     const loadWidgets = () => {
@@ -781,6 +797,22 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
         switch (action) {
             case 'toggleLight':
                 try {
+                    // Update UI sofort für bessere UX
+                    setLocalLights(prevLights => {
+                        const newLights = { ...prevLights };
+                        if (newLights[params.lightId]) {
+                            newLights[params.lightId] = {
+                                ...newLights[params.lightId],
+                                state: {
+                                    ...newLights[params.lightId].state,
+                                    on: params.on
+                                }
+                            };
+                        }
+                        return newLights;
+                    });
+
+                    // Dann API-Aufruf
                     const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${params.lightId}/state`, {
                         method: 'PUT',
                         headers: {
@@ -789,14 +821,67 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
                         body: JSON.stringify({ on: params.on })
                     });
 
-                    await response.json();
+                    const result = await response.json();
+
+                    // Falls API-Fehler zurückgibt, ggf. State zurücksetzen
+                    if (result[0] && result[0].error) {
+                        console.error("API-Fehler:", result[0].error);
+                        // UI-Zustand zurücksetzen
+                        setLocalLights(prevLights => {
+                            const newLights = { ...prevLights };
+                            if (newLights[params.lightId]) {
+                                newLights[params.lightId] = {
+                                    ...newLights[params.lightId],
+                                    state: {
+                                        ...newLights[params.lightId].state,
+                                        on: !params.on // zurück zum vorherigen Zustand
+                                    }
+                                };
+                            }
+                            return newLights;
+                        });
+                    }
+
+                    if (typeof onLightsUpdate === 'function') {
+                        onLightsUpdate(localLights);
+                    }
                 } catch (error) {
                     console.error(`Fehler beim Schalten von Licht ${params.lightId}:`, error);
+                    // UI-Zustand bei Netzwerkfehler zurücksetzen
+                    setLocalLights(prevLights => {
+                        const newLights = { ...prevLights };
+                        if (newLights[params.lightId]) {
+                            newLights[params.lightId] = {
+                                ...newLights[params.lightId],
+                                state: {
+                                    ...newLights[params.lightId].state,
+                                    on: !params.on // zurück zum vorherigen Zustand
+                                }
+                            };
+                        }
+                        return newLights;
+                    });
                 }
                 break;
 
             case 'setBrightness':
                 try {
+                    // Update UI sofort
+                    setLocalLights(prevLights => {
+                        const newLights = { ...prevLights };
+                        if (newLights[params.lightId]) {
+                            newLights[params.lightId] = {
+                                ...newLights[params.lightId],
+                                state: {
+                                    ...newLights[params.lightId].state,
+                                    bri: parseInt(params.brightness)
+                                }
+                            };
+                        }
+                        return newLights;
+                    });
+
+                    // Dann API-Aufruf
                     const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${params.lightId}/state`, {
                         method: 'PUT',
                         headers: {
@@ -806,33 +891,77 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
                     });
 
                     await response.json();
+
+                    if (typeof onLightsUpdate === 'function') {
+                        onLightsUpdate(localLights);
+                    }
                 } catch (error) {
                     console.error(`Fehler beim Einstellen der Helligkeit von Licht ${params.lightId}:`, error);
                 }
                 break;
 
             case 'setColor':
-                // Konvertiere Hex zu Hue/Sat und sende an die Bridge
                 try {
                     // Funktion zur Konvertierung von Hex zu HSV für die API
                     const hexToHsv = (hex) => {
-                        // Implementierung hier
-                        // Diese sollte den Hex-Wert in Hue/Sat-Werte für die API umwandeln
-                        // Platzhalter-Implementierung
-                        return { hue: 0, sat: 254 };
+                        // Bessere Implementierung
+                        const r = parseInt(hex.slice(1, 3), 16) / 255;
+                        const g = parseInt(hex.slice(3, 5), 16) / 255;
+                        const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+                        const max = Math.max(r, g, b);
+                        const min = Math.min(r, g, b);
+                        const v = max;
+                        const d = max - min;
+                        const s = max === 0 ? 0 : d / max;
+                        let h = 0;
+
+                        if (max !== min) {
+                            if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+                            else if (max === g) h = (b - r) / d + 2;
+                            else if (max === b) h = (r - g) / d + 4;
+                            h /= 6;
+                        }
+
+                        // Konvertierung zu Philips Hue-Werten
+                        return {
+                            hue: Math.round(h * 65535),
+                            sat: Math.round(s * 254),
+                            bri: Math.round(v * 254)
+                        };
                     };
 
-                    const hsv = hexToHsv(params.color);
+                    const hsvValues = hexToHsv(params.color);
 
+                    // Update UI sofort
+                    setLocalLights(prevLights => {
+                        const newLights = { ...prevLights };
+                        if (newLights[params.lightId]) {
+                            newLights[params.lightId] = {
+                                ...newLights[params.lightId],
+                                state: {
+                                    ...newLights[params.lightId].state,
+                                    ...hsvValues
+                                }
+                            };
+                        }
+                        return newLights;
+                    });
+
+                    // Dann API-Aufruf
                     const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${params.lightId}/state`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(hsv)
+                        body: JSON.stringify(hsvValues)
                     });
 
                     await response.json();
+
+                    if (typeof onLightsUpdate === 'function') {
+                        onLightsUpdate(localLights);
+                    }
                 } catch (error) {
                     console.error(`Fehler beim Einstellen der Farbe von Licht ${params.lightId}:`, error);
                 }
@@ -854,6 +983,9 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
 
                         // Aktiviere die Szene (Lichter entsprechend setzen)
                         console.log("Aktiviere Szene:", scene.name);
+
+                        // TODO: Implementiere Szenen-Aktivierung via API
+                        // Im Moment nur UI-Update
                     }
                 } catch (error) {
                     console.error(`Fehler beim Aktivieren der Szene:`, error);
@@ -861,20 +993,45 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
                 break;
 
             case 'toggleGroup':
-                // Alle Lichter in der Gruppe ein- oder ausschalten
                 try {
                     const widget = widgets.find(w => w.id === params.widgetId);
                     if (widget && widget.lightIds) {
-                        // Setze alle Lichter in der Gruppe auf den gewünschten Zustand
-                        widget.lightIds.forEach(async (lightId) => {
-                            await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                        // Update UI sofort
+                        setLocalLights(prevLights => {
+                            const newLights = { ...prevLights };
+                            widget.lightIds.forEach(lightId => {
+                                if (newLights[lightId]) {
+                                    newLights[lightId] = {
+                                        ...newLights[lightId],
+                                        state: {
+                                            ...newLights[lightId].state,
+                                            on: params.on
+                                        }
+                                    };
+                                }
+                            });
+                            return newLights;
+                        });
+
+                        // Dann API-Aufrufe
+                        const promises = widget.lightIds.map(async (lightId) => {
+                            const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify({ on: params.on })
                             });
+
+                            return response.json();
                         });
+
+                        // Warte auf alle API-Aufrufe
+                        await Promise.all(promises);
+
+                        if (typeof onLightsUpdate === 'function') {
+                            onLightsUpdate(localLights);
+                        }
                     }
                 } catch (error) {
                     console.error(`Fehler beim Umschalten der Lichtergruppe:`, error);
@@ -882,20 +1039,44 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
                 break;
 
             case 'setGroupBrightness':
-                // Helligkeit aller Lichter in der Gruppe einstellen
                 try {
                     const widget = widgets.find(w => w.id === params.widgetId);
                     if (widget && widget.lightIds) {
-                        // Setze die Helligkeit für alle Lichter in der Gruppe
-                        widget.lightIds.forEach(async (lightId) => {
-                            await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
+                        // Update UI sofort
+                        setLocalLights(prevLights => {
+                            const newLights = { ...prevLights };
+                            widget.lightIds.forEach(lightId => {
+                                if (newLights[lightId]) {
+                                    newLights[lightId] = {
+                                        ...newLights[lightId],
+                                        state: {
+                                            ...newLights[lightId].state,
+                                            bri: parseInt(params.brightness)
+                                        }
+                                    };
+                                }
+                            });
+                            return newLights;
+                        });
+
+                        // Dann API-Aufrufe
+                        const promises = widget.lightIds.map(async (lightId) => {
+                            const response = await fetch(`http://${bridgeIP}/api/${username}/lights/${lightId}/state`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify({ bri: parseInt(params.brightness) })
                             });
+
+                            return response.json();
                         });
+
+                        await Promise.all(promises);
+
+                        if (typeof onLightsUpdate === 'function') {
+                            onLightsUpdate(localLights);
+                        }
                     }
                 } catch (error) {
                     console.error(`Fehler beim Einstellen der Gruppenhelligkeit:`, error);
@@ -962,7 +1143,7 @@ const DashboardView = ({ lights, scenes = [], bridgeIP, username }) => {
                             onEdit={editWidget}
                             onRemove={removeWidget}
                             onAction={handleWidgetAction}
-                            lights={lights}
+                            lights={localLights}
                             scenes={scenes}
                         />
                     ))}

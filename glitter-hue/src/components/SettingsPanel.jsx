@@ -1,4 +1,4 @@
-// SettingsPanel.jsx - Komponente für Disco-Modus-Einstellungen im BrainBuster-Stil
+// SettingsPanel.jsx - Korrigierte Komponente für Disco-Modus-Einstellungen im BrainBuster-Stil
 import React from 'react';
 
 const SettingsPanel = ({ discoSettings, updateSettings, lights, discoMode, toggleDiscoMode, isSecureConnection }) => {
@@ -145,8 +145,20 @@ const SettingsPanel = ({ discoSettings, updateSettings, lights, discoMode, toggl
                 <div className="setting-group light-selection">
                     <h3>Lichter</h3>
                     <div className="light-selection-buttons">
-                        <button onClick={handleSelectAllLights} disabled={!isSecureConnection}>Alle auswählen</button>
-                        <button onClick={handleDeselectAllLights} disabled={!isSecureConnection}>Keine auswählen</button>
+                        <button
+                            onClick={handleSelectAllLights}
+                            disabled={!isSecureConnection}
+                            type="button"
+                        >
+                            Alle auswählen
+                        </button>
+                        <button
+                            onClick={handleDeselectAllLights}
+                            disabled={!isSecureConnection}
+                            type="button"
+                        >
+                            Keine auswählen
+                        </button>
                     </div>
                     <div className="light-checkboxes">
                         {Object.keys(lights).map(lightId => (

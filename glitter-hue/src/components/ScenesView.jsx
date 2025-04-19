@@ -1,6 +1,7 @@
-// src/components/ScenesView.jsx - Szenen-Management im BrainBuster-Stil
+// src/components/ScenesView.jsx - Szenen-Management im BrainBuster-Stil (korrigiert)
 import React, {useEffect, useState} from 'react';
 import {Scene, SCENE_TYPES} from '../models/types';
+import '../styles/scenes.css';
 
 // Szenen-Icons
 const SceneIcon = ({type, name, isActive}) => {
@@ -224,7 +225,7 @@ const SceneFormModal = ({scene, lights, onSave, onCancel}) => {
                             <div className="light-states">
                                 {formData.lights.map(lightId => (
                                     <div key={lightId} className="light-state-config">
-                                        <h4>{lights[lightId].name}</h4>
+                                        <h4>{lights[lightId]?.name || 'Licht'}</h4>
 
                                         <label>
                                             <span>Helligkeit</span>
@@ -237,13 +238,13 @@ const SceneFormModal = ({scene, lights, onSave, onCancel}) => {
                                             />
                                         </label>
 
-                                        {lights[lightId].state.hue !== undefined && (
+                                        {lights[lightId]?.state.hue !== undefined && (
                                             <label>
                                                 <span>Farbe</span>
                                                 <input
                                                     type="color"
                                                     className="color-picker"
-                                                    value={convertToHex(formData.states[lightId] || lights[lightId].state)}
+                                                    value={convertToHex(formData.states[lightId] || lights[lightId]?.state || { hue: 0, sat: 0 })}
                                                     onChange={(e) => {
                                                         const hsv = hexToHsv(e.target.value);
                                                         handleLightStateChange(lightId, 'hue', hsv.hue);
@@ -305,20 +306,82 @@ const SceneFormModal = ({scene, lights, onSave, onCancel}) => {
 
 // Hilfsfunktion zur Konvertierung von Hue/Sat zu Hex
 const convertToHex = (state) => {
-    // Implementierung der Konvertierung von Hue/Sat zu Hex
-    // Dies wäre ähnlich zur hexToHsv Funktion in der App.jsx,
-    // aber in die andere Richtung
+    if (!state || state.hue === undefined || state.sat === undefined) {
+        return '#ffffff';
+    }
 
-    // Platzhalter-Implementierung
-    return '#ffffff';
+    // Konvertierung von Hue API-Werten zu HSL
+    const h = (state.hue / 65535) * 360;
+    const s = (state.sat / 254) * 100;
+    const l = 50; // Mittlere Helligkeit für Farbpicker
+
+    // HSL zu RGB konvertieren
+    const c = (1 - Math.abs(2 * l / 100 - 1)) * (s / 100);
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l / 100 - c / 2;
+
+    let r, g, b;
+
+    if (h >= 0 && h < 60) {
+        [r, g, b] = [c, x, 0];
+    } else if (h >= 60 && h < 120) {
+        [r, g, b] = [x, c, 0];
+    } else if (h >= 120 && h < 180) {
+        [r, g, b] = [0, c, x];
+    } else if (h >= 180 && h < 240) {
+        [r, g, b] = [0, x, c];
+    } else if (h >= 240 && h < 300) {
+        [r, g, b] = [x, 0, c];
+    } else {
+        [r, g, b] = [c, 0, x];
+    }
+
+    const toHex = (value) => {
+        const hex = Math.round((value + m) * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    };
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
 
 // Hilfsfunktion zur Konvertierung von Hex zu Hue/Sat
 const hexToHsv = (hex) => {
-    // Sollte die gleiche Funktion wie in App.jsx sein
+    // Konvertiere Hex zu RGB
+    hex = hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
 
-    // Platzhalter-Implementierung
-    return {hue: 0, sat: 0};
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+
+    let h = 0;
+
+    if (diff === 0) {
+        h = 0;
+    } else if (max === r) {
+        h = ((g - b) / diff) % 6;
+    } else if (max === g) {
+        h = (b - r) / diff + 2;
+    } else {
+        h = (r - g) / diff + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+
+    // Sättigung
+    const s = max === 0 ? 0 : diff / max;
+
+    // Konvertiere zu Hue API-Werten
+    const hue = Math.round((h / 360) * 65535);
+    const sat = Math.round(s * 254);
+
+    return {
+        hue,
+        sat
+    };
 };
 
 // Hauptkomponente für die Szenenansicht
@@ -382,7 +445,7 @@ const ScenesView = ({lights, username, bridgeIP}) => {
 
             // In einer echten Implementierung würden wir die Szene auf der Bridge aktivieren
             // Für jede Lampe in der Szene, setze den entsprechenden Status
-            scene.lights.forEach(async (lightId) => {
+            for (const lightId of scene.lights) {
                 const state = scene.states[lightId] || {on: true, bri: 254};
 
                 // API-Aufruf zum Setzen des Lichtzustands
@@ -393,7 +456,7 @@ const ScenesView = ({lights, username, bridgeIP}) => {
                     },
                     body: JSON.stringify(state)
                 });
-            });
+            }
         } catch (err) {
             console.error("Fehler beim Aktivieren der Szene:", err);
             setError("Szene konnte nicht aktiviert werden. " + err.message);
@@ -404,7 +467,7 @@ const ScenesView = ({lights, username, bridgeIP}) => {
     const editScene = (sceneId) => {
         const scene = scenes.find(s => s.id === sceneId);
         if (scene) {
-            setEditingScene(scene);
+            setEditingScene({...scene});
             setShowFormModal(true);
         }
     };

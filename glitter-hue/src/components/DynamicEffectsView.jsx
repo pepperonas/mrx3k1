@@ -357,6 +357,16 @@ const EffectCustomizeModal = ({ effect, onSave, onCancel, lights }) => {
                         <div className="setting-group">
                             <h3>Blitz-Effekt</h3>
                             <div className="flash-controls">
+                                <div className="control-row">
+                                    <label className="checkbox-container">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.flash || false}
+                                            onChange={(e) => handleSettingChange('flash', e.target.checked)}
+                                        />
+                                        <span>Blitz-Effekt aktivieren</span>
+                                    </label>
+                                </div>
                                 <div className="flash-field">
                                     <label>Häufigkeit</label>
                                     <input
@@ -366,20 +376,9 @@ const EffectCustomizeModal = ({ effect, onSave, onCancel, lights }) => {
                                         step="0.01"
                                         value={settings.flashChance}
                                         onChange={(e) => handleSettingChange('flashChance', parseFloat(e.target.value))}
+                                        disabled={!settings.flash}
                                     />
-                                    <span className="setting-value">{Math.round(settings.flashChance * 100)}%</span>
-                                </div>
 
-                                <div className="flash-field">
-                                    <label>Dauer (ms)</label>
-                                    <input
-                                        type="range"
-                                        min="50"
-                                        max="500"
-                                        step="10"
-                                        value={settings.flashDuration}
-                                        onChange={(e) => handleSettingChange('flashDuration', parseInt(e.target.value))}
-                                    />
                                     <span className="setting-value">{settings.flashDuration}ms</span>
                                 </div>
                             </div>

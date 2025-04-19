@@ -989,6 +989,12 @@ const GeoFenceForm = ({ automation, onSave, onCancel, scenes }) => {
     );
 };
 
+const toggleAutomation = (automationId) => {
+    setAutomations(automations.map(auto =>
+        auto.id === automationId ? { ...auto, enabled: !auto.enabled } : auto
+    ));
+};
+
 // Modaler Dialog für die Auswahl des Automatisierungstyps
 const SelectAutomationTypeModal = ({ onSelect, onCancel }) => {
     return (
@@ -1000,14 +1006,14 @@ const SelectAutomationTypeModal = ({ onSelect, onCancel }) => {
                 </div>
                 <div className="automation-type-selection">
                     <div className="automation-type-grid">
-                        <div
+                        <button
                             className="automation-type-card"
                             onClick={() => onSelect(AUTOMATION_TYPES.WAKE_UP)}
                         >
                             <AutomationIcon type={AUTOMATION_TYPES.WAKE_UP} />
                             <h3>Lichtwecker</h3>
                             <p>Wache mit einem sanften Sonnenaufgang auf</p>
-                        </div>
+                        </button>
 
                         <div
                             className="automation-type-card"
