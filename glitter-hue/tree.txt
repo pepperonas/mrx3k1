@@ -52,7 +52,7 @@ Aktueller Pfad: /Users/martin/WebstormProjects/mrx3k1/glitter-hue
 │   ├── models
 │   │   └── types.js
 │   ├── services
-│   │   ├── HueApiService.jsx
+│   │   ├── HueApiService.js
 │   │   └── TimeControlService.js
 │   ├── styles
 │   │   ├── _empty.css

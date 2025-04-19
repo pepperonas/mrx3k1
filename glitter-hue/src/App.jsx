@@ -10,11 +10,10 @@ import ScenesView from './components/ScenesView';
 import DynamicEffectsView from './components/DynamicEffectsView';
 import DashboardView from './components/DashboardView';
 import MediaSyncTool from './components/MediaSyncTool';
-import EnhancedAutomationView from './components/EnhancedAutomationView';
 import EnergyDashboardView from './components/EnergyDashboardView';
 import SensorControlView from './components/SensorControlView';
 import DevView from './components/DevView';
-import TimeControlView from "./components/TimeControlView";
+import UnifiedTimeControlView from './components/UnifiedTimeControlView';
 
 // BrainBuster-Stil Logo-Komponente
 const LogoComponent = () => (
@@ -154,6 +153,21 @@ function App() {
     const getBaseUrl = (ip) => {
         return `http://${ip}`;
     };
+
+    useEffect(() => {
+        // Ausführung nur beim ersten Rendering
+        const savedTab = window.localStorage.getItem('hue-active-tab');
+        if (savedTab) {
+            setActiveTab(savedTab);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Speichern nur, wenn sich der Tab ändert und nicht beim initialen Rendering
+        if (activeTab !== 'lights') { // Nicht speichern, wenn es der Standardwert ist
+            window.localStorage.setItem('hue-active-tab', activeTab);
+        }
+    }, [activeTab]);
 
     // Gespeicherte Werte laden
     useEffect(() => {
@@ -1038,18 +1052,8 @@ function App() {
                                 />
                             </Tab>
 
-                            <Tab id="automations" label="Automatisierungen">
-                                <EnhancedAutomationView
-                                    lights={lights}
-                                    rooms={groups}
-                                    scenes={scenes}
-                                    username={username}
-                                    bridgeIP={bridgeIP}
-                                />
-                            </Tab>
-
                             <Tab id="timecontrol" label="Zeitsteuerung">
-                                <TimeControlView
+                                <UnifiedTimeControlView
                                     username={username}
                                     bridgeIP={bridgeIP}
                                     lights={lights}
